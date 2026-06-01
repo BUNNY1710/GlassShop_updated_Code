@@ -94,13 +94,15 @@ export default ManageStaff;
 /* ================= STYLES ================= */
 
 const card = {
-  width: "520px",
+  width: "100%",
+  maxWidth: "520px",
   padding: "30px",
   background: "rgba(0,0,0,0.65)",
   borderRadius: "16px",
   color: "white",
   boxShadow: "0 20px 50px rgba(0,0,0,0.7)",
-  position: "relative", // 🔥 required for close button
+  position: "relative",
+  boxSizing: "border-box",
 };
 
 const closeBtn = {
@@ -144,12 +146,14 @@ const overlay = {
 };
 
 const confirmCard = {
-  width: "360px",
+  width: "100%",
+  maxWidth: "360px",
   padding: "25px",
   borderRadius: "16px",
   background: "rgba(20,20,20,0.95)",
   color: "white",
   textAlign: "center",
+  boxSizing: "border-box",
 };
 
 const actions = {

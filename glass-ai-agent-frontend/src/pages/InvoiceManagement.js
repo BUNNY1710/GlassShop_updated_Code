@@ -427,7 +427,7 @@ function InvoiceManagement() {
         </div>
 
         {loading ? (
-          <div style={{ textAlign: "center", color: "#fff", padding: "20px" }}>Loading...</div>
+          <div style={{ textAlign: "center", color: "#64748b", padding: "20px" }}>Loading...</div>
         ) : isMobile ? (
           /* ── MOBILE: card list, no horizontal scroll ── */
           <div style={{ backgroundColor: "white", borderRadius: "8px", overflow: "hidden", width: "100%", boxSizing: "border-box" }}>

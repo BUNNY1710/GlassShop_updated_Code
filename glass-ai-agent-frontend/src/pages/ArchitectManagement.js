@@ -666,7 +666,7 @@ export default function ArchitectManagement() {
 
         {/* List */}
         {loading ? (
-          <div style={{ textAlign: "center", color: "#fff", padding: 40, backgroundColor: "rgba(255,255,255,0.1)", borderRadius: 12 }}>⏳ Loading architects…</div>
+          <div style={{ textAlign: "center", color: "#64748b", padding: 40, backgroundColor: "#f8fafc", borderRadius: 12 }}>⏳ Loading architects…</div>
         ) : (
           <div style={{ backgroundColor: "white", borderRadius: 12, overflow: "hidden", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)" }}>
             <div style={{ padding: 20, borderBottom: "2px solid #e5e7eb", backgroundColor: "#f9fafb" }}>

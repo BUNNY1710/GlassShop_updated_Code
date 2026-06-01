@@ -60,10 +60,10 @@ function AiAssistant() {
         site: selectedAction === "INSTALLED" ? site : undefined,
       };
 
-      const res = await api.post("/ai/ask", payload);
-      
+      const res = await api.post("/api/ai/ask", payload);
+
       // Animate typing effect
-      const response = res.data;
+      const response = res.data?.message || res.data || "No response";
       animateTyping(response);
       
       // Save to history

@@ -3762,7 +3762,7 @@ function QuotationManagement() {
         )}
 
         {loading ? (
-          <div style={{ textAlign: "center", color: "#fff", padding: "20px" }}>Loading...</div>
+          <div style={{ textAlign: "center", color: "#64748b", padding: "20px" }}>Loading...</div>
         ) : (
           <div
             style={{

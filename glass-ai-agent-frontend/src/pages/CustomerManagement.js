@@ -776,9 +776,9 @@ function CustomerManagement() {
           <div
             style={{
               textAlign: "center",
-              color: "#fff",
+              color: "#64748b",
               padding: "40px",
-              backgroundColor: "rgba(255,255,255,0.1)",
+              backgroundColor: "#f8fafc",
               borderRadius: "12px",
               fontSize: "16px",
             }}
