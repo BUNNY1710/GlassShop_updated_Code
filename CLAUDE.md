@@ -1,0 +1,201 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Repository Layout
+
+This is a monorepo with two active sub-projects:
+
+- `glassshop-backend/` — Node.js/Express REST API (port 8080)
+- `glass-ai-agent-frontend/` — React SPA (port 3000)
+- `GlassShop/` — Legacy Java Spring Boot app; not in active use
+
+## Commands
+
+### Backend (`glassshop-backend/`)
+
+```bash
+npm run dev       # Start with nodemon (auto-reload)
+npm start         # Production start
+npm test          # Run all Jest tests
+npm test -- --testPathPattern=routes/stock   # Run a single test file
+npm test -- --testNamePattern="low stock"    # Run tests matching a name
+```
+
+### Frontend (`glass-ai-agent-frontend/`)
+
+```bash
+npm start                  # Dev server on port 3000
+npm run build              # Production build
+npm test                   # Jest unit tests (watch mode)
+npm run test:coverage      # Coverage report (non-watch)
+npm run cypress:open       # Open Cypress UI
+npm run test:e2e           # Run Cypress headlessly
+```
+
+### Root
+
+```bash
+npm run install:all     # Install deps for root + both sub-projects
+npm run start:backend   # cd glassshop-backend && npm run dev
+npm run start:frontend  # cd glass-ai-agent-frontend && npm start
+npm run test:backend    # Run backend Jest tests
+npm run test:frontend   # Run frontend Jest tests
+```
+
+Convenience: `start-all.bat` (Windows) / `start-all.sh` (Linux/Mac) at the repo root start both services in one command.
+
+## Backend Environment
+
+Create `glassshop-backend/.env`:
+
+```env
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=glass_shop
+DB_USERNAME=postgres
+DB_PASSWORD=your_password
+JWT_SECRET=your_secret_key
+PORT=8080
+NODE_ENV=development
+EC2_IP=16.16.73.29   # Only needed in production; controls CORS origin default
+```
+
+The backend syncs Sequelize models automatically on startup when `NODE_ENV !== 'production'` (using `alter: false`). In production, run migrations manually using the SQL files in `deploy/` (e.g., `deploy/create-all-tables.sql` for initial schema, `deploy/migrations/*.sql` for incremental changes).
+
+`glassshop-backend/migrations/` contains additional SQL migration files and `scripts/add-discount-columns.js` is a Node.js migration helper for cases where plain SQL isn't sufficient.
+
+## Frontend Environment
+
+Create `glass-ai-agent-frontend/.env` only when overriding defaults:
+
+```env
+REACT_APP_API_URL=http://localhost:8080
+```
+
+Without this variable, the frontend auto-detects: S3/CloudFront hostnames hit the EC2 IP (`16.16.73.29:8080`); everything else hits `localhost:8080`.
+
+## Architecture
+
+### Multi-tenancy
+
+All business data is shop-scoped. Every User belongs to a Shop, and every query that returns or modifies business data filters by `shopId` (obtained by looking up the authenticated user in the DB). There is no global admin role that spans shops.
+
+### Authentication Flow
+
+1. Client POSTs to `/api/auth/login` → receives a JWT (24h expiry).
+2. JWT payload: `{ sub: username, role: "ROLE_ADMIN" | "ROLE_STAFF" }`.
+3. Token is stored in `sessionStorage` (not `localStorage`).
+4. The axios instance in `glass-ai-agent-frontend/src/api/api.js` automatically attaches `Authorization: Bearer <token>` to every request and redirects to `/login` on 401.
+5. Backend `authMiddleware` validates the JWT and attaches `{ username, role }` to `req.user`.
+
+### Role-Based Access
+
+- `ROLE_ADMIN` — full access including staff management, quotations, invoices, customers, AI assistant, audit log, and glass price master.
+- `ROLE_STAFF` — limited to stock operations and staff-side quotations.
+- Frontend enforces this in `App.js` via `<ProtectedRoute allowedRoles={[...]}>` and the `<RequireAdmin>` wrapper.
+- Backend enforces it via `requireAdmin` / `requireStaff` middleware from `glassshop-backend/middleware/auth.js`.
+- Important: `server.js` only applies `authMiddleware` at the route mount level. Each router then applies `requireAdmin` or `requireStaff` at the top of the router file via `router.use(...)`, not per-endpoint. `requireStaff` allows both ROLE_STAFF and ROLE_ADMIN; `requireAdmin` allows only ROLE_ADMIN.
+
+### Backend Route Structure
+
+Only `POST /api/auth/register-shop` and `POST /api/auth/login` are fully public. All other `/api/auth` sub-routes (e.g., create-staff, profile, change-password) require `authMiddleware` and most require `requireAdmin`. Everything outside `/api/auth` requires `authMiddleware`.
+
+| Prefix | File | Role guard |
+|--------|------|------------|
+| `/api/auth/register-shop`, `/api/auth/login` | `routes/auth.js` | none |
+| `/api/auth/*` (rest) | `routes/auth.js` | `authMiddleware` + `requireAdmin` |
+| `/api/stock` | `routes/stock.js` | `requireStaff` |
+| `/api/customers` | `routes/customer.js` | `requireAdmin` |
+| `/api/quotations` | `routes/quotation.js` | mixed (most open, confirm/reject admin-only) |
+| `/api/invoices` | `routes/invoice.js` | `requireAdmin` |
+| `/api/audit` | `routes/audit.js` | `requireAdmin` |
+| `/api/ai` | `routes/ai.js` | `requireAdmin` (stub — not wired to an AI service) |
+| `/api/glass-price-master` | `routes/glassPriceMaster.js` | `requireAdmin` |
+| `/api/architects` | `routes/architect.js` | `requireAdmin` |
+
+Debug endpoints: `GET /health` and `GET /test` (both public, no auth).
+
+### Data Model Relationships
+
+```
+Shop
+ ├── Users (ROLE_ADMIN, ROLE_STAFF)
+ ├── Customers
+ │    ├── Quotations → QuotationItems
+ │    └── Invoices  → InvoiceItems
+ │                  → Payments
+ ├── Stock (tied to Glass types via glassId)
+ └── Architects (business partners; referenced on Customer, Quotation, Invoice)
+
+Glass → GlassPriceMaster (price catalog, scoped per shopId)
+StockHistory (tracks changes by glassId + shopId + standNo, no direct stockId FK)
+Site → Installations → Invoice
+```
+
+### Sequelize Model Pattern
+
+All models use a factory function: `module.exports = (sequelize) => { return sequelize.define(...) }`. Associations are wired in `glassshop-backend/models/index.js`, which is the single import point for the entire ORM layer.
+
+### Stock Pricing and Status Flow
+
+When stock is added or transferred, the backend checks `GlassPriceMaster` for a matching `(shopId, glassType, thickness)` entry:
+- If an approved entry exists with prices → stock is created with `status: 'APPROVED'` and the prices from the master.
+- If no entry exists or the entry is `isPending: true` → a pending entry is created/kept and stock gets `status: 'PENDING'`.
+
+Every stock mutation (ADD, REMOVE, EDIT, TRANSFER) also creates an `AuditLog` row and a `StockHistory` row.
+
+**Important quirk:** Stock route handlers respond with plain JSON strings (e.g., `res.json('✅ Stock added successfully')`), not JSON objects. Frontend checks for string responses.
+
+### PDF Generation
+
+`glassshop-backend/services/pdfService.js` uses PDFKit to generate invoice and quotation PDFs. Polish/custom data is serialized as `POLISH_DATA:<json>` embedded in the description field and parsed back out at render time.
+
+### Glass Cutting Optimization
+
+`glass-ai-agent-frontend/src/utils/optimizationService.js` is a pure-function module (no React, no API calls) that implements:
+- Unit conversion helpers (`toMM`, `fromMM`, `parseDim`) — supports MM, INCH, FEET, and fraction strings like `"5 1/4"`.
+- `findMatches` — scores stock items against an order using area waste + type/unit match bonus.
+- `planCuts` — shelf (guillotine) bin-packing that returns placed pieces, a remnant rectangle, waste, utilization %, and step-by-step cut instructions.
+- `optimizeOrders` — top-level entry point; classifies matches as `exact / good / partial / none` and finds combined plans for multiple orders from one sheet.
+
+`glass-ai-agent-frontend/src/utils/printCuttingPlan.js` formats optimization output for PDF/print. The optimization UI lives at `/optimization` (admin-only).
+
+### Frontend Stack Notes
+
+The frontend uses **React Router v7** (`react-router-dom ^7`). This version has different APIs from v6 — consult v7 docs for loader/action patterns if extending routing.
+
+### Frontend API Layer
+
+- `glass-ai-agent-frontend/src/api/api.js` — axios instance with auth interceptors
+- `glass-ai-agent-frontend/src/api/quotationApi.js` — quotation-specific API calls
+- All page components import from these files rather than calling axios directly
+
+### Frontend UI Components & Responsive Design
+
+Reusable UI primitives live in `glass-ai-agent-frontend/src/components/ui/` (`Button`, `Card`, `Input`, `Select`, `Badge`, `StatCard`) and are exported from `components/ui/index.js`. A global design system stylesheet is at `styles/design-system.css`.
+
+For responsive layouts, import `useResponsive` from `src/hooks/useResponsive.js`. It returns `{ isMobile, isTablet, isDesktop, isSmallMobile, isLargeMobile, isMobileOrTablet, width, height }`. Breakpoints: mobile < 768px, tablet 768–1023px, desktop ≥ 1024px.
+
+### Testing
+
+**Frontend:** Jest unit tests exist under `src/**/__tests__/` and `src/App.test.js`. Cypress E2E tests are in `cypress/e2e/` (login, dashboard, stock management). Cypress is configured in `cypress.config.js` with `baseUrl: http://localhost:3000`.
+
+**Backend:** No test files currently exist in `glassshop-backend/`. The Jest config is set up and ready — add test files under `glassshop-backend/tests/` or alongside route files.
+
+### Health Check
+
+`GET /health` — no auth required, returns `{ status: "OK", ... }`. Use this to verify the backend is up.
+
+## Deployment
+
+The `deploy/` directory contains all production deployment artifacts:
+
+- `create-all-tables.sql` — full schema for initial DB setup
+- `migrations/*.sql` — incremental schema changes to apply manually when deploying schema updates
+- `nginx.conf` — Nginx config that serves the React build and proxies `/api` → `localhost:8080`
+- `ecosystem.config.js` — PM2 process config for running the Node backend
+- `glassshop-backend.service` — systemd unit file alternative to PM2
+- `aws-quick-deploy.sh` / `deploy.sh` / `deploy-from-github.sh` — shell scripts for EC2 deployments
+
+To upload the frontend build to S3 run `glass-ai-agent-frontend/s3-upload.sh` after `npm run build`.

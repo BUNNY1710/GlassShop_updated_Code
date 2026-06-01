@@ -1,0 +1,432 @@
+/* ================= RESPONSIVE DESIGN SYSTEM ================= */
+/* Mobile-first approach with breakpoints */
+
+/* ================= BREAKPOINTS ================= */
+/* 
+  Mobile: < 768px (default, mobile-first)
+  Tablet: 768px - 1024px
+  Desktop: > 1024px
+*/
+
+/* ================= BASE MOBILE STYLES ================= */
+/* Already defined in mobile-first approach */
+
+/* ================= TABLET STYLES (768px+) ================= */
+@media (min-width: 768px) {
+  /* Table improvements */
+  .table-wrapper {
+    overflow-x: visible;
+  }
+
+  table {
+    min-width: auto !important;
+  }
+
+  /* Button groups - horizontal on tablet+ */
+  .action-buttons-container {
+    flex-direction: row !important;
+    justify-content: center;
+  }
+
+  /* Modal improvements */
+  .modal-card {
+    max-width: 600px !important;
+  }
+
+  /* KPI Grid */
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* ================= DESKTOP STYLES (1024px+) ================= */
+@media (min-width: 1024px) {
+  /* KPI Grid - 4 columns on desktop */
+  .kpi-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+
+  /* Table full width */
+  table {
+    width: 100%;
+  }
+
+  /* Modal larger on desktop */
+  .modal-card {
+    max-width: 500px !important;
+  }
+
+  /* Better spacing on large screens */
+  .container {
+    padding: 32px 24px !important;
+  }
+}
+
+/* ================= MOBILE SPECIFIC (max-width: 767px) ================= */
+@media (max-width: 767px) {
+  /* Stack buttons vertically */
+  .action-buttons-container {
+    flex-direction: column !important;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .action-buttons-container button {
+    width: 100% !important;
+  }
+
+  /* Table becomes card-based on mobile */
+  .table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  table {
+    min-width: 700px; /* Keep scrollable on mobile */
+  }
+
+  /* Table cells - better spacing on mobile */
+  table td,
+  table th {
+    padding: 12px 8px !important;
+    font-size: 13px !important;
+  }
+
+  /* Modal full width on mobile */
+  .modal-card {
+    width: 95% !important;
+    max-width: 95% !important;
+    padding: 20px !important;
+    max-height: 85vh !important;
+  }
+
+  /* Form inputs full width */
+  .form-input,
+  .form-select {
+    width: 100% !important;
+  }
+
+  /* Filter grid - stack on mobile */
+  .filter-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* KPI Grid - single column on mobile */
+  .kpi-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Navbar menu - full width on mobile */
+  .navbar-menu {
+    width: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+  }
+
+  /* Card padding reduction on mobile */
+  .card {
+    padding: 16px !important;
+  }
+
+  /* Button touch targets - minimum 44px */
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Prevent text zoom on input focus (iOS) */
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* ================= LARGE SCREENS (1440px+) ================= */
+@media (min-width: 1440px) {
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+}
+
+/* ================= UTILITY CLASSES ================= */
+.mobile-only {
+  display: block;
+}
+
+.desktop-only {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .mobile-only {
+    display: none;
+  }
+
+  .desktop-only {
+    display: block;
+  }
+}
+
+/* ================= TOUCH FRIENDLY ================= */
+@media (hover: none) and (pointer: coarse) {
+  /* Mobile touch devices */
+  button,
+  a,
+  .clickable {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 12px 16px;
+  }
+
+  /* Larger tap targets */
+  .nav-link {
+    padding: 12px 16px !important;
+  }
+}
+
+/* ================= BUTTON ENHANCEMENTS ================= */
+.action-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.action-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.action-btn:active::before {
+  width: 300px;
+  height: 300px;
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.action-btn:active {
+  transform: translateY(0);
+}
+
+.add-remove-btn:hover {
+  background: linear-gradient(135deg, #7c3aed, #6366f1) !important;
+}
+
+.transfer-btn:hover {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+}
+
+/* Button text and icon spacing */
+.btn-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.btn-text {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Mobile: Hide icon text, show only icons */
+@media (max-width: 480px) {
+  .btn-text {
+    display: none;
+  }
+  
+  .action-btn {
+    min-width: 44px !important;
+    padding: 10px !important;
+  }
+  
+  .btn-icon {
+    font-size: 18px;
+  }
+}
+
+/* ================= FILTER GRID RESPONSIVE ================= */
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 640px) {
+  .filter-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ================= TABLE RESPONSIVE IMPROVEMENTS ================= */
+@media (max-width: 767px) {
+  /* Make table headers smaller on mobile */
+  table thead th {
+    font-size: 12px !important;
+    padding: 10px 6px !important;
+  }
+  
+  table tbody td {
+    font-size: 12px !important;
+    padding: 10px 6px !important;
+  }
+  
+  /* Action column wider on mobile */
+  table th:last-child,
+  table td:last-child {
+    min-width: 140px;
+  }
+}
+
+/* ================= MODAL RESPONSIVE ================= */
+@media (max-width: 480px) {
+  .modal-card {
+    padding: 16px !important;
+    border-radius: 12px !important;
+  }
+  
+  .modal-title {
+    font-size: 18px !important;
+  }
+  
+  .infoRow {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 4px;
+  }
+  
+  .buttonGroup {
+    flex-direction: column !important;
+  }
+  
+  .buttonGroup button {
+    width: 100% !important;
+  }
+}
+
+/* ================= CARD RESPONSIVE ================= */
+@media (max-width: 767px) {
+  .card {
+    margin: 8px !important;
+    padding: 16px !important;
+    border-radius: 12px !important;
+  }
+  
+  .title {
+    font-size: 20px !important;
+    margin-bottom: 16px !important;
+  }
+}
+
+/* ================= NAVBAR RESPONSIVE ================= */
+@media (max-width: 767px) {
+  .navbar {
+    padding: 0 12px !important;
+  }
+  
+  .navbar-logo {
+    font-size: 16px !important;
+  }
+  
+  .navbar-menu a {
+    padding: 14px 16px !important;
+    font-size: 15px !important;
+  }
+}
+
+/* ================= KPI GRID RESPONSIVE ================= */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 640px) {
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .kpi-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ================= FORM RESPONSIVE ================= */
+@media (max-width: 767px) {
+  .form-group {
+    margin-bottom: 16px;
+  }
+  
+  input[type="text"],
+  input[type="number"],
+  select {
+    width: 100% !important;
+    box-sizing: border-box;
+  }
+}
+
+/* ================= ANIMATIONS ================= */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-card {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* ================= ACCESSIBILITY ================= */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ================= FOCUS STATES ================= */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 2px;
+}
+
+/* ================= PRINT STYLES ================= */
+@media print {
+  .navbar,
+  .action-buttons-container,
+  button {
+    display: none !important;
+  }
+}
+

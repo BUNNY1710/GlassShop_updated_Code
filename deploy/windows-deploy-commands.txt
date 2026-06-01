@@ -1,0 +1,77 @@
+==========================================
+WINDOWS TO EC2 DEPLOYMENT - COPY & PASTE
+==========================================
+
+STEP 1: Open Git Bash (comes with Git for Windows)
+---------------------------------------------------
+If you don't have Git: https://git-scm.com/download/win
+
+
+STEP 2: Connect to EC2 (Copy & Paste in Git Bash)
+---------------------------------------------------
+cd ~/Downloads
+chmod 400 your-key.pem
+ssh -i your-key.pem ubuntu@YOUR-EC2-IP
+
+# Replace:
+# - your-key.pem with your actual key file name
+# - YOUR-EC2-IP with your EC2 public IP (from AWS Console)
+
+
+STEP 3: Deploy Application (After SSH connection)
+---------------------------------------------------
+cd /tmp
+git clone https://github.com/YOUR-USERNAME/GlassShopApplication.git temp-repo
+cd temp-repo/deploy
+chmod +x deploy-from-github.sh
+sudo ./deploy-from-github.sh
+
+# When prompted:
+# - Enter your GitHub repository URL
+# - Enter branch (default: master)
+
+
+STEP 4: Access Application
+---------------------------------------------------
+Open browser: http://YOUR-EC2-IP
+
+
+==========================================
+TROUBLESHOOTING
+==========================================
+
+Can't connect? Try full path:
+ssh -i "C:/Users/YourUsername/Downloads/your-key.pem" ubuntu@YOUR-EC2-IP
+
+Permission denied? Make sure:
+- Using 'ubuntu' (not 'ec2-user') for Ubuntu instances
+- Security Group allows port 22 from your IP
+- Key file permissions: chmod 400 your-key.pem
+
+Still issues? Use AWS Systems Manager (no key needed):
+1. AWS Console → Systems Manager → Session Manager
+2. Click "Start session"
+3. Select your EC2 instance
+4. Browser terminal opens!
+
+
+==========================================
+QUICK REFERENCE
+==========================================
+
+Get EC2 IP: AWS Console → EC2 → Instances → Your Instance → Public IPv4 address
+
+Check Security Group: EC2 → Security Groups → Your Group → Inbound Rules → Port 22
+
+Test Connection: ssh -i your-key.pem ubuntu@YOUR-EC2-IP
+
+View Logs (after deployment):
+sudo journalctl -u glassshop-backend -f    # Backend
+pm2 logs glassshop-frontend                 # Frontend
+
+Restart Services:
+sudo systemctl restart glassshop-backend   # Backend
+pm2 restart glassshop-frontend             # Frontend
+
+==========================================
+

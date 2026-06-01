@@ -1,0 +1,97 @@
+==========================================
+🚀 START HERE - WINDOWS DEPLOYMENT
+==========================================
+
+What's Your Situation?
+----------------------
+
+A) I can connect to EC2 via SSH
+   → Go to: "STEP 7: Deploy Application" in STEP_BY_STEP_WINDOWS.md
+
+B) I CAN'T connect to EC2 (SSH issues)
+   → Use AWS Systems Manager (Method 2 in STEP_BY_STEP_WINDOWS.md)
+   → No SSH key needed!
+
+C) I don't have EC2 instance yet
+   → Create one first:
+      1. AWS Console → EC2 → Launch Instance
+      2. Choose Ubuntu 22.04
+      3. t3.medium
+      4. Configure Security Group (ports 22, 80)
+      5. Launch and download key
+
+D) My code is not on GitHub
+   → Upload first:
+      1. Install Git for Windows
+      2. Open Git Bash in your project folder
+      3. Run:
+         git init
+         git add .
+         git commit -m "Initial commit"
+         git remote add origin https://github.com/YOUR-USERNAME/REPO.git
+         git push -u origin master
+
+
+EASIEST METHOD - Use AWS Systems Manager (No SSH Key!)
+-------------------------------------------------------
+
+1. Enable Systems Manager:
+   - EC2 Console → Select instance
+   - Actions → Security → Modify IAM role
+   - Create IAM role with "AmazonSSMManagedInstanceCore" policy
+   - Attach to instance
+   - Wait 2-3 minutes
+
+2. Connect via Browser:
+   - AWS Console → Systems Manager → Session Manager
+   - Click "Start session"
+   - Select your EC2 instance
+   - Browser terminal opens!
+
+3. Deploy:
+   Copy and paste these commands in browser terminal:
+   
+   cd /tmp
+   git clone https://github.com/YOUR-USERNAME/GlassShopApplication.git temp-repo
+   cd temp-repo/deploy
+   chmod +x deploy-from-github.sh
+   sudo ./deploy-from-github.sh
+
+4. Access:
+   http://YOUR-EC2-IP
+
+
+QUICK TROUBLESHOOTING
+---------------------
+
+Can't connect via SSH?
+  → Use AWS Systems Manager (Method 2)
+
+Don't have Git?
+  → Download: https://git-scm.com/download/win
+
+Don't know your EC2 IP?
+  → AWS Console → EC2 → Instances → Public IPv4 address
+
+Security Group blocking?
+  → EC2 → Security Groups → Edit Inbound Rules
+  → Add: SSH (22), HTTP (80) from 0.0.0.0/0
+
+
+FILES TO READ
+-------------
+
+1. STEP_BY_STEP_WINDOWS.md - Complete step-by-step guide
+2. WINDOWS_QUICK_START.md - 3-step quick start
+3. WINDOWS_DEPLOYMENT_GUIDE.md - Full Windows guide
+
+
+NEXT STEP
+---------
+
+Open: STEP_BY_STEP_WINDOWS.md and follow Method 2 (AWS Systems Manager)
+→ EASIEST - No SSH key needed!
+
+
+==========================================
+

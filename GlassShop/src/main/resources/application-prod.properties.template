@@ -1,0 +1,49 @@
+# Production Configuration Template
+# Copy this to application-prod.properties and fill in your values
+
+# Database Configuration
+spring.datasource.url=jdbc:postgresql://localhost:5432/glassshop
+spring.datasource.username=glassshop_user
+spring.datasource.password=CHANGE_THIS_PASSWORD
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+# JPA Configuration
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=false
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+spring.jpa.properties.hibernate.format_sql=false
+
+# Server Configuration
+server.port=8080
+server.address=0.0.0.0
+
+# JWT Secret (IMPORTANT: Use a strong random secret, minimum 256 bits)
+# Generate with: openssl rand -base64 32
+jwt.secret=CHANGE_THIS_TO_A_STRONG_RANDOM_SECRET_MIN_256_BITS
+
+# CORS Configuration - Update with your domain/IP
+spring.web.cors.allowed-origins=http://your-domain.com,http://your-ec2-ip,http://localhost:3000
+
+# Logging
+logging.level.com.glassshop.ai=INFO
+logging.level.org.springframework.security=WARN
+logging.level.org.springframework.web=WARN
+logging.level.org.hibernate=WARN
+
+# File logging (optional)
+logging.file.name=/var/log/glassshop/application.log
+logging.file.max-size=10MB
+logging.file.max-history=30
+
+# Email Configuration (if using email alerts)
+spring.mail.host=smtp.gmail.com
+spring.mail.port=587
+spring.mail.username=your-email@gmail.com
+spring.mail.password=your-app-password
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+
+# Flyway (Database Migrations)
+spring.flyway.enabled=true
+spring.flyway.baseline-on-migrate=true
+

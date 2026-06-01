@@ -1,0 +1,24 @@
+{
+  "name": "glassshop-full-stack",
+  "version": "1.0.0",
+  "description": "GlassShop Full Stack Application - Node.js Backend + React Frontend",
+  "scripts": {
+    "install:all": "npm install && cd glassshop-backend && npm install && cd ../glass-ai-agent-frontend && npm install",
+    "start:backend": "cd glassshop-backend && npm run dev",
+    "start:frontend": "cd glass-ai-agent-frontend && npm start",
+    "build:frontend": "cd glass-ai-agent-frontend && npm run build",
+    "test:backend": "cd glassshop-backend && npm test",
+    "test:frontend": "cd glass-ai-agent-frontend && npm test"
+  },
+  "keywords": [
+    "glassshop",
+    "fullstack",
+    "nodejs",
+    "react"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

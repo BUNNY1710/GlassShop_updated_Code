@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Glass Shop</title>
+    <script>
+      // S3 static hosting error page handler
+      // Redirects all routes to index.html for React Router
+      var path = window.location.pathname;
+      var query = window.location.search;
+      var hash = window.location.hash;
+      window.location.replace('/index.html' + query + hash);
+    </script>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <p>Redirecting...</p>
+  </body>
+</html>
+

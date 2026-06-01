@@ -1,0 +1,92 @@
+# Dependencies
+node_modules/
+**/node_modules/
+package-lock.json
+**/package-lock.json
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+**/.env
+**/.env.local
+**/.env.*.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.iml
+
+# Build outputs
+dist/
+build/
+target/
+**/target/
+**/dist/
+**/build/
+*.class
+*.jar
+*.war
+*.ear
+
+# Coverage
+coverage/
+.nyc_output/
+*.lcov
+
+# Testing
+.jest/
+.cypress/
+cypress/videos/
+cypress/screenshots/
+
+# Maven
+GlassShop/.mvn/
+GlassShop/target/
+GlassShop/.settings/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+*.cache
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# PM2
+.pm2/
+ecosystem.config.js.bak
+
+# Misc
+.metadata
+*.pid
+*.seed
+*.pid.lock
