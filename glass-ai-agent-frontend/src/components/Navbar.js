@@ -281,17 +281,22 @@ function SidebarBody({ role, username, onNavClick }) {
       {/* Navigation */}
       <nav style={{ flex: 1, overflowY: "auto", padding: "6px 8px 12px" }}>
         <Section label="Overview" />
-        <Item to="/dashboard"      icon={ICONS.dashboard}    label="Dashboard"      onClick={onNavClick} />
+        <Item to="/dashboard" icon={ICONS.dashboard} label="Dashboard" onClick={onNavClick} />
 
         <Section label="Inventory" />
-        <Item to="/view-stock"     icon={ICONS.stock_view}   label="View Stock"     onClick={onNavClick} />
-        <Item to="/manage-stock"   icon={ICONS.stock_manage} label="Manage Stock"   onClick={onNavClick} />
-        <Item to="/stock-transfer" icon={ICONS.transfer}     label="Transfer Stock" onClick={onNavClick} />
+        <Item to="/view-stock" icon={ICONS.stock_view} label="View Stock" onClick={onNavClick} />
+
+        {role === "ROLE_ADMIN" && (
+          <>
+            <Item to="/manage-stock"   icon={ICONS.stock_manage} label="Manage Stock"   onClick={onNavClick} />
+            <Item to="/stock-transfer" icon={ICONS.transfer}     label="Transfer Stock" onClick={onNavClick} />
+          </>
+        )}
 
         {role === "ROLE_STAFF" && (
           <>
-            <Section label="Billing" />
-            <Item to="/staff-quotations" icon={ICONS.quotation_s} label="Quotations" onClick={onNavClick} />
+            <Section label="Tools" />
+            <Item to="/optimization" icon={ICONS.optimization} label="Optimization" onClick={onNavClick} />
           </>
         )}
 
@@ -305,10 +310,10 @@ function SidebarBody({ role, username, onNavClick }) {
             <Item to="/optimization" icon={ICONS.optimization} label="Optimization" onClick={onNavClick} />
 
             <Section label="Administration" />
-            <Item to="/staff-management"   icon={ICONS.staff}        label="Staff"          onClick={onNavClick} />
-            <Item to="/glass-price-master" icon={ICONS.price_master} label="Price Master"   onClick={onNavClick} />
-            <Item to="/ai"                 icon={ICONS.ai}           label="AI Assistant"   onClick={onNavClick} />
-            <Item to="/audit"              icon={ICONS.audit}        label="Audit Log"      onClick={onNavClick} />
+            <Item to="/staff-management"   icon={ICONS.staff}        label="Staff"        onClick={onNavClick} />
+            <Item to="/glass-price-master" icon={ICONS.price_master} label="Price Master" onClick={onNavClick} />
+            <Item to="/ai"                 icon={ICONS.ai}           label="AI Assistant" onClick={onNavClick} />
+            <Item to="/audit"              icon={ICONS.audit}        label="Audit Log"    onClick={onNavClick} />
           </>
         )}
       </nav>

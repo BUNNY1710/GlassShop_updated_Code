@@ -35,14 +35,13 @@ function IconBtn({ title, onClick, icon, hoverBg = "#f1f5f9", hoverColor = "#374
       title={title}
       onClick={onClick}
       style={{
-        width: 32, height: 32, borderRadius: 7,
-        border: "1px solid #e2e8f0",
-        background: hov ? hoverBg : "#fff",
-        color: hov ? hoverColor : "#64748b",
-        cursor: "pointer", fontSize: 15, padding: 0,
+        width: 30, height: 30, borderRadius: 6,
+        border: "1px solid #e5e7eb",
+        background: hov ? hoverBg : "transparent",
+        color: hov ? hoverColor : "#6b7280",
+        cursor: "pointer", fontSize: 14, padding: 0,
         display: "inline-flex", alignItems: "center", justifyContent: "center",
-        transition: "all 140ms ease", flexShrink: 0,
-        transform: hov ? "scale(1.07)" : "scale(1)",
+        transition: "all 120ms ease", flexShrink: 0,
       }}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}

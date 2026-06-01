@@ -23,10 +23,10 @@ import "../styles/design-system.css";
 
 /* ─── Compact icon-action button for table rows ─────────────────────────────── */
 const ICON_BTN_VARIANTS = {
-  view:    { idle: { bg: "transparent", color: "#64748b", border: "1px solid transparent" }, hover: { bg: "#f0f9ff", color: "#0284c7", border: "1px solid #bae6fd" } },
-  confirm: { idle: { bg: "transparent", color: "#64748b", border: "1px solid transparent" }, hover: { bg: "#f0fdf4", color: "#16a34a", border: "1px solid #bbf7d0" } },
-  reject:  { idle: { bg: "transparent", color: "#64748b", border: "1px solid transparent" }, hover: { bg: "#fff7ed", color: "#ea580c", border: "1px solid #fed7aa" } },
-  delete:  { idle: { bg: "transparent", color: "#64748b", border: "1px solid transparent" }, hover: { bg: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca" } },
+  view:    { idle: { bg: "transparent", color: "#6b7280", border: "1px solid #e5e7eb" }, hover: { bg: "#f9fafb", color: "#111827", border: "1px solid #d1d5db" } },
+  confirm: { idle: { bg: "transparent", color: "#6b7280", border: "1px solid #e5e7eb" }, hover: { bg: "#f0fdf4", color: "#16a34a", border: "1px solid #bbf7d0" } },
+  reject:  { idle: { bg: "transparent", color: "#6b7280", border: "1px solid #e5e7eb" }, hover: { bg: "#fff7ed", color: "#ea580c", border: "1px solid #fed7aa" } },
+  delete:  { idle: { bg: "transparent", color: "#6b7280", border: "1px solid #e5e7eb" }, hover: { bg: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca" } },
 };
 
 function QuotaActBtn({ variant = "view", title, onClick, children }) {
@@ -206,6 +206,7 @@ function QuotationManagement() {
   const [architects,      setArchitects]      = useState([]);
   const [archSearch,      setArchSearch]      = useState("");
   const [archDropOpen,    setArchDropOpen]    = useState(false);
+  const [showCharges,     setShowCharges]     = useState(false); // collapsible Additional Charges
   const [selectedArch,    setSelectedArch]    = useState(null);
 
   const getDefaultValidUntil = (quotationDate) => {
@@ -2177,214 +2178,6 @@ function QuotationManagement() {
                 </div>
               )}
 
-              {/* Additional Charges */}
-              <div style={{ marginBottom: "18px" }}>
-                <h3 style={{ color: "#374151", fontSize: "13px", fontWeight: "700", marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                  💰 Additional Charges
-                </h3>
-                <div style={{ marginBottom: "12px", padding: "10px 14px", backgroundColor: "#f0f9ff", borderRadius: "8px", border: "1px solid #bae6fd" }}>
-                  <label style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
-                    <input
-                      type="checkbox"
-                      checked={formData.transportationRequired}
-                      onChange={(e) => setFormData({ ...formData, transportationRequired: e.target.checked })}
-                      style={{ width: "18px", height: "18px", cursor: "pointer" }}
-                    />
-                    <span>🚚 Customer Requires Transportation</span>
-                  </label>
-                </div>
-                <div style={{
-                  display: "grid",
-                  gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr",
-                  gap: isMobile ? "12px" : "14px",
-                  width: "100%",
-                }}>
-                  <div>
-                    <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
-                      Installation Charge (₹)
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={formData.installationCharge === 0 ? "" : formData.installationCharge}
-                      onChange={(e) => setFormData({ ...formData, installationCharge: parseFloat(e.target.value) || 0 })}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = "#6366f1";
-                        if (e.target.value === "0" || e.target.value === "") {
-                          e.target.value = "";
-                        }
-                      }}
-                      onBlur={(e) => {
-                        e.target.style.borderColor = "#d1d5db";
-                        if (e.target.value === "" || e.target.value === "0") {
-                          setFormData({ ...formData, installationCharge: 0 });
-                        }
-                      }}
-                      placeholder="0.00"
-                      style={{
-                        width: "100%",
-                        padding: isMobile ? "14px 12px" : "12px",
-                        borderRadius: "8px",
-                        border: "1px solid #d1d5db",
-                        fontSize: "16px", // Prevent iOS zoom
-                        transition: "all 0.2s",
-                        boxSizing: "border-box",
-                        minHeight: "44px", // Touch target
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
-                      Transport Charge (₹)
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={formData.transportCharge === 0 ? "" : formData.transportCharge}
-                      onChange={(e) => setFormData({ ...formData, transportCharge: parseFloat(e.target.value) || 0 })}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = "#6366f1";
-                        if (e.target.value === "0" || e.target.value === "") {
-                          e.target.value = "";
-                        }
-                      }}
-                      onBlur={(e) => {
-                        e.target.style.borderColor = "#d1d5db";
-                        if (e.target.value === "" || e.target.value === "0") {
-                          setFormData({ ...formData, transportCharge: 0 });
-                        }
-                      }}
-                      placeholder="0.00"
-                      style={{
-                        width: "100%",
-                        padding: "12px",
-                        borderRadius: "8px",
-                        border: "1px solid #d1d5db",
-                        fontSize: "14px",
-                        transition: "all 0.2s",
-                        boxSizing: "border-box",
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
-                      Discount
-                    </label>
-                    <div style={{ 
-                      display: "flex", 
-                      gap: isMobile ? "8px" : "10px", 
-                      marginBottom: "8px",
-                      flexDirection: isMobile ? "column" : "row",
-                    }}>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFormData({ ...formData, discountType: "AMOUNT", discountValue: 0, discount: 0 });
-                        }}
-                        style={{
-                          flex: 1,
-                          padding: isMobile ? "12px 16px" : "10px",
-                          backgroundColor: formData.discountType === "AMOUNT" ? "#6366f1" : "#e5e7eb",
-                          color: formData.discountType === "AMOUNT" ? "white" : "#374151",
-                          border: "none",
-                          borderRadius: "8px",
-                          cursor: "pointer",
-                          fontSize: isMobile ? "14px" : "13px",
-                          fontWeight: "500",
-                          transition: "all 0.2s",
-                          minHeight: "44px", // Touch target
-                          width: isMobile ? "100%" : "auto",
-                        }}
-                        onMouseOver={(e) => {
-                          if (formData.discountType !== "AMOUNT") {
-                            e.target.style.backgroundColor = "#d1d5db";
-                          }
-                        }}
-                        onMouseOut={(e) => {
-                          if (formData.discountType !== "AMOUNT") {
-                            e.target.style.backgroundColor = "#e5e7eb";
-                          }
-                        }}
-                      >
-                        Amount (₹)
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFormData({ ...formData, discountType: "PERCENTAGE", discountValue: 0, discount: 0 });
-                        }}
-                        style={{
-                          flex: 1,
-                          padding: isMobile ? "12px 16px" : "10px",
-                          backgroundColor: formData.discountType === "PERCENTAGE" ? "#6366f1" : "#e5e7eb",
-                          color: formData.discountType === "PERCENTAGE" ? "white" : "#374151",
-                          border: "none",
-                          borderRadius: "8px",
-                          cursor: "pointer",
-                          fontSize: isMobile ? "14px" : "13px",
-                          fontWeight: "500",
-                          transition: "all 0.2s",
-                          minHeight: "44px", // Touch target
-                          width: isMobile ? "100%" : "auto",
-                        }}
-                        onMouseOver={(e) => {
-                          if (formData.discountType !== "PERCENTAGE") {
-                            e.target.style.backgroundColor = "#d1d5db";
-                          }
-                        }}
-                        onMouseOut={(e) => {
-                          if (formData.discountType !== "PERCENTAGE") {
-                            e.target.style.backgroundColor = "#e5e7eb";
-                          }
-                        }}
-                      >
-                        Percentage (%)
-                      </button>
-                    </div>
-                    <input
-                      type="number"
-                      min="0"
-                      step={formData.discountType === "PERCENTAGE" ? "0.01" : "0.01"}
-                      max={formData.discountType === "PERCENTAGE" ? "100" : undefined}
-                      value={formData.discountValue === 0 ? "" : formData.discountValue}
-                      onChange={(e) => {
-                        const value = parseFloat(e.target.value) || 0;
-                        setFormData({ ...formData, discountValue: value });
-                      }}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = "#6366f1";
-                        if (e.target.value === "0" || e.target.value === "") {
-                          e.target.value = "";
-                        }
-                      }}
-                      onBlur={(e) => {
-                        e.target.style.borderColor = "#d1d5db";
-                        if (e.target.value === "" || e.target.value === "0") {
-                          setFormData({ ...formData, discountValue: 0, discount: 0 });
-                        }
-                      }}
-                      placeholder={formData.discountType === "PERCENTAGE" ? "0.00" : "0.00"}
-                      style={{
-                        width: "100%",
-                        padding: isMobile ? "14px 12px" : "12px",
-                        borderRadius: "8px",
-                        border: "1px solid #d1d5db",
-                        fontSize: "16px", // Prevent iOS zoom
-                        transition: "all 0.2s",
-                        boxSizing: "border-box",
-                        minHeight: "44px", // Touch target
-                      }}
-                    />
-                    <p style={{ marginTop: "5px", color: "#6b7280", fontSize: "12px" }}>
-                      🎁 {formData.discountType === "PERCENTAGE" 
-                        ? "Discount percentage (0-100%)" 
-                        : "Discount amount in ₹"}
-                    </p>
-                  </div>
-                </div>
-              </div>
 
               {/* Shipping Address Section */}
               <div style={{ marginBottom: "30px" }}>
@@ -3799,6 +3592,115 @@ function QuotationManagement() {
                     ➕ Add Item
                   </button>
                 </div>
+              </div>
+
+              {/* ── Additional Charges (collapsible) — after all items ── */}
+              <div style={{ marginBottom: "16px", border: "1.5px solid #e5e7eb", borderRadius: 10, overflow: "hidden" }}>
+                {/* Toggle header */}
+                <button
+                  type="button"
+                  onClick={() => setShowCharges(v => !v)}
+                  style={{
+                    width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
+                    padding: "11px 14px", background: showCharges ? "#f8fafc" : "#fff",
+                    border: "none", cursor: "pointer", borderBottom: showCharges ? "1.5px solid #e5e7eb" : "none",
+                    fontFamily: "inherit", transition: "background 140ms ease",
+                  }}
+                >
+                  <span style={{ fontSize: 13, fontWeight: 700, color: "#374151", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    💰 Additional Charges
+                    {(parseFloat(formData.installationCharge) > 0 || parseFloat(formData.transportCharge) > 0 || parseFloat(formData.discountValue) > 0 || formData.transportationRequired) && (
+                      <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 600, color: "#6366f1", textTransform: "none", letterSpacing: 0 }}>
+                        (applied)
+                      </span>
+                    )}
+                  </span>
+                  <span style={{ fontSize: 11, color: "#94a3b8", fontWeight: 500 }}>
+                    {showCharges ? "▲ Collapse" : "▼ Expand"}
+                  </span>
+                </button>
+
+                {showCharges && (
+                  <div style={{ padding: "14px" }}>
+                    {/* Transportation checkbox */}
+                    <div style={{ marginBottom: "12px", padding: "10px 14px", backgroundColor: "#f0f9ff", borderRadius: "8px", border: "1px solid #bae6fd" }}>
+                      <label style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                        <input
+                          type="checkbox"
+                          checked={formData.transportationRequired}
+                          onChange={(e) => setFormData({ ...formData, transportationRequired: e.target.checked })}
+                          style={{ width: "18px", height: "18px", cursor: "pointer" }}
+                        />
+                        <span>🚚 Customer Requires Transportation</span>
+                      </label>
+                    </div>
+
+                    {/* Charges grid */}
+                    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: isMobile ? "12px" : "14px", width: "100%" }}>
+                      {/* Installation */}
+                      <div>
+                        <label style={{ display: "block", marginBottom: "5px", color: "#374151", fontWeight: "600", fontSize: "12.5px" }}>
+                          Installation Charge (₹)
+                        </label>
+                        <input
+                          type="number" min="0" step="0.01"
+                          value={formData.installationCharge === 0 ? "" : formData.installationCharge}
+                          onChange={(e) => setFormData({ ...formData, installationCharge: parseFloat(e.target.value) || 0 })}
+                          onFocus={(e) => { e.target.style.borderColor = "#6366f1"; if (e.target.value === "0" || e.target.value === "") e.target.value = ""; }}
+                          onBlur={(e) => { e.target.style.borderColor = "#d1d5db"; if (e.target.value === "" || e.target.value === "0") setFormData({ ...formData, installationCharge: 0 }); }}
+                          placeholder="0.00"
+                          style={{ width: "100%", padding: isMobile ? "14px 12px" : "9px 12px", borderRadius: "8px", border: "1px solid #d1d5db", fontSize: "16px", transition: "all 0.2s", boxSizing: "border-box", minHeight: isMobile ? "44px" : "auto" }}
+                        />
+                      </div>
+
+                      {/* Transport */}
+                      <div>
+                        <label style={{ display: "block", marginBottom: "5px", color: "#374151", fontWeight: "600", fontSize: "12.5px" }}>
+                          Transport Charge (₹)
+                        </label>
+                        <input
+                          type="number" min="0" step="0.01"
+                          value={formData.transportCharge === 0 ? "" : formData.transportCharge}
+                          onChange={(e) => setFormData({ ...formData, transportCharge: parseFloat(e.target.value) || 0 })}
+                          onFocus={(e) => { e.target.style.borderColor = "#6366f1"; if (e.target.value === "0" || e.target.value === "") e.target.value = ""; }}
+                          onBlur={(e) => { e.target.style.borderColor = "#d1d5db"; if (e.target.value === "" || e.target.value === "0") setFormData({ ...formData, transportCharge: 0 }); }}
+                          placeholder="0.00"
+                          style={{ width: "100%", padding: isMobile ? "14px 12px" : "9px 12px", borderRadius: "8px", border: "1px solid #d1d5db", fontSize: "16px", transition: "all 0.2s", boxSizing: "border-box", minHeight: isMobile ? "44px" : "auto" }}
+                        />
+                      </div>
+
+                      {/* Discount */}
+                      <div>
+                        <label style={{ display: "block", marginBottom: "5px", color: "#374151", fontWeight: "600", fontSize: "12.5px" }}>
+                          Discount
+                        </label>
+                        <div style={{ display: "flex", gap: "6px", marginBottom: "8px" }}>
+                          <button type="button"
+                            onClick={() => setFormData({ ...formData, discountType: "AMOUNT", discountValue: 0, discount: 0 })}
+                            style={{ flex: 1, padding: "7px 10px", backgroundColor: formData.discountType === "AMOUNT" ? "#6366f1" : "#e5e7eb", color: formData.discountType === "AMOUNT" ? "white" : "#374151", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontWeight: "500", transition: "all 0.2s" }}
+                          >Amount (₹)</button>
+                          <button type="button"
+                            onClick={() => setFormData({ ...formData, discountType: "PERCENTAGE", discountValue: 0, discount: 0 })}
+                            style={{ flex: 1, padding: "7px 10px", backgroundColor: formData.discountType === "PERCENTAGE" ? "#6366f1" : "#e5e7eb", color: formData.discountType === "PERCENTAGE" ? "white" : "#374151", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontWeight: "500", transition: "all 0.2s" }}
+                          >Percentage (%)</button>
+                        </div>
+                        <input
+                          type="number" min="0" step="0.01"
+                          max={formData.discountType === "PERCENTAGE" ? "100" : undefined}
+                          value={formData.discountValue === 0 ? "" : formData.discountValue}
+                          onChange={(e) => setFormData({ ...formData, discountValue: parseFloat(e.target.value) || 0 })}
+                          onFocus={(e) => { e.target.style.borderColor = "#6366f1"; if (e.target.value === "0" || e.target.value === "") e.target.value = ""; }}
+                          onBlur={(e) => { e.target.style.borderColor = "#d1d5db"; if (e.target.value === "" || e.target.value === "0") setFormData({ ...formData, discountValue: 0, discount: 0 }); }}
+                          placeholder="0.00"
+                          style={{ width: "100%", padding: isMobile ? "14px 12px" : "9px 12px", borderRadius: "8px", border: "1px solid #d1d5db", fontSize: "16px", transition: "all 0.2s", boxSizing: "border-box", minHeight: isMobile ? "44px" : "auto" }}
+                        />
+                        <p style={{ marginTop: "5px", color: "#6b7280", fontSize: "12px" }}>
+                          🎁 {formData.discountType === "PERCENTAGE" ? "Discount percentage (0-100%)" : "Discount amount in ₹"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Action Buttons */}

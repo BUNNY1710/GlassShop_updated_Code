@@ -141,6 +141,7 @@ function Dashboard() {
   const [stats, setStats]          = useState({
     totalStock: 0, totalTransfers: 0, totalStaff: 0,
     totalLogs: 0,  lowStock: 0,      totalQuantity: 0,
+    pendingCutting: 0, confirmedOrders: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -151,7 +152,7 @@ function Dashboard() {
         if (!token) { setLoading(false); return; }
         setLoading(true);
 
-        const [stockRes, staffRes, auditRes, transferRes] = await Promise.all([
+        const [stockRes, staffRes, auditRes, transferRes, quotationsRes] = await Promise.all([
           api.get("/api/stock/all").then(r => r.data).catch(() => []),
           role === "ROLE_ADMIN" ? api.get("/api/auth/staff").then(r => r.data).catch(() => []) : [],
           role === "ROLE_ADMIN" ? api.get("/api/audit/recent").then(r => r.data).catch(() => []) : [],
@@ -159,6 +160,7 @@ function Dashboard() {
             const d = r.data;
             return typeof d === "object" && "count" in d ? +d.count : +d || 0;
           }).catch(() => 0),
+          api.get("/api/quotations").then(r => r.data).catch(() => []),
         ]);
 
         if (role === "ROLE_ADMIN") setAuditLogs((auditRes || []).slice(0, 5));
@@ -167,14 +169,20 @@ function Dashboard() {
         const lowItems = active.filter(i => i.quantity < (i.minQuantity || 10));
         const totalQty = active.reduce((s, i) => s + (parseInt(i.quantity) || 0), 0);
 
+        const allQuotations = Array.isArray(quotationsRes) ? quotationsRes : [];
+        const pendingCutting  = allQuotations.filter(q => q.status === "CONFIRMED").length;
+        const confirmedOrders = allQuotations.filter(q => q.status === "CONFIRMED" || q.status === "DRAFT").length;
+
         setStockData(active);
         setStats({
-          totalStock:     active.length,
-          totalTransfers: +transferRes || (Array.isArray(auditRes) ? auditRes.filter(l => l.action === "TRANSFER").length : 0),
-          totalStaff:     role === "ROLE_ADMIN" && Array.isArray(staffRes) ? staffRes.length : 0,
-          totalLogs:      Array.isArray(auditRes) ? auditRes.length : 0,
-          lowStock:       lowItems.length,
-          totalQuantity:  totalQty,
+          totalStock:      active.length,
+          totalTransfers:  +transferRes || (Array.isArray(auditRes) ? auditRes.filter(l => l.action === "TRANSFER").length : 0),
+          totalStaff:      role === "ROLE_ADMIN" && Array.isArray(staffRes) ? staffRes.length : 0,
+          totalLogs:       Array.isArray(auditRes) ? auditRes.length : 0,
+          lowStock:        lowItems.length,
+          totalQuantity:   totalQty,
+          pendingCutting,
+          confirmedOrders,
         });
       } catch (err) {
         console.error("Dashboard load error", err);
@@ -206,7 +214,7 @@ function Dashboard() {
   // ── Column layout helpers ──
   const colsStats = {
     display: "grid",
-    gridTemplateColumns: isMobile ? "1fr 1fr" : role === "ROLE_ADMIN" ? "repeat(6,1fr)" : "repeat(3,1fr)",
+    gridTemplateColumns: isMobile ? "1fr 1fr" : role === "ROLE_ADMIN" ? "repeat(6,1fr)" : "repeat(4,1fr)",
     gap: 12, marginBottom: 20,
   };
 
@@ -233,7 +241,7 @@ function Dashboard() {
       {/* ── KPI cards ─────────────────────────────────────────────────────── */}
       <div style={colsStats}>
         {loading ? (
-          Array.from({ length: role === "ROLE_ADMIN" ? 6 : 3 }).map((_, i) => (
+          Array.from({ length: role === "ROLE_ADMIN" ? 6 : 4 }).map((_, i) => (
             <div key={i} style={{ borderRadius: 12, overflow: "hidden" }}>
               <Skeleton h={96} r={12} />
             </div>
@@ -249,9 +257,10 @@ function Dashboard() {
           </>
         ) : (
           <>
-            <StatCard icon="📦" label="Stock Items"  value={stats.totalStock}    color="#4f46e5" />
-            <StatCard icon="🔢" label="Total Qty"    value={stats.totalQuantity} color="#3b82f6" />
-            <StatCard icon="⚠️" label="Low Stock"    value={stats.lowStock}      color={stats.lowStock > 0 ? "#ef4444" : "#22c55e"} />
+            <StatCard icon="📦" label="Stock Items"       value={stats.totalStock}      color="#4f46e5" />
+            <StatCard icon="🔢" label="Total Qty"         value={stats.totalQuantity}   color="#3b82f6" />
+            <StatCard icon="✂️" label="Pending Cutting"   value={stats.pendingCutting}  color={stats.pendingCutting > 0 ? "#f59e0b" : "#22c55e"} />
+            <StatCard icon="⚠️" label="Low Stock"         value={stats.lowStock}        color={stats.lowStock > 0 ? "#ef4444" : "#22c55e"} />
           </>
         )}
       </div>
@@ -447,18 +456,18 @@ function Dashboard() {
               Quick Actions
             </h3>
             <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
-              <QuickCard icon="📦" label="View Stock"     to="/view-stock"   color="#4f46e5" />
-              <QuickCard icon="✏️" label="Manage Stock"   to="/manage-stock"  color="#3b82f6" />
-              <QuickCard icon="🔁" label="Transfer Stock" to="/stock-transfer" color="#8b5cf6" />
+              <QuickCard icon="📦" label="View Stock" to="/view-stock" color="#4f46e5" />
               {role === "ROLE_ADMIN" && (
                 <>
-                  <QuickCard icon="👥" label="Customers"    to="/customers"  color="#22c55e" />
-                  <QuickCard icon="📄" label="Quotations"   to="/quotations" color="#f59e0b" />
-                  <QuickCard icon="🧾" label="Invoices"     to="/invoices"   color="#ef4444" />
+                  <QuickCard icon="✏️" label="Manage Stock"   to="/manage-stock"   color="#3b82f6" />
+                  <QuickCard icon="🔁" label="Transfer Stock" to="/stock-transfer" color="#8b5cf6" />
+                  <QuickCard icon="👥" label="Customers"      to="/customers"      color="#22c55e" />
+                  <QuickCard icon="📄" label="Quotations"     to="/quotations"     color="#f59e0b" />
+                  <QuickCard icon="🧾" label="Invoices"       to="/invoices"       color="#ef4444" />
                 </>
               )}
               {role === "ROLE_STAFF" && (
-                <QuickCard icon="📄" label="Quotations" to="/staff-quotations" color="#f59e0b" />
+                <QuickCard icon="⊞" label="Optimization" to="/optimization" color="#6366f1" />
               )}
             </div>
           </Card>
@@ -479,9 +488,12 @@ function Dashboard() {
                   { label:"Total Qty",     value: stats.totalQuantity,  color:"#3b82f6" },
                   { label:"Low Stock",     value: stats.lowStock,       color: stats.lowStock>0?"#ef4444":"#22c55e" },
                   ...(role==="ROLE_ADMIN" ? [
-                    { label:"Transfers",   value: stats.totalTransfers, color:"#8b5cf6" },
-                    { label:"Staff",       value: stats.totalStaff,     color:"#22c55e" },
-                  ] : []),
+                    { label:"Transfers",         value: stats.totalTransfers, color:"#8b5cf6" },
+                    { label:"Staff",             value: stats.totalStaff,     color:"#22c55e" },
+                  ] : [
+                    { label:"Pending Cutting",   value: stats.pendingCutting,  color: stats.pendingCutting>0?"#f59e0b":"#22c55e" },
+                    { label:"Total Orders",      value: stats.confirmedOrders, color:"#6366f1" },
+                  ]),
                 ].map((row) => (
                   <div key={row.label} style={{
                     display:"flex", alignItems:"center", justifyContent:"space-between",

@@ -12,12 +12,12 @@ import StaffManagement from "./pages/StaffManagement";
 import Profile from "./pages/Profile";
 import CustomerManagement from "./pages/CustomerManagement";
 import QuotationManagement from "./pages/QuotationManagement";
-import StaffQuotationManagement from "./pages/StaffQuotationManagement";
 import InvoiceManagement from "./pages/InvoiceManagement";
 import StockTransfer from "./pages/StockTransfer";
 import GlassPriceMaster from "./pages/GlassPriceMaster";
 import OptimizationPage from "./pages/OptimizationPage";
 import ArchitectManagement from "./pages/ArchitectManagement";
+import AccessDenied from "./pages/AccessDenied";
 import Login from "./auth/Login";
 import Register from "./auth/Register";
 import Layout from "./layout/Layout";
@@ -26,7 +26,7 @@ const RequireAdmin = ({ children }) => {
   const role = sessionStorage.getItem("role");
   return role === "ROLE_ADMIN"
     ? children
-    : <Navigate to="/dashboard" />;
+    : <Navigate to="/access-denied" />;
 };
 
 
@@ -99,15 +99,6 @@ function App() {
         />
 
         <Route
-          path="/staff-quotations"
-          element={
-            <ProtectedRoute allowedRoles={["ROLE_STAFF"]}>
-              <StaffQuotationManagement />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
           path="/invoices"
           element={
             <ProtectedRoute allowedRoles={["ROLE_ADMIN"]}>
@@ -126,9 +117,10 @@ function App() {
           element={<RequireAdmin><GlassPriceMaster /></RequireAdmin>}
         />
 
+        {/* Optimization — accessible to both ROLE_ADMIN and ROLE_STAFF */}
         <Route
           path="/optimization"
-          element={<RequireAdmin><OptimizationPage /></RequireAdmin>}
+          element={<ProtectedRoute><OptimizationPage /></ProtectedRoute>}
         />
 
         <Route
@@ -146,6 +138,12 @@ function App() {
         <Route
           path="/profile"
           element={<ProtectedRoute><Profile /></ProtectedRoute>}
+        />
+
+        {/* 403 page — shown when a logged-in user lacks role permission */}
+        <Route
+          path="/access-denied"
+          element={<ProtectedRoute><AccessDenied /></ProtectedRoute>}
         />
       </Route>
 

@@ -7,8 +7,8 @@ const pdfService = require('../services/pdfService');
 // Note: Most routes are accessible to both admin and staff
 // Only confirm/reject route requires admin access
 
-// Create quotation
-router.post('/', async (req, res) => {
+// Create quotation (admin only)
+router.post('/', requireAdmin, async (req, res) => {
   try {
     const user = await User.findOne({
       where: { userName: req.user.username },
@@ -323,8 +323,8 @@ router.put('/:id/confirm', requireAdmin, async (req, res) => {
   }
 });
 
-// Delete quotation
-router.delete('/:id', async (req, res) => {
+// Delete quotation (admin only)
+router.delete('/:id', requireAdmin, async (req, res) => {
   try {
     const user = await User.findOne({
       where: { userName: req.user.username },

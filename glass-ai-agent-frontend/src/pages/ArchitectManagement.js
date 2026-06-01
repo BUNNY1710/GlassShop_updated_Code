@@ -455,6 +455,25 @@ function Empty({ icon, msg }) {
   </div>;
 }
 
+/* ─── Ghost icon-button helpers (shared across desktop table rows) ─────────── */
+const ghostBtn = () => ({
+  width: 30, height: 30, borderRadius: 6, padding: 0, flexShrink: 0,
+  display: "inline-flex", alignItems: "center", justifyContent: "center",
+  border: "1px solid #e5e7eb", background: "transparent",
+  color: "#6b7280", cursor: "pointer", fontSize: 14,
+  transition: "all 120ms ease",
+});
+const applyGhostHover = (e, danger = false) => {
+  e.currentTarget.style.background    = danger ? "#fef2f2" : "#f9fafb";
+  e.currentTarget.style.borderColor   = danger ? "#fecaca" : "#d1d5db";
+  e.currentTarget.style.color         = danger ? "#ef4444" : "#111827";
+};
+const resetGhostHover = (e) => {
+  e.currentTarget.style.background  = "transparent";
+  e.currentTarget.style.borderColor = "#e5e7eb";
+  e.currentTarget.style.color       = "#6b7280";
+};
+
 /* ─── Main page ─────────────────────────────────────────────────────────────── */
 const EMPTY_FORM = { name: "", mobile: "", email: "", dob: "", address: "", city: "", state: "", pincode: "", notes: "" };
 
@@ -703,7 +722,7 @@ export default function ArchitectManagement() {
                   <thead>
                     <tr style={{ backgroundColor: "#f3f4f6" }}>
                       {["#", "Name", "Mobile", "Email", "City", "Actions"].map(h => (
-                        <th key={h} style={{ padding: "14px 16px", textAlign: "left", color: "#374151", fontWeight: 600, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.5px" }}>{h}</th>
+                        <th key={h} style={{ padding: "10px 12px", textAlign: h === "Actions" ? "center" : "left", color: "#374151", fontWeight: 600, fontSize: 12, textTransform: "uppercase", letterSpacing: "0.5px" }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -712,16 +731,25 @@ export default function ArchitectManagement() {
                       <tr key={a.id} style={{ borderTop: "1px solid #e5e7eb", backgroundColor: idx % 2 === 0 ? "#ffffff" : "#f9fafb" }}
                         onMouseEnter={e => e.currentTarget.style.backgroundColor = "#f3f4f6"}
                         onMouseLeave={e => e.currentTarget.style.backgroundColor = idx % 2 === 0 ? "#ffffff" : "#f9fafb"}>
-                        <td style={{ padding: "14px 16px", color: "#94a3b8", fontSize: 13 }}>{String(a.id).padStart(3, "0")}</td>
-                        <td style={{ padding: "14px 16px", fontWeight: 600, color: "#0f172a" }}>🏛️ {a.name}</td>
-                        <td style={{ padding: "14px 16px", color: "#4b5563" }}>{a.mobile || "—"}</td>
-                        <td style={{ padding: "14px 16px", color: "#4b5563" }}>{a.email || "—"}</td>
-                        <td style={{ padding: "14px 16px", color: "#4b5563" }}>{a.city || "—"}</td>
-                        <td style={{ padding: "10px 14px" }}>
-                          <div className="action-row">
-                            <Button variant="outline"  size="sm" icon="👁️" onClick={() => setViewId(a.id)}>View</Button>
-                            <Button variant="warning"  size="sm" icon="✏️" onClick={() => openEdit(a)}>Edit</Button>
-                            <Button variant="danger"   size="sm" icon="🗑️" onClick={() => setConfirmDel({ id: a.id, name: a.name })}>Delete</Button>
+                        <td style={{ padding: "9px 12px", color: "#94a3b8", fontSize: 13 }}>{String(a.id).padStart(3, "0")}</td>
+                        <td style={{ padding: "9px 12px", fontWeight: 600, color: "#0f172a" }}>🏛️ {a.name}</td>
+                        <td style={{ padding: "9px 12px", color: "#4b5563" }}>{a.mobile || "—"}</td>
+                        <td style={{ padding: "9px 12px", color: "#4b5563" }}>{a.email || "—"}</td>
+                        <td style={{ padding: "9px 12px", color: "#4b5563" }}>{a.city || "—"}</td>
+                        <td style={{ padding: "7px 12px" }}>
+                          <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                            <button title="View"   onClick={() => setViewId(a.id)}
+                              style={ghostBtn()}
+                              onMouseEnter={e => applyGhostHover(e, false)}
+                              onMouseLeave={e => resetGhostHover(e)}>👁️</button>
+                            <button title="Edit"   onClick={() => openEdit(a)}
+                              style={ghostBtn()}
+                              onMouseEnter={e => applyGhostHover(e, false)}
+                              onMouseLeave={e => resetGhostHover(e)}>✏️</button>
+                            <button title="Delete" onClick={() => setConfirmDel({ id: a.id, name: a.name })}
+                              style={ghostBtn()}
+                              onMouseEnter={e => applyGhostHover(e, true)}
+                              onMouseLeave={e => resetGhostHover(e)}>🗑️</button>
                           </div>
                         </td>
                       </tr>

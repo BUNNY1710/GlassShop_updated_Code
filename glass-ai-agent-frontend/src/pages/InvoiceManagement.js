@@ -514,16 +514,16 @@ function InvoiceManagement() {
               <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "900px" }}>
                 <thead>
                   <tr style={{ backgroundColor: "#f5f5f5" }}>
-                    <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600" }}>Invoice #</th>
-                    <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600" }}>Customer</th>
-                    <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600" }}>Type</th>
-                    <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600" }}>Billing Type</th>
-                    <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600" }}>Payment Status</th>
-                    <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600" }}>Grand Total</th>
-                    <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600" }}>Paid</th>
-                    <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600" }}>Due</th>
-                    <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600" }}>Date</th>
-                    <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600" }}>Actions</th>
+                    <th style={{ padding: "9px 10px", textAlign: "left", fontSize: "12px", fontWeight: "600" }}>Invoice #</th>
+                    <th style={{ padding: "9px 10px", textAlign: "left", fontSize: "12px", fontWeight: "600" }}>Customer</th>
+                    <th style={{ padding: "9px 10px", textAlign: "left", fontSize: "12px", fontWeight: "600" }}>Type</th>
+                    <th style={{ padding: "9px 10px", textAlign: "left", fontSize: "12px", fontWeight: "600" }}>Billing</th>
+                    <th style={{ padding: "9px 10px", textAlign: "left", fontSize: "12px", fontWeight: "600" }}>Status</th>
+                    <th style={{ padding: "9px 10px", textAlign: "left", fontSize: "12px", fontWeight: "600" }}>Total</th>
+                    <th style={{ padding: "9px 10px", textAlign: "left", fontSize: "12px", fontWeight: "600" }}>Paid</th>
+                    <th style={{ padding: "9px 10px", textAlign: "left", fontSize: "12px", fontWeight: "600" }}>Due</th>
+                    <th style={{ padding: "9px 10px", textAlign: "left", fontSize: "12px", fontWeight: "600" }}>Date</th>
+                    <th style={{ padding: "9px 10px", textAlign: "center", fontSize: "12px", fontWeight: "600" }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -538,42 +538,42 @@ function InvoiceManagement() {
                       onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f3f4f6")}
                       onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = idx % 2 === 0 ? "#ffffff" : "#f9fafb")}
                     >
-                      <td style={{ padding: "12px", fontWeight: "500" }}>{invoice.invoiceNumber}</td>
-                      <td style={{ padding: "12px" }}>{invoice.customerName}</td>
-                      <td style={{ padding: "12px" }}>{invoice.invoiceType}</td>
-                      <td style={{ padding: "12px" }}>{invoice.billingType}</td>
-                      <td style={{ padding: "12px" }}>{getPaymentStatusBadge(invoice.paymentStatus)}</td>
-                      <td style={{ padding: "12px", fontWeight: "600" }}>₹{(parseFloat(invoice.grandTotal) || 0).toFixed(2)}</td>
-                      <td style={{ padding: "12px" }}>₹{(parseFloat(invoice.paidAmount) || 0).toFixed(2)}</td>
-                      <td style={{ padding: "12px", color: invoice.dueAmount > 0 ? "#ef4444" : "#22c55e", fontWeight: "500" }}>
+                      <td style={{ padding: "8px 10px", fontWeight: "500", fontSize: 13 }}>{invoice.invoiceNumber}</td>
+                      <td style={{ padding: "8px 10px", fontSize: 13 }}>{invoice.customerName}</td>
+                      <td style={{ padding: "8px 10px", fontSize: 13 }}>{invoice.invoiceType}</td>
+                      <td style={{ padding: "8px 10px", fontSize: 13 }}>{invoice.billingType}</td>
+                      <td style={{ padding: "8px 10px" }}>{getPaymentStatusBadge(invoice.paymentStatus)}</td>
+                      <td style={{ padding: "8px 10px", fontWeight: "600", fontSize: 13 }}>₹{(parseFloat(invoice.grandTotal) || 0).toFixed(2)}</td>
+                      <td style={{ padding: "8px 10px", fontSize: 13 }}>₹{(parseFloat(invoice.paidAmount) || 0).toFixed(2)}</td>
+                      <td style={{ padding: "8px 10px", fontSize: 13, color: invoice.dueAmount > 0 ? "#ef4444" : "#22c55e", fontWeight: "500" }}>
                         ₹{(parseFloat(invoice.dueAmount) || 0).toFixed(2)}
                       </td>
-                      <td style={{ padding: "12px" }}>{invoice.invoiceDate}</td>
-                      <td style={{ padding: "12px" }}>
-                        <button
-                          onClick={() => handleViewInvoice(invoice.id)}
-                          style={{ padding: "5px 10px", backgroundColor: "#2196f3", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", marginRight: "5px" }}
-                        >
-                          View
-                        </button>
-                        {invoice.paymentStatus !== "PAID" && (
-                          <button
-                            onClick={async () => {
-                              setCurrentInvoiceId(invoice.id);
-                              setCurrentInvoiceForPayment(invoice);
-                              try {
-                                const response = await getInvoiceById(invoice.id);
-                                setCurrentInvoiceForPayment(response.data);
-                              } catch (error) {
-                                console.error("Failed to load invoice details", error);
-                              }
-                              setShowPaymentModal(true);
-                            }}
-                            style={{ padding: "5px 10px", backgroundColor: "#4caf50", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontSize: "12px" }}
-                          >
-                            💳 Add Payment
-                          </button>
-                        )}
+                      <td style={{ padding: "8px 10px", fontSize: 13 }}>{invoice.invoiceDate}</td>
+                      <td style={{ padding: "7px 12px" }}>
+                        <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                          <button title="View"
+                            onClick={() => handleViewInvoice(invoice.id)}
+                            style={{ width:30,height:30,borderRadius:6,padding:0,flexShrink:0,display:"inline-flex",alignItems:"center",justifyContent:"center",border:"1px solid #e5e7eb",background:"transparent",color:"#6b7280",cursor:"pointer",fontSize:14,transition:"all 120ms ease" }}
+                            onMouseEnter={e=>{e.currentTarget.style.background="#f9fafb";e.currentTarget.style.borderColor="#d1d5db";e.currentTarget.style.color="#111827";}}
+                            onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.borderColor="#e5e7eb";e.currentTarget.style.color="#6b7280";}}>👁</button>
+                          {invoice.paymentStatus !== "PAID" && (
+                            <button title="Add Payment"
+                              onClick={async () => {
+                                setCurrentInvoiceId(invoice.id);
+                                setCurrentInvoiceForPayment(invoice);
+                                try {
+                                  const response = await getInvoiceById(invoice.id);
+                                  setCurrentInvoiceForPayment(response.data);
+                                } catch (error) {
+                                  console.error("Failed to load invoice details", error);
+                                }
+                                setShowPaymentModal(true);
+                              }}
+                              style={{ width:30,height:30,borderRadius:6,padding:0,flexShrink:0,display:"inline-flex",alignItems:"center",justifyContent:"center",border:"1px solid #e5e7eb",background:"transparent",color:"#6b7280",cursor:"pointer",fontSize:14,transition:"all 120ms ease" }}
+                              onMouseEnter={e=>{e.currentTarget.style.background="#f0fdf4";e.currentTarget.style.borderColor="#bbf7d0";e.currentTarget.style.color="#16a34a";}}
+                              onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.borderColor="#e5e7eb";e.currentTarget.style.color="#6b7280";}}>💳</button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}

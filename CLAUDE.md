@@ -116,6 +116,8 @@ Only `POST /api/auth/register-shop` and `POST /api/auth/login` are fully public.
 
 Debug endpoints: `GET /health` and `GET /test` (both public, no auth).
 
+**CORS**: `server.js` has two layers — a custom middleware that sets headers and handles OPTIONS, followed by the `cors` npm package as a fallback. Both are intentionally present; the custom layer was added for EC2 deployment debugging. Every request is also logged to console at the CORS layer — this is intentional for production troubleshooting, not a dev-only artifact.
+
 ### Data Model Relationships
 
 ```
@@ -168,12 +170,42 @@ The frontend uses **React Router v7** (`react-router-dom ^7`). This version has 
 ### Frontend API Layer
 
 - `glass-ai-agent-frontend/src/api/api.js` — axios instance with auth interceptors
-- `glass-ai-agent-frontend/src/api/quotationApi.js` — quotation-specific API calls
+- `glass-ai-agent-frontend/src/api/quotationApi.js` — all business-domain API calls (customers, quotations, invoices, architects, and stock); named `quotationApi` for historical reasons but is the primary client-side API module
 - All page components import from these files rather than calling axios directly
+
+### Frontend Route Map
+
+All routes under `<Layout>` render with a sidebar (desktop) or top bar (mobile) from `Navbar.js`. `ProtectedRoute` redirects unauthenticated users to `/login`; `RequireAdmin` redirects non-admins to `/dashboard`.
+
+| Path | Component | Access |
+|------|-----------|--------|
+| `/dashboard` | `Dashboard` | any logged-in |
+| `/manage-stock` | `StockManager` | any logged-in |
+| `/view-stock` | `StockDashboard` | any logged-in |
+| `/stock-transfer` | `StockTransfer` | any logged-in |
+| `/profile` | `Profile` | any logged-in |
+| `/staff-quotations` | `StaffQuotationManagement` | `ROLE_STAFF` only |
+| `/staff` | `ManageStaff` | `ROLE_ADMIN` |
+| `/create-staff` | `CreateStaff` | `ROLE_ADMIN` |
+| `/staff-management` | `StaffManagement` | `ROLE_ADMIN` |
+| `/customers` | `CustomerManagement` | `ROLE_ADMIN` |
+| `/quotations` | `QuotationManagement` | `ROLE_ADMIN` |
+| `/invoices` | `InvoiceManagement` | `ROLE_ADMIN` |
+| `/audit` | `AuditLog` | `ROLE_ADMIN` |
+| `/ai` | `AiAssistant` | `ROLE_ADMIN` |
+| `/glass-price-master` | `GlassPriceMaster` | `ROLE_ADMIN` |
+| `/optimization` | `OptimizationPage` | `ROLE_ADMIN` |
+| `/architects` | `ArchitectManagement` | `ROLE_ADMIN` |
+
+**Staff pages**: `/staff` (`ManageStaff`) is the legacy list/edit/delete page; `/staff-management` (`StaffManagement`) is the newer unified view. Both are admin-only but are separate components with overlapping functionality.
 
 ### Frontend UI Components & Responsive Design
 
 Reusable UI primitives live in `glass-ai-agent-frontend/src/components/ui/` (`Button`, `Card`, `Input`, `Select`, `Badge`, `StatCard`) and are exported from `components/ui/index.js`. A global design system stylesheet is at `styles/design-system.css`.
+
+`PageWrapper` wraps every page's content area with a centered max-width-1400 container. Its `background`/`backgroundImage` props are accepted but **silently ignored** — all pages share the `#f8fafc` background set by `Layout.js`. Passing a background image prop to `PageWrapper` has no visual effect.
+
+All page components use **inline styles** rather than CSS modules or utility classes. New pages should follow the same pattern to stay consistent.
 
 For responsive layouts, import `useResponsive` from `src/hooks/useResponsive.js`. It returns `{ isMobile, isTablet, isDesktop, isSmallMobile, isLargeMobile, isMobileOrTablet, width, height }`. Breakpoints: mobile < 768px, tablet 768–1023px, desktop ≥ 1024px.
 

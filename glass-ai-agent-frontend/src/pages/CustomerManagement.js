@@ -1096,16 +1096,16 @@ function CustomerManagement() {
                             </td>
                           </>
                         )}
-                        <td style={{ padding: "10px 14px" }}>
-                          <div className="action-row">
-                            <Button
-                              variant="outline" size="sm" icon="✏️"
-                              onClick={() => handleEdit(customer)}
-                            >Edit</Button>
-                            <Button
-                              variant="danger" size="sm" icon="🗑️"
-                              onClick={() => setConfirmDelete({ id: customer.id, name: customer.name })}
-                            >Delete</Button>
+                        <td style={{ padding: "7px 12px" }}>
+                          <div style={{ display: "flex", gap: 4, alignItems: "center", justifyContent: "center" }}>
+                            <button title="Edit"   onClick={() => handleEdit(customer)}
+                              style={{ width:30,height:30,borderRadius:6,padding:0,flexShrink:0,display:"inline-flex",alignItems:"center",justifyContent:"center",border:"1px solid #e5e7eb",background:"transparent",color:"#6b7280",cursor:"pointer",fontSize:14,transition:"all 120ms ease" }}
+                              onMouseEnter={e=>{e.currentTarget.style.background="#f9fafb";e.currentTarget.style.borderColor="#d1d5db";e.currentTarget.style.color="#111827";}}
+                              onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.borderColor="#e5e7eb";e.currentTarget.style.color="#6b7280";}}>✏️</button>
+                            <button title="Delete" onClick={() => setConfirmDelete({ id: customer.id, name: customer.name })}
+                              style={{ width:30,height:30,borderRadius:6,padding:0,flexShrink:0,display:"inline-flex",alignItems:"center",justifyContent:"center",border:"1px solid #e5e7eb",background:"transparent",color:"#6b7280",cursor:"pointer",fontSize:14,transition:"all 120ms ease" }}
+                              onMouseEnter={e=>{e.currentTarget.style.background="#fef2f2";e.currentTarget.style.borderColor="#fecaca";e.currentTarget.style.color="#ef4444";}}
+                              onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.borderColor="#e5e7eb";e.currentTarget.style.color="#6b7280";}}>🗑️</button>
                           </div>
                         </td>
                       </tr>

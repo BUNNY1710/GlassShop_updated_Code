@@ -9,7 +9,7 @@ function ProtectedRoute({ children, allowedRoles }) {
   }
 
   if (allowedRoles && !allowedRoles.includes(role)) {
-    return <Navigate to="/dashboard" />;
+    return <Navigate to="/access-denied" />;
   }
 
   return children;
