@@ -7,6 +7,9 @@ import ConfirmModal from "../components/ConfirmModal";
 import { getUserRole } from "../utils/auth";
 import "../styles/design-system.css";
 
+// Short unit label: INCH→in, FEET→ft, MM→mm
+const unitAbbr = (u) => ({ INCH: "in", FEET: "ft", MM: "mm" }[(u || "MM").toUpperCase()] || (u || "mm").toLowerCase());
+
 // Removes trailing zeros: 5.00 → "5 mm", 10.50 → "10.5 mm"
 const formatThickness = (value) =>
   value != null && value !== "" ? `${Number(value)} mm` : "N/A";
@@ -632,7 +635,7 @@ function StockDashboard() {
                     `#${s.standNo}`,
                     s.glass?.thickness ? formatThicknessMM(s.glass.thickness) : null,
                     s.glass?.type || "N/A",
-                    (s.height && s.width) ? `${s.height}×${s.width} ${unit}` : null,
+                    (s.height && s.width) ? `${s.height}×${s.width} ${unitAbbr(unit)}` : null,
                     `Qty ${s.quantity}`,
                   ].filter(Boolean).join(" • ");
 
@@ -783,7 +786,7 @@ function StockDashboard() {
                     </span>
                   </div>
                   <span style={compactSummaryDetail}>
-                    {selectedStock.height}×{selectedStock.width} {selectedStock.glass?.unit || "MM"} • Qty {selectedStock.quantity}
+                    {selectedStock.height}×{selectedStock.width} {unitAbbr(selectedStock.glass?.unit)} • Qty {selectedStock.quantity}
                   </span>
                 </div>
               ) : (
@@ -800,7 +803,7 @@ function StockDashboard() {
                     </div>
                     <div style={getInfoItemStyle(isMobile)}>
                       <span style={getInfoLabelStyle(isMobile)}>Size</span>
-                      <span style={getInfoValueStyle(isMobile)}>{selectedStock.height} × {selectedStock.width} {selectedStock.glass?.unit || "MM"}</span>
+                      <span style={getInfoValueStyle(isMobile)}>{selectedStock.height} × {selectedStock.width} {unitAbbr(selectedStock.glass?.unit)}</span>
                     </div>
                     <div style={getInfoItemStyle(isMobile)}>
                       <span style={getInfoLabelStyle(isMobile)}>Stand No</span>
@@ -878,7 +881,7 @@ function StockDashboard() {
                     #{transferStock.standNo} • {formatThicknessMM(transferStock.glass?.thickness)} • {transferStock.glass?.type || "N/A"}
                   </span>
                   <span style={compactSummaryDetail}>
-                    {transferStock.height}×{transferStock.width} {transferStock.glass?.unit || "MM"} • Available {transferStock.quantity}
+                    {transferStock.height}×{transferStock.width} {unitAbbr(transferStock.glass?.unit)} • Available {transferStock.quantity}
                   </span>
                 </div>
               ) : (
@@ -895,7 +898,7 @@ function StockDashboard() {
                     </div>
                     <div style={getInfoItemStyle(isMobile)}>
                       <span style={getInfoLabelStyle(isMobile)}>Size</span>
-                      <span style={getInfoValueStyle(isMobile)}>{transferStock.height} × {transferStock.width} {transferStock.glass?.unit || "MM"}</span>
+                      <span style={getInfoValueStyle(isMobile)}>{transferStock.height} × {transferStock.width} {unitAbbr(transferStock.glass?.unit)}</span>
                     </div>
                     <div style={getInfoItemStyle(isMobile)}>
                       <span style={getInfoLabelStyle(isMobile)}>From Stand</span>
@@ -969,7 +972,7 @@ function StockDashboard() {
                     #{transferStock.standNo} → Stand #{toStand}
                   </span>
                   <span style={compactSummaryDetail}>
-                    {transferStock.glass?.type} • {formatThicknessMM(transferStock.glass?.thickness)} • {transferStock.height}×{transferStock.width} {transferStock.glass?.unit || "MM"} • Qty {transferQuantity}
+                    {transferStock.glass?.type} • {formatThicknessMM(transferStock.glass?.thickness)} • {transferStock.height}×{transferStock.width} {unitAbbr(transferStock.glass?.unit)} • Qty {transferQuantity}
                   </span>
                 </div>
               ) : (
@@ -982,7 +985,7 @@ function StockDashboard() {
                     </div>
                     <div style={getInfoItemStyle(isMobile)}>
                       <span style={getInfoLabelStyle(isMobile)}>Size</span>
-                      <span style={getInfoValueStyle(isMobile)}>{transferStock.height} × {transferStock.width} {transferStock.glass?.unit || "MM"}</span>
+                      <span style={getInfoValueStyle(isMobile)}>{transferStock.height} × {transferStock.width} {unitAbbr(transferStock.glass?.unit)}</span>
                     </div>
                     <div style={getInfoItemStyle(isMobile)}>
                       <span style={getInfoLabelStyle(isMobile)}>From Stand</span>

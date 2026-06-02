@@ -26,7 +26,7 @@ const matchColors = {
 
 const isMob = () => window.innerWidth < 768;
 const r2    = n => Math.round(n * 100) / 100;
-const fmtSize = (h, w, unit) => `${fmtNum(parseDim(h))} × ${fmtNum(parseDim(w))} ${(unit||"MM").toUpperCase()}`;
+const fmtSize = (h, w, unit) => `${fmtNum(parseDim(h))} × ${fmtNum(parseDim(w))} ${unitLabel(unit).toUpperCase()}`;
 
 const niceInterval = (range) => {
   if (!range || range <= 0) return 1;

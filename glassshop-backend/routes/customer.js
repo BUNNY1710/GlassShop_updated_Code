@@ -4,8 +4,8 @@ const { Customer, Architect, User, Shop } = require('../models');
 const { Op } = require('sequelize');
 const { requireAdmin } = require('../middleware/auth');
 
-// Note: Most routes are accessible to both admin and staff
-// Staff can create customers when creating quotations
+// All customer routes require admin access
+router.use(requireAdmin);
 
 // Validate and normalize mobile number
 const validateMobileNumber = (mobile) => {
