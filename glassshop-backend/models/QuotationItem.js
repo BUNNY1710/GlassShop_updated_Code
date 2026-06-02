@@ -76,6 +76,16 @@ module.exports = (sequelize) => {
       type: DataTypes.TEXT,
       allowNull: true
     },
+    sellingPrice: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+      field: 'selling_price'
+    },
+    purchasePrice: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+      field: 'purchase_price'
+    },
     itemOrder: {
       type: DataTypes.INTEGER,
       allowNull: false,

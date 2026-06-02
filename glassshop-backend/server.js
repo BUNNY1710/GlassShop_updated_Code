@@ -5,6 +5,8 @@ require('dotenv').config();
 
 const { sequelize } = require('./models');
 const { authMiddleware } = require('./middleware/auth');
+const { initDatabase }   = require('./utils/dbInit');
+const { runSeeder }      = require('./utils/seeder');
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -126,25 +128,21 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Something went wrong!', message: err.message });
 });
 
-// Database connection and server start
+// ── Startup ───────────────────────────────────────────────────────────────────
 const startServer = async () => {
   try {
-    await sequelize.authenticate();
-    console.log('✅ Database connection established successfully.');
+    // 1. Create DB if needed, run migrations, sync Sequelize models
+    await initDatabase(sequelize);
 
-    // Sync database (set force: false in production, use migrations instead)
-    if (process.env.NODE_ENV !== 'production') {
-      await sequelize.sync({ alter: false });
-      console.log('✅ Database models synchronized.');
-    }
+    // 2. Seed default admin user + sample data (dev only)
+    await runSeeder();
 
-    // Listen on all interfaces (0.0.0.0) so nginx can proxy to it
+    // 3. Start HTTP server
     app.listen(PORT, '0.0.0.0', () => {
-      console.log(`🚀 Server is running on http://0.0.0.0:${PORT}`);
-      console.log(`📡 Accessible at http://localhost:${PORT} and http://127.0.0.1:${PORT}`);
+      console.log(`🚀 Server ready  ->  http://localhost:${PORT}\n`);
     });
-  } catch (error) {
-    console.error('❌ Unable to connect to the database:', error);
+  } catch (err) {
+    console.error('\n❌ Startup failed:', err.message);
     process.exit(1);
   }
 };

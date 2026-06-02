@@ -61,7 +61,13 @@ NODE_ENV=development
 EC2_IP=16.16.73.29   # Only needed in production; controls CORS origin default
 ```
 
-The backend syncs Sequelize models automatically on startup when `NODE_ENV !== 'production'` (using `alter: false`). In production, run migrations manually using the SQL files in `deploy/` (e.g., `deploy/create-all-tables.sql` for initial schema, `deploy/migrations/*.sql` for incremental changes).
+On every startup the backend runs a 4-step initialization sequence (see `glassshop-backend/utils/dbInit.js`):
+1. **Create DB** — if the target database doesn't exist, it's created automatically using a raw `pg` client connected to the `postgres` maintenance DB.
+2. **Run migrations** — SQL files in `migrations/` are executed in alphabetical order. Applied migrations are tracked in `_schema_migrations` and skipped on subsequent startups.
+3. **Sequelize sync** — `sequelize.sync({ alter: true })` adds any tables or columns that the models define but that don't yet exist. Falls back to `{ force: false }` (create-only) if alter fails.
+4. **Seeder** — creates the default shop and admin user (`admin`/`admin123`) if they don't exist. In `NODE_ENV=development` also creates sample Architect, Customer, Glass, and Stock entries.
+
+In production, the sync step still runs (alter:true) but migrations should also be applied via `deploy/migrations/*.sql` for any changes requiring explicit DDL (e.g. column type changes that PostgreSQL needs a USING clause for).
 
 `glassshop-backend/migrations/` contains additional SQL migration files and `scripts/add-discount-columns.js` is a Node.js migration helper for cases where plain SQL isn't sufficient.
 

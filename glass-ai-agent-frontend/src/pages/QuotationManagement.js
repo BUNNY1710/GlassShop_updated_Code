@@ -3843,7 +3843,7 @@ function QuotationManagement() {
                 </tbody>
               </table>
             </div>
-            )}
+            
 
             {/* Empty State */}
             {quotations.length === 0 && (
