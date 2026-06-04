@@ -1,7 +1,39 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-require('dotenv').config();
+const path = require('path');
+const fs   = require('fs');
+
+// ── Auto-create .env from .env.example on first run ───────────────────────────
+const ENV_PATH     = path.resolve(__dirname, '.env');
+const EXAMPLE_PATH = path.resolve(__dirname, '.env.example');
+
+if (!fs.existsSync(ENV_PATH)) {
+  if (fs.existsSync(EXAMPLE_PATH)) {
+    fs.copyFileSync(EXAMPLE_PATH, ENV_PATH);
+    console.log('\n📝  .env file created from .env.example');
+    console.log('    Open  glassshop-backend/.env  and set:\n');
+    console.log('       DB_PASSWORD=your_postgres_password\n');
+  } else {
+    console.warn('\n⚠️   No .env or .env.example found in glassshop-backend/');
+    console.warn('    Create glassshop-backend/.env with at least DB_PASSWORD set.\n');
+  }
+}
+
+require('dotenv').config({ path: ENV_PATH });
+
+// ── Pre-flight: fail fast with a clear message if DB_PASSWORD is not set ──────
+if (!process.env.DB_PASSWORD) {
+  console.error('\n' + '═'.repeat(55));
+  console.error('  ❌  DB_PASSWORD is not set');
+  console.error('═'.repeat(55));
+  console.error('\n  PostgreSQL 14+ uses SCRAM-SHA-256 authentication');
+  console.error('  which requires a password.  To fix:\n');
+  console.error('  1.  Open   glassshop-backend/.env');
+  console.error('  2.  Set    DB_PASSWORD=your_postgres_password');
+  console.error('  3.  Run    npm run dev\n');
+  process.exit(1);
+}
 
 const { sequelize } = require('./models');
 const { authMiddleware } = require('./middleware/auth');
@@ -18,6 +50,7 @@ const auditRoutes = require('./routes/audit');
 const aiRoutes = require('./routes/ai');
 const glassPriceMasterRoutes = require('./routes/glassPriceMaster');
 const architectRoutes = require('./routes/architect');
+const settingsRoutes  = require('./routes/settings');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -96,6 +129,7 @@ app.use('/api/audit', authMiddleware, auditRoutes);
 app.use('/api/ai', authMiddleware, aiRoutes);
 app.use('/api/glass-price-master', authMiddleware, glassPriceMasterRoutes);
 app.use('/api/architects', authMiddleware, architectRoutes);
+app.use('/api/settings',  authMiddleware, settingsRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

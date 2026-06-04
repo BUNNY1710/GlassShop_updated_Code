@@ -140,10 +140,16 @@ function Dashboard() {
   const [stockData, setStockData]  = useState([]);
   const [stats, setStats]          = useState({
     totalStock: 0, totalTransfers: 0, totalStaff: 0,
-    totalLogs: 0,  lowStock: 0,      totalQuantity: 0,
+    totalLogs: 0,  totalQuantity: 0,
     pendingCutting: 0, confirmedOrders: 0,
   });
   const [loading, setLoading] = useState(true);
+
+  // ── Configurable low-stock threshold ──────────────────────────────────────
+  const [threshold,          setThreshold]          = useState(5);
+  const [showThresholdModal, setShowThresholdModal] = useState(false);
+  const [thresholdInput,     setThresholdInput]     = useState("5");
+  const [thresholdSaving,    setThresholdSaving]    = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -152,7 +158,7 @@ function Dashboard() {
         if (!token) { setLoading(false); return; }
         setLoading(true);
 
-        const [stockRes, staffRes, auditRes, transferRes, quotationsRes] = await Promise.all([
+        const [stockRes, staffRes, auditRes, transferRes, quotationsRes, settingsRes] = await Promise.all([
           api.get("/api/stock/all").then(r => r.data).catch(() => []),
           role === "ROLE_ADMIN" ? api.get("/api/auth/staff").then(r => r.data).catch(() => []) : [],
           role === "ROLE_ADMIN" ? api.get("/api/audit/recent").then(r => r.data).catch(() => []) : [],
@@ -161,12 +167,19 @@ function Dashboard() {
             return typeof d === "object" && "count" in d ? +d.count : +d || 0;
           }).catch(() => 0),
           api.get("/api/quotations").then(r => r.data).catch(() => []),
+          role === "ROLE_ADMIN"
+            ? api.get("/api/settings").then(r => r.data).catch(() => ({ lowStockThreshold: 5 }))
+            : Promise.resolve({ lowStockThreshold: 5 }),
         ]);
 
         if (role === "ROLE_ADMIN") setAuditLogs((auditRes || []).slice(0, 5));
 
+        // Load persisted threshold (admin only; default 5 for staff)
+        const savedThreshold = settingsRes?.lowStockThreshold ?? 5;
+        setThreshold(savedThreshold);
+        setThresholdInput(String(savedThreshold));
+
         const active   = (Array.isArray(stockRes) ? stockRes : []).filter(i => i.quantity > 0);
-        const lowItems = active.filter(i => i.quantity < (i.minQuantity || 10));
         const totalQty = active.reduce((s, i) => s + (parseInt(i.quantity) || 0), 0);
 
         const allQuotations = Array.isArray(quotationsRes) ? quotationsRes : [];
@@ -179,7 +192,6 @@ function Dashboard() {
           totalTransfers:  +transferRes || (Array.isArray(auditRes) ? auditRes.filter(l => l.action === "TRANSFER").length : 0),
           totalStaff:      role === "ROLE_ADMIN" && Array.isArray(staffRes) ? staffRes.length : 0,
           totalLogs:       Array.isArray(auditRes) ? auditRes.length : 0,
-          lowStock:        lowItems.length,
           totalQuantity:   totalQty,
           pendingCutting,
           confirmedOrders,
@@ -207,9 +219,29 @@ function Dashboard() {
     .slice(0, 8)
     .map(([name, d]) => ({ name, value: d.quantity, count: d.count }));
 
-  const lowStockItems = stockData
-    .filter(i => i.quantity < (i.minQuantity || 10))
-    .slice(0, 6);
+  // Low-stock derived values — reactive to both stockData and threshold
+  const lowStockItems = stockData.filter(i => i.quantity <= threshold).slice(0, 6);
+  const lowStockCount = stockData.filter(i => i.quantity <= threshold).length;
+
+  // Unit short label for display
+  const unitShort = (u) =>
+    ({ INCH: "IN", MM: "MM", FEET: "FT" }[(u || "MM").toUpperCase()] || u || "MM");
+
+  // Save threshold to backend and update local state
+  const saveThreshold = async () => {
+    const val = parseInt(thresholdInput, 10);
+    if (!val || val < 1) return;
+    setThresholdSaving(true);
+    try {
+      await api.put("/api/settings", { lowStockThreshold: val });
+      setThreshold(val);
+      setShowThresholdModal(false);
+    } catch (err) {
+      console.error("Failed to save threshold", err);
+    } finally {
+      setThresholdSaving(false);
+    }
+  };
 
   // ── Column layout helpers ──
   const colsStats = {
@@ -250,7 +282,7 @@ function Dashboard() {
           <>
             <StatCard icon="📦" label="Stock Items"    value={stats.totalStock}     color="#4f46e5" />
             <StatCard icon="🔢" label="Total Qty"      value={stats.totalQuantity}  color="#3b82f6" />
-            <StatCard icon="⚠️" label="Low Stock"      value={stats.lowStock}       color={stats.lowStock > 0 ? "#ef4444" : "#22c55e"} />
+            <StatCard icon="⚠️" label="Low Stock"      value={lowStockCount}        color={lowStockCount > 0 ? "#ef4444" : "#22c55e"} />
             <StatCard icon="🔄" label="Transfers"      value={stats.totalTransfers} color="#8b5cf6" />
             <StatCard icon="👥" label="Staff"          value={stats.totalStaff}     color="#22c55e" />
             <StatCard icon="📜" label="Activity Logs"  value={stats.totalLogs}      color="#f59e0b" />
@@ -260,7 +292,7 @@ function Dashboard() {
             <StatCard icon="📦" label="Stock Items"       value={stats.totalStock}      color="#4f46e5" />
             <StatCard icon="🔢" label="Total Qty"         value={stats.totalQuantity}   color="#3b82f6" />
             <StatCard icon="✂️" label="Pending Cutting"   value={stats.pendingCutting}  color={stats.pendingCutting > 0 ? "#f59e0b" : "#22c55e"} />
-            <StatCard icon="⚠️" label="Low Stock"         value={stats.lowStock}        color={stats.lowStock > 0 ? "#ef4444" : "#22c55e"} />
+            <StatCard icon="⚠️" label="Low Stock"         value={lowStockCount}        color={lowStockCount > 0 ? "#ef4444" : "#22c55e"} />
           </>
         )}
       </div>
@@ -328,47 +360,62 @@ function Dashboard() {
           </Card>
 
           {/* Low stock alert */}
-          {!loading && stats.lowStock > 0 && (
+          {!loading && lowStockCount > 0 && (
             <Card>
-              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
+              {/* Header */}
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
                 <div>
-                  <h3 style={{ fontSize:15, fontWeight:700, color:"#0f172a", margin:"0 0 2px", letterSpacing:"-0.02em" }}>
+                  <h3 style={{ fontSize:15, fontWeight:700, color:"#0f172a", margin:"0 0 2px", letterSpacing:"-0.02em", display:"flex", alignItems:"center", gap:6 }}>
                     Low Stock Alerts
+                    {role === "ROLE_ADMIN" && (
+                      <button
+                        title={`Threshold: ≤ ${threshold}. Click to change.`}
+                        onClick={() => { setThresholdInput(String(threshold)); setShowThresholdModal(true); }}
+                        style={{ width:22, height:22, borderRadius:5, border:"1px solid #e2e8f0", background:"#f8fafc", cursor:"pointer", fontSize:12, color:"#64748b", display:"inline-flex", alignItems:"center", justifyContent:"center", padding:0, lineHeight:1, flexShrink:0 }}
+                        onMouseEnter={e => { e.currentTarget.style.background="#f1f5f9"; e.currentTarget.style.color="#374151"; }}
+                        onMouseLeave={e => { e.currentTarget.style.background="#f8fafc"; e.currentTarget.style.color="#64748b"; }}
+                      >⚙</button>
+                    )}
                   </h3>
                   <p style={{ fontSize:12.5, color:"#64748b", margin:0 }}>
-                    {stats.lowStock} item{stats.lowStock !== 1 ? "s" : ""} below threshold
+                    {lowStockCount} item{lowStockCount !== 1 ? "s" : ""} with qty ≤ {threshold}
                   </p>
                 </div>
-                <Badge status="WARNING" dot label={`${stats.lowStock} low`} />
+                <Badge status="WARNING" dot label={`${lowStockCount} low`} />
               </div>
 
-              <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
-                {lowStockItems.map((item, i) => (
-                  <div key={i} style={{
-                    display:"flex", alignItems:"center", justifyContent:"space-between",
-                    padding:"9px 12px", borderRadius:8,
-                    background: i%2===0 ? "#fafbff" : "#fff",
-                    border:"1px solid #f1f5f9",
-                  }}>
-                    <div>
-                      <div style={{ fontSize:13, fontWeight:600, color:"#0f172a" }}>
-                        {item.glass?.type || "N/A"} · {item.glass?.thickness || ""}{item.glass?.unit || "MM"}
-                      </div>
-                      <div style={{ fontSize:11.5, color:"#94a3b8", marginTop:2 }}>
-                        Stand #{item.standNo} · {item.height}×{item.width} {item.glass?.unit || "MM"}
+              {/* Item cards */}
+              <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
+                {lowStockItems.map((item, i) => {
+                  const t    = item.glass?.thickness;
+                  const thick = t != null ? `${Number(t)}MM` : "";
+                  const type  = item.glass?.type || "N/A";
+                  const unit  = unitShort(item.glass?.unit);
+                  const desc  = [thick, type, `Stand #${item.standNo}`, (item.height && item.width) ? `${item.height}×${item.width} ${unit}` : ""].filter(Boolean).join(" ");
+                  return (
+                    <div key={i} style={{
+                      display:"flex", alignItems:"center", justifyContent:"space-between",
+                      padding:"7px 11px", borderRadius:8,
+                      background: i % 2 === 0 ? "#fafbff" : "#fff",
+                      border:"1px solid #f1f5f9",
+                    }}>
+                      <div style={{ minWidth:0, flex:1 }}>
+                        <div style={{ fontSize:13, fontWeight:600, color:"#0f172a", lineHeight:1.3, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
+                          {desc}
+                        </div>
+                        <div style={{ fontSize:11, color:"#94a3b8", marginTop:1 }}>
+                          Qty Left: <span style={{ color:"#ef4444", fontWeight:700 }}>{item.quantity}</span>
+                        </div>
                       </div>
                     </div>
-                    <div style={{ textAlign:"right" }}>
-                      <div style={{ fontSize:15, fontWeight:700, color:"#ef4444" }}>{item.quantity}</div>
-                      <div style={{ fontSize:10.5, color:"#94a3b8" }}>/ {item.minQuantity || 10}</div>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
-              {stats.lowStock > 6 && (
+
+              {lowStockCount > 6 && (
                 <div style={{ marginTop:10, textAlign:"center" }}>
                   <Button variant="ghost" size="sm" onClick={() => navigate("/view-stock")}>
-                    +{stats.lowStock - 6} more — view all →
+                    +{lowStockCount - 6} more — view all →
                   </Button>
                 </div>
               )}
@@ -486,7 +533,7 @@ function Dashboard() {
                 {[
                   { label:"Total Items",   value: stats.totalStock,     color:"#4f46e5" },
                   { label:"Total Qty",     value: stats.totalQuantity,  color:"#3b82f6" },
-                  { label:"Low Stock",     value: stats.lowStock,       color: stats.lowStock>0?"#ef4444":"#22c55e" },
+                  { label:"Low Stock",     value: lowStockCount,       color: lowStockCount>0?"#ef4444":"#22c55e" },
                   ...(role==="ROLE_ADMIN" ? [
                     { label:"Transfers",         value: stats.totalTransfers, color:"#8b5cf6" },
                     { label:"Staff",             value: stats.totalStaff,     color:"#22c55e" },
@@ -510,6 +557,67 @@ function Dashboard() {
           </Card>
         </div>
       </div>
+
+      {/* ── Low-stock threshold modal ─────────────────────────────────────── */}
+      {showThresholdModal && (
+        <div
+          style={{ position:"fixed", inset:0, background:"rgba(15,23,42,0.52)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:10000, padding:16 }}
+          onClick={() => setShowThresholdModal(false)}
+        >
+          <div
+            style={{ background:"#fff", borderRadius:14, padding:"22px 20px 18px", width:"100%", maxWidth:340, boxShadow:"0 20px 40px rgba(15,23,42,0.18)", fontFamily:"'Inter',-apple-system,sans-serif" }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ fontSize:16, fontWeight:700, color:"#0f172a", marginBottom:4 }}>Low Stock Threshold</div>
+            <p style={{ fontSize:13, color:"#64748b", margin:"0 0 14px", lineHeight:1.5 }}>
+              Show an alert when stock quantity is ≤ this value.
+            </p>
+
+            {/* Quick-select presets */}
+            <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:14 }}>
+              {[1, 2, 3, 5, 10, 15, 20].map(v => {
+                const active = thresholdInput === String(v);
+                return (
+                  <button
+                    key={v}
+                    onClick={() => setThresholdInput(String(v))}
+                    style={{
+                      padding:"5px 13px", borderRadius:6, fontSize:13, fontWeight:600, cursor:"pointer",
+                      border: `1.5px solid ${active ? "#4f46e5" : "#e2e8f0"}`,
+                      background: active ? "#eef2ff" : "#fff",
+                      color:      active ? "#4f46e5" : "#374151",
+                      transition: "all 120ms ease",
+                    }}
+                  >{v}</button>
+                );
+              })}
+            </div>
+
+            {/* Custom numeric input */}
+            <input
+              type="number" min="1" max="9999"
+              value={thresholdInput}
+              onChange={e => setThresholdInput(e.target.value)}
+              onFocus={e => { e.target.style.borderColor = "#6366f1"; }}
+              onBlur={e =>  { e.target.style.borderColor = "#e2e8f0"; }}
+              style={{ width:"100%", padding:"9px 12px", borderRadius:8, border:"1.5px solid #e2e8f0", fontSize:14, outline:"none", boxSizing:"border-box", marginBottom:16, fontFamily:"inherit", color:"#0f172a" }}
+            />
+
+            {/* Actions */}
+            <div style={{ display:"flex", gap:8 }}>
+              <button
+                onClick={() => setShowThresholdModal(false)}
+                style={{ flex:1, padding:"9px 0", borderRadius:8, border:"1.5px solid #e2e8f0", background:"#fff", color:"#374151", fontSize:13, fontWeight:500, cursor:"pointer", fontFamily:"inherit" }}
+              >Cancel</button>
+              <button
+                onClick={saveThreshold}
+                disabled={thresholdSaving}
+                style={{ flex:1, padding:"9px 0", borderRadius:8, border:"none", background: thresholdSaving ? "#a5b4fc" : "#4f46e5", color:"#fff", fontSize:13, fontWeight:600, cursor: thresholdSaving ? "not-allowed" : "pointer", fontFamily:"inherit", transition:"background 140ms ease" }}
+              >{thresholdSaving ? "Saving…" : "Save"}</button>
+            </div>
+          </div>
+        </div>
+      )}
     </PageWrapper>
   );
 }

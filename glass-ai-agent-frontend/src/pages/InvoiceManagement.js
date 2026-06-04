@@ -1488,7 +1488,7 @@ function InvoiceManagement() {
                           <td style={{ padding:'8px 12px', textAlign:'right', color:'#94a3b8', fontWeight:600, width:32 }}>{idx+1}</td>
                           <td style={{ padding:'8px 12px', fontWeight:600, color:'#0f172a' }}>{item.glassType||'N/A'}</td>
                           <td style={{ padding:'8px 12px', color:'#475569' }}>{item.thickness||'—'}</td>
-                          <td style={{ padding:'8px 12px', color:'#475569', whiteSpace:'nowrap' }}>{item.height} × {item.width} ft</td>
+                          <td style={{ padding:'8px 12px', color:'#475569', whiteSpace:'nowrap' }}>{(v=>isNaN(parseFloat(v))?v:String(parseFloat(v)))(item.height)} × {(v=>isNaN(parseFloat(v))?v:String(parseFloat(v)))(item.width)} {item.heightUnit==='MM'?'mm':item.heightUnit==='INCH'?'in':"ft"}</td>
                           <td style={{ padding:'8px 12px', color:'#374151', textAlign:'right' }}>{item.quantity}</td>
                           <td style={{ padding:'8px 12px', color:'#374151', textAlign:'right', whiteSpace:'nowrap' }}>₹{(parseFloat(item.ratePerSqft)||0).toFixed(2)}</td>
                           <td style={{ padding:'8px 12px', fontWeight:700, color:'#0f172a', textAlign:'right', whiteSpace:'nowrap' }}>₹{(parseFloat(item.subtotal)||0).toFixed(2)}</td>

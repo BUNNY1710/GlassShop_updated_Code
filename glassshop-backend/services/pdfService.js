@@ -73,12 +73,19 @@ const fmtDate = (d) => {
   return [String(x.getDate()).padStart(2, '0'), String(x.getMonth() + 1).padStart(2, '0'), x.getFullYear()].join('-');
 };
 
+/** Strip trailing decimal zeros: "1000.00" → "1000", "10.50" → "10.5", "9 1/2" → "9 1/2" */
+const fmtDim = (v) => {
+  if (v == null || v === '') return '';
+  const n = parseFloat(v);
+  return isNaN(n) ? String(v) : String(n);
+};
+
 const rupee = (n) => `Rs.${(parseFloat(n) || 0).toFixed(2)}`;
 
 // Build the item name line (bold): e.g. "12MM Plain Glass"
 const itemName = (item) => {
   const gt = (item.glassType || '').trim();
-  const tk = item.thickness ? String(item.thickness).replace(/\s*mm\s*/i, '').trim() + 'MM' : '';
+  const tk = item.thickness ? fmtDim(String(item.thickness).replace(/\s*mm\s*/i, '').trim()) + 'MM' : '';
   const parts = [tk, gt].filter(Boolean);
   if (item.design) parts.push(item.design);
   return parts.join(' ') || 'Glass Item';
@@ -91,7 +98,7 @@ const itemDesc = (item) => {
   const pd = parsePolishData(item.description);
   const parts = [];
   if (item.height && item.width) {
-    let hD = String(item.height), wD = String(item.width);
+    let hD = fmtDim(item.height), wD = fmtDim(item.width);
     if (pd && !pd.sizeInMM) {
       if (pd.heightOriginal) hD = pd.heightOriginal;
       if (pd.widthOriginal)  wD = pd.widthOriginal;
@@ -783,7 +790,7 @@ const generateCuttingPadPrintPdf = async (quotationId, userId) => {
   (q.items || []).forEach((item, idx) => {
     if (y > LPH - 90) return;
     const pd = parsePolishData(item.description);
-    let hD = String(item.height || ''), wD = String(item.width || '');
+    let hD = fmtDim(item.height), wD = fmtDim(item.width);
     if (pd && !pd.sizeInMM) { if (pd.heightOriginal) hD = pd.heightOriginal; if (pd.widthOriginal) wD = pd.widthOriginal; }
     const unit = item.heightUnit || 'FEET';
     const hU   = unit === 'INCH' ? '"' : unit === 'MM' ? 'mm' : "'";
@@ -1059,7 +1066,7 @@ const generateChallanPdf = async (invoiceId, userId) => {
   (inv.items || []).forEach((item, idx) => {
     if (y > PH - MB - 100) return;
     const pd = parsePolishData(item.description);
-    let hD = String(item.height || ''), wD = String(item.width || '');
+    let hD = fmtDim(item.height), wD = fmtDim(item.width);
     if (pd && !pd.sizeInMM) { if (pd.heightOriginal) hD = pd.heightOriginal; if (pd.widthOriginal) wD = pd.widthOriginal; }
     const unit = item.heightUnit || 'FEET';
     const hU   = unit === 'INCH' ? '"' : unit === 'MM' ? 'mm' : "'";

@@ -181,10 +181,13 @@ const page = {
   justifyContent: "center",
   alignItems: "center",
   background: "radial-gradient(circle at top, #1e293b, #020617)",
+  padding: "20px 16px",
+  boxSizing: "border-box",
 };
 
 const card = {
-  width: "380px",
+  width: "100%",
+  maxWidth: "380px",
   padding: "30px",
   borderRadius: "18px",
   background: "rgba(255,255,255,0.08)",
@@ -192,6 +195,7 @@ const card = {
   boxShadow: "0 20px 45px rgba(0,0,0,0.6)",
   textAlign: "center",
   color: "#f9fafb",
+  boxSizing: "border-box",
 };
 
 const title = {

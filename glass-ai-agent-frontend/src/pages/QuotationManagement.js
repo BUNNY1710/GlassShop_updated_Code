@@ -491,23 +491,17 @@ function QuotationManagement() {
     const newItems = [...formData.items];
     const item = newItems[index];
     
-    // Handle sizeInMM toggle - convert MM to inches in background
+    // Handle sizeInMM toggle
     if (field === "sizeInMM") {
       item.sizeInMM = value;
-      // Always use INCH for calculations, even when inputting in MM
-      item.heightUnit = "INCH";
-      item.widthUnit = "INCH";
-      
-      // If toggling off MM mode, convert existing MM values back to inches
-      if (!value && item.heightMM) {
-        const mmValue = parseFloat(item.heightMM) || 0;
-        item.height = (mmValue / 25.4).toFixed(4);
-        item.heightMM = "";
-      }
-      if (!value && item.widthMM) {
-        const mmValue = parseFloat(item.widthMM) || 0;
-        item.width = (mmValue / 25.4).toFixed(4);
-        item.widthMM = "";
+      // Store the unit that matches what the user selected
+      item.heightUnit = value ? "MM" : "INCH";
+      item.widthUnit  = value ? "MM" : "INCH";
+
+      if (!value) {
+        // Toggling OFF: if we had MM values stored, clear them so user re-enters in INCH
+        if (item.heightMM) { item.height = ""; item.heightMM = ""; item.heightOriginal = ""; }
+        if (item.widthMM)  { item.width  = ""; item.widthMM  = ""; item.widthOriginal  = ""; }
       }
     } else {
       item[field] = value;
@@ -517,28 +511,24 @@ function QuotationManagement() {
     if (field === "height" || field === "width") {
       let decimalValue;
       
-      // If sizeInMM is checked, convert MM to inches
+      // If sizeInMM is checked, store the MM value directly.
+      // Convert to INCH only for the cutting-table lookup (decimalValue), not for storage.
       if (item.sizeInMM) {
-        // Store original MM value
-        if (field === "height") {
-          item.heightMM = value;
-        } else if (field === "width") {
-          item.widthMM = value;
-        }
-        
-        // Convert MM to inches (1 inch = 25.4 mm)
         const mmValue = parseFloat(value) || 0;
-        decimalValue = mmValue / 25.4;
-        
-        // Store converted inch value (as string with precision)
-        const inchValue = decimalValue.toFixed(4);
+
+        // Store the original MM value in height/width so the API receives MM
         if (field === "height") {
-          item.height = inchValue;
-          item.heightOriginal = inchValue; // Store for display
+          item.height         = String(value);   // MM value stored as-is
+          item.heightMM       = String(value);   // kept for backward-compat display
+          item.heightOriginal = String(value);
         } else if (field === "width") {
-          item.width = inchValue;
-          item.widthOriginal = inchValue; // Store for display
+          item.width         = String(value);
+          item.widthMM       = String(value);
+          item.widthOriginal = String(value);
         }
+
+        // Convert to INCH only for table-lookup decimal calculation
+        decimalValue = mmValue / 25.4;
       } else {
         // Normal inch input mode
         if (field === "height") {
@@ -1267,8 +1257,10 @@ function QuotationManagement() {
             heightUnit: item.heightUnit || "FEET",
             widthUnit: item.widthUnit || "FEET",
             description: descriptionParts.join('\n'),
-            // Remove temporary fields before sending
+            // Remove frontend-only fields before sending to API
             sizeInMM: undefined,
+            heightMM: undefined,
+            widthMM: undefined,
             heightTableNumber: undefined,
             widthTableNumber: undefined,
             selectedHeightTableValue: undefined,
@@ -2275,12 +2267,13 @@ function QuotationManagement() {
                       )}
                     </div>
 
-                    <div style={{ 
-                      display: "grid", 
-                      gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", 
-                      gap: isMobile ? "16px" : "20px", 
+                    <div style={{
+                      display: "grid",
+                      gridTemplateColumns: isMobile ? "minmax(0,1fr)" : "minmax(0,1fr) minmax(0,1fr)",
+                      gap: isMobile ? "16px" : "20px",
                       marginBottom: isMobile ? "16px" : "20px",
                       width: "100%",
+                      minWidth: 0,
                     }}>
                       {/* Glass Type Dropdown */}
                       <div style={{ marginBottom: "16px" }}>
@@ -2494,148 +2487,85 @@ function QuotationManagement() {
                         </label>
                       </div>
                       
-                      <div style={{
-                        width: "100%",
-                        boxSizing: "border-box",
-                      }}>
-                        <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
-                          Height * <span style={{ color: "#ef4444" }}>●</span>
-                        </label>
-                        <div style={{ 
-                          display: "flex", 
-                          gap: isMobile ? "8px" : "10px",
-                          width: "100%",
-                          boxSizing: "border-box",
-                        }}>
-                          <input
-                            type="text"
-                            required
-                            value={item.sizeInMM ? (item.heightMM || "") : (item.height || "")}
-                            onChange={(e) => handleItemChange(index, "height", e.target.value)}
-                            placeholder={item.sizeInMM ? "e.g., 3000 (mm)" : "e.g., 9 or 9 1/2 (inch)"}
-                            style={{
-                              flex: "1 1 auto",
-                              padding: isMobile ? "14px 12px" : "12px",
-                              borderRadius: "8px",
-                              border: "1px solid #d1d5db",
-                              fontSize: "16px", // Prevent iOS zoom
-                              transition: "all 0.2s",
-                              boxSizing: "border-box",
-                              minHeight: "44px", // Touch target
-                              minWidth: 0, // Allow flex shrinking
-                            }}
-                            onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
-                            onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
-                          />
-                          <div style={{
-                              padding: isMobile ? "14px 8px" : "12px",
-                              borderRadius: "8px",
-                              border: "1px solid #d1d5db",
-                              fontSize: isMobile ? "13px" : "14px",
-                              backgroundColor: "#f3f4f6",
-                              color: "#6b7280",
-                              width: isMobile ? "65px" : "100px",
-                              minWidth: isMobile ? "65px" : "100px",
-                              maxWidth: isMobile ? "65px" : "100px",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              flexShrink: 0, // Prevent shrinking
-                              boxSizing: "border-box",
-                              minHeight: "44px", // Touch target
+                      {/* Height & Width — always in one row (50/50) */}
+                      <div style={{ display: "flex", gap: 8, width: "100%", boxSizing: "border-box" }}>
+                        {/* Height */}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <label style={{ display: "block", marginBottom: 5, color: "#374151", fontWeight: "500", fontSize: 13 }}>
+                            H * <span style={{ color: "#ef4444" }}>●</span>
+                          </label>
+                          <div style={{ display: "flex", gap: 4 }}>
+                            <input
+                              type="text"
+                              required
+                              value={item.sizeInMM ? (item.heightMM || "") : (item.height || "")}
+                              onChange={(e) => handleItemChange(index, "height", e.target.value)}
+                              placeholder={item.sizeInMM ? "e.g. 3000" : "e.g. 9 1/2"}
+                              style={{
+                                flex: 1, minWidth: 0,
+                                padding: "10px 8px",
+                                borderRadius: 7, border: "1px solid #d1d5db",
+                                fontSize: 16, boxSizing: "border-box", minHeight: 44,
+                              }}
+                              onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
+                              onBlur={(e)  => (e.target.style.borderColor = "#d1d5db")}
+                            />
+                            <div style={{
+                              width: 44, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
+                              borderRadius: 7, border: "1px solid #d1d5db", backgroundColor: "#f3f4f6",
+                              fontSize: 12, color: "#6b7280", minHeight: 44,
                             }}>
-                            INCH
+                              {item.sizeInMM ? "MM" : "IN"}
+                            </div>
                           </div>
                         </div>
-                        <p style={{ marginTop: "5px", color: "#6b7280", fontSize: "11px" }}>
-                          {item.sizeInMM ? "📏 Input in millimeters (converted to inches automatically)" : "📏 Height in inches (supports fractions: 9 1/2, 9-1/2)"}
-                        </p>
-                        {item.sizeInMM && item.height && (
-                          <p style={{ marginTop: "3px", color: "#6366f1", fontSize: "11px", fontWeight: "500" }}>
-                            ✓ Converted: {item.heightMM} mm = {parseFloat(item.height).toFixed(2)} inches
-                          </p>
-                        )}
-                      </div>
-                      <div style={{
-                        width: "100%",
-                        boxSizing: "border-box",
-                      }}>
-                        <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
-                          Width * <span style={{ color: "#ef4444" }}>●</span>
-                        </label>
-                        <div style={{ 
-                          display: "flex", 
-                          gap: isMobile ? "8px" : "10px",
-                          width: "100%",
-                          boxSizing: "border-box",
-                        }}>
-                          <input
-                            type="text"
-                            required
-                            value={item.sizeInMM ? (item.widthMM || "") : (item.width || "")}
-                            onChange={(e) => handleItemChange(index, "width", e.target.value)}
-                            placeholder={item.sizeInMM ? "e.g., 2000 (mm)" : "e.g., 6 or 6 1/2 (inch)"}
-                            style={{
-                              flex: "1 1 auto",
-                              padding: isMobile ? "14px 12px" : "12px",
-                              borderRadius: "8px",
-                              border: "1px solid #d1d5db",
-                              fontSize: "16px", // Prevent iOS zoom
-                              transition: "all 0.2s",
-                              boxSizing: "border-box",
-                              minHeight: "44px", // Touch target
-                              minWidth: 0, // Allow flex shrinking
-                            }}
-                            onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
-                            onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
-                          />
-                          <div style={{
-                              padding: isMobile ? "14px 8px" : "12px",
-                              borderRadius: "8px",
-                              border: "1px solid #d1d5db",
-                              fontSize: isMobile ? "13px" : "14px",
-                              backgroundColor: "#f3f4f6",
-                              color: "#6b7280",
-                              width: isMobile ? "65px" : "100px",
-                              minWidth: isMobile ? "65px" : "100px",
-                              maxWidth: isMobile ? "65px" : "100px",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              flexShrink: 0, // Prevent shrinking
-                              boxSizing: "border-box",
-                              minHeight: "44px", // Touch target
+
+                        {/* Width */}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <label style={{ display: "block", marginBottom: 5, color: "#374151", fontWeight: "500", fontSize: 13 }}>
+                            W * <span style={{ color: "#ef4444" }}>●</span>
+                          </label>
+                          <div style={{ display: "flex", gap: 4 }}>
+                            <input
+                              type="text"
+                              required
+                              value={item.sizeInMM ? (item.widthMM || "") : (item.width || "")}
+                              onChange={(e) => handleItemChange(index, "width", e.target.value)}
+                              placeholder={item.sizeInMM ? "e.g. 2000" : "e.g. 6 1/2"}
+                              style={{
+                                flex: 1, minWidth: 0,
+                                padding: "10px 8px",
+                                borderRadius: 7, border: "1px solid #d1d5db",
+                                fontSize: 16, boxSizing: "border-box", minHeight: 44,
+                              }}
+                              onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
+                              onBlur={(e)  => (e.target.style.borderColor = "#d1d5db")}
+                            />
+                            <div style={{
+                              width: 44, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
+                              borderRadius: 7, border: "1px solid #d1d5db", backgroundColor: "#f3f4f6",
+                              fontSize: 12, color: "#6b7280", minHeight: 44,
                             }}>
-                            INCH
+                              {item.sizeInMM ? "MM" : "IN"}
+                            </div>
                           </div>
                         </div>
-                        <p style={{ marginTop: "5px", color: "#6b7280", fontSize: "11px" }}>
-                          {item.sizeInMM ? "📏 Input in millimeters (converted to inches automatically)" : "📏 Width in inches (supports fractions: 6 1/2, 6-1/2)"}
-                        </p>
-                        {item.sizeInMM && item.width && (
-                          <p style={{ marginTop: "3px", color: "#6366f1", fontSize: "11px", fontWeight: "500" }}>
-                            ✓ Converted: {item.widthMM} mm = {parseFloat(item.width).toFixed(2)} inches
-                          </p>
-                        )}
                       </div>
-                      {/* Table Selection Section */}
-                      <div style={{ gridColumn: isMobile ? "1" : "1 / -1", marginTop: "20px", marginBottom: "20px" }}>
-                        <h4 style={{ color: "#374151", fontSize: "16px", fontWeight: "600", marginBottom: "15px" }}>
-                          📊 Table Selection
-                        </h4>
-                        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "20px" }}>
+                      {/* Table Selection — always 2 columns */}
+                      <div style={{ gridColumn: isMobile ? "1" : "1 / -1", marginTop: "8px", marginBottom: "6px" }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: "#6b7280", marginBottom: 6 }}>📊 Table Selection</div>
+                        <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "8px" }}>
                           {/* Height Table */}
                           <div style={{
-                            border: "2px solid #e5e7eb",
-                            borderRadius: "8px",
-                            padding: "15px",
+                            border: "1px solid #e5e7eb",
+                            borderRadius: "7px",
+                            padding: "10px",
                             backgroundColor: "#fafafa",
                           }}>
-                            <label style={{ display: "block", marginBottom: "10px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
-                              Height Table
+                            <label style={{ display: "block", marginBottom: "6px", color: "#374151", fontWeight: "500", fontSize: "12px" }}>
+                              Height Tbl
                             </label>
-                            <div style={{ display: "flex", gap: "10px", marginBottom: "15px", alignItems: "center" }}>
-                              <label style={{ fontSize: "13px", color: "#6b7280" }}>Table:</label>
+                            <div style={{ display: "flex", gap: "6px", marginBottom: "6px", alignItems: "center" }}>
                               <input
                                 type="text"
                                 value={item.heightTableNumber !== undefined && item.heightTableNumber !== null ? String(item.heightTableNumber) : "6"}
@@ -2690,9 +2620,9 @@ function QuotationManagement() {
                               />
                             </div>
                             {item.selectedHeightTableValue && (
-                              <div style={{ marginTop: "10px", padding: "10px", backgroundColor: "#eef2ff", borderRadius: "6px", border: "1px solid #6366f1" }}>
-                                <p style={{ fontSize: "14px", color: "#6366f1", fontWeight: "600", margin: 0 }}>
-                                  Selected: {item.selectedHeightTableValue}
+                              <div style={{ marginTop: "6px", padding: "5px 8px", backgroundColor: "#eef2ff", borderRadius: "5px", border: "1px solid #6366f1" }}>
+                                <p style={{ fontSize: "12px", color: "#6366f1", fontWeight: "600", margin: 0 }}>
+                                  ✓ {item.selectedHeightTableValue}
                                 </p>
                               </div>
                             )}
@@ -2700,18 +2630,16 @@ function QuotationManagement() {
 
                           {/* Width Table */}
                           <div style={{
-                            border: "2px solid #e5e7eb",
-                            borderRadius: "8px",
-                            padding: isMobile ? "12px" : "15px",
+                            border: "1px solid #e5e7eb",
+                            borderRadius: "7px",
+                            padding: "10px",
                             backgroundColor: "#fafafa",
-                            width: "100%",
                             boxSizing: "border-box",
                           }}>
-                            <label style={{ display: "block", marginBottom: "10px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
-                              Width Table
+                            <label style={{ display: "block", marginBottom: "6px", color: "#374151", fontWeight: "500", fontSize: "12px" }}>
+                              Width Tbl
                             </label>
-                            <div style={{ display: "flex", gap: "10px", marginBottom: "15px", alignItems: "center" }}>
-                              <label style={{ fontSize: "13px", color: "#6b7280" }}>Table:</label>
+                            <div style={{ display: "flex", gap: "6px", marginBottom: "6px", alignItems: "center" }}>
                               <input
                                 type="text"
                                 value={item.widthTableNumber !== undefined && item.widthTableNumber !== null ? String(item.widthTableNumber) : "6"}
@@ -2766,9 +2694,9 @@ function QuotationManagement() {
                               />
                             </div>
                             {item.selectedWidthTableValue && (
-                              <div style={{ marginTop: "10px", padding: "10px", backgroundColor: "#eef2ff", borderRadius: "6px", border: "1px solid #6366f1" }}>
-                                <p style={{ fontSize: "14px", color: "#6366f1", fontWeight: "600", margin: 0 }}>
-                                  Selected: {item.selectedWidthTableValue}
+                              <div style={{ marginTop: "6px", padding: "5px 8px", backgroundColor: "#eef2ff", borderRadius: "5px", border: "1px solid #6366f1" }}>
+                                <p style={{ fontSize: "12px", color: "#6366f1", fontWeight: "600", margin: 0 }}>
+                                  ✓ {item.selectedWidthTableValue}
                                 </p>
                               </div>
                             )}
@@ -2778,29 +2706,32 @@ function QuotationManagement() {
 
 
                       {/* Polish Type Section */}
-                      <div style={{ gridColumn: isMobile ? "1" : "1 / -1", marginTop: "20px", marginBottom: "15px" }}>
+                      <div style={{ gridColumn: isMobile ? "1" : "1 / -1", marginTop: "8px", marginBottom: "6px" }}>
                         <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
                           Polish Type (Optional)
                         </label>
                         <div style={{
                           display: "flex",
-                          gap: "20px",
-                          padding: "12px",
+                          gap: "8px",
+                          padding: "6px",
                           borderRadius: "8px",
                           border: "1px solid #d1d5db",
                           backgroundColor: "#f9fafb",
+                          flexWrap: "nowrap",
                         }}>
                           <label style={{
                             display: "flex",
                             alignItems: "center",
-                            gap: "8px",
+                            gap: "6px",
                             cursor: "pointer",
-                            padding: "8px 12px",
+                            padding: "8px 10px",
                             borderRadius: "6px",
                             backgroundColor: item.polish === "Hand-Polish" ? "#eef2ff" : "transparent",
                             border: item.polish === "Hand-Polish" ? "2px solid #6366f1" : "2px solid transparent",
                             transition: "all 0.2s",
                             flex: 1,
+                            minHeight: "40px",
+                            justifyContent: "center",
                           }}>
                             <input
                               type="radio"
@@ -2810,19 +2741,21 @@ function QuotationManagement() {
                               onChange={(e) => handleItemChange(index, "polish", e.target.value)}
                               style={{ cursor: "pointer" }}
                             />
-                            <span style={{ fontWeight: item.polish === "Hand-Polish" ? "600" : "400", color: "#374151" }}>Hand-Polish</span>
+                            <span style={{ fontWeight: item.polish === "Hand-Polish" ? "600" : "400", color: "#374151", fontSize: "13px" }}>Hand-Polish</span>
                           </label>
                           <label style={{
                             display: "flex",
                             alignItems: "center",
-                            gap: "8px",
+                            gap: "6px",
                             cursor: "pointer",
-                            padding: "8px 12px",
+                            padding: "8px 10px",
                             borderRadius: "6px",
                             backgroundColor: item.polish === "CNC Polish" ? "#eef2ff" : "transparent",
                             border: item.polish === "CNC Polish" ? "2px solid #6366f1" : "2px solid transparent",
                             transition: "all 0.2s",
                             flex: 1,
+                            minHeight: "40px",
+                            justifyContent: "center",
                           }}>
                             <input
                               type="radio"
@@ -2832,32 +2765,30 @@ function QuotationManagement() {
                               onChange={(e) => handleItemChange(index, "polish", e.target.value)}
                               style={{ cursor: "pointer" }}
                             />
-                            <span style={{ fontWeight: item.polish === "CNC Polish" ? "600" : "400", color: "#374151" }}>CNC Polish</span>
+                            <span style={{ fontWeight: item.polish === "CNC Polish" ? "600" : "400", color: "#374151", fontSize: "13px" }}>CNC Polish</span>
                           </label>
                         </div>
                         <p style={{ marginTop: "5px", color: "#6b7280", fontSize: "11px" }}>✨ Select the type of polish for this item</p>
                       </div>
 
                       {/* Polish Selection Section */}
-                      <div style={{ gridColumn: isMobile ? "1" : "1 / -1", marginTop: "20px", marginBottom: "20px" }}>
-                        <h4 style={{ color: "#374151", fontSize: "16px", fontWeight: "600", marginBottom: "15px" }}>
-                          ✨ Polish Selection
-                        </h4>
-                        
-                        {/* Rate Configuration */}
+                      <div style={{ gridColumn: isMobile ? "1" : "1 / -1", marginTop: "6px", marginBottom: "6px" }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: "#6b7280", marginBottom: 6 }}>✨ Polish Selection</div>
+
+                        {/* Rate Configuration — always 3 columns */}
                         <div style={{
-                          border: "2px solid #e5e7eb",
-                          borderRadius: "8px",
-                          padding: "15px",
-                          marginBottom: "15px",
+                          border: "1px solid #e5e7eb",
+                          borderRadius: "7px",
+                          padding: "10px",
+                          marginBottom: "8px",
                           backgroundColor: "#fafafa",
                         }}>
-                          <label style={{ display: "block", marginBottom: "10px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
-                            Rate/Rft Configuration
+                          <label style={{ display: "block", marginBottom: "6px", color: "#374151", fontWeight: "500", fontSize: "12px" }}>
+                            Rate/Rft
                           </label>
-                          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: "15px" }}>
+                          <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)", gap: "8px" }}>
                             <div>
-                              <label style={{ display: "block", marginBottom: "5px", fontSize: "13px", color: "#6b7280" }}>P (Polish)</label>
+                              <label style={{ display: "block", marginBottom: "5px", fontSize: isMobile ? "11px" : "13px", color: "#6b7280" }}>{isMobile ? "Polish" : "P (Polish)"}</label>
                               <input
                                 type="text"
                                 value={item.polishRates?.P !== undefined && item.polishRates?.P !== null ? String(item.polishRates.P) : "15"}
@@ -2906,7 +2837,7 @@ function QuotationManagement() {
                               />
                             </div>
                             <div>
-                              <label style={{ display: "block", marginBottom: "5px", fontSize: "13px", color: "#6b7280" }}>H (Half-round)</label>
+                              <label style={{ display: "block", marginBottom: "5px", fontSize: isMobile ? "11px" : "13px", color: "#6b7280" }}>{isMobile ? "Half-Rnd" : "H (Half-round)"}</label>
                               <input
                                 type="text"
                                 value={item.polishRates?.H !== undefined && item.polishRates?.H !== null ? String(item.polishRates.H) : "75"}
@@ -2955,7 +2886,7 @@ function QuotationManagement() {
                               />
                             </div>
                             <div>
-                              <label style={{ display: "block", marginBottom: "5px", fontSize: "13px", color: "#6b7280" }}>B (Beveling)</label>
+                              <label style={{ display: "block", marginBottom: "5px", fontSize: isMobile ? "11px" : "13px", color: "#6b7280" }}>{isMobile ? "Beveling" : "B (Beveling)"}</label>
                               <input
                                 type="text"
                                 value={item.polishRates?.B !== undefined && item.polishRates?.B !== null ? String(item.polishRates.B) : "75"}
@@ -3008,143 +2939,225 @@ function QuotationManagement() {
 
                         {/* Polish Selection Table */}
                         <div style={{
-                          border: "2px solid #e5e7eb",
-                          borderRadius: "8px",
-                          padding: "15px",
+                          border: "1px solid #e5e7eb",
+                          borderRadius: "7px",
+                          padding: "8px",
                           backgroundColor: "#fafafa",
                         }}>
-                          <div style={{ overflowX: "auto" }}>
-                            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                              <thead>
-                                <tr style={{ borderBottom: "2px solid #e5e7eb" }}>
-                                  <th style={{ padding: "10px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#374151" }}>
-                                    <label style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "4px", cursor: "pointer" }}>
-                                      <span>Side</span>
+                          {isMobile ? (
+                            // Mobile: flex card layout — no horizontal scroll
+                            <div>
+                              {/* Header */}
+                              <div style={{ display: "flex", alignItems: "center", padding: "6px 4px 8px", borderBottom: "2px solid #e5e7eb" }}>
+                                <div style={{ width: 28, flexShrink: 0 }}>
+                                  <input
+                                    type="checkbox"
+                                    checked={item.polishSelection?.every(row => row.checked) || false}
+                                    onChange={(e) => {
+                                      const newItems = [...formData.items];
+                                      const itm = newItems[index];
+                                      if (!itm.polishSelection) itm.polishSelection = [
+                                        { side: "Height 1", checked: false, type: null, rate: 0 },
+                                        { side: "Width 1",  checked: false, type: null, rate: 0 },
+                                        { side: "Height 2", checked: false, type: null, rate: 0 },
+                                        { side: "Width 2",  checked: false, type: null, rate: 0 },
+                                      ];
+                                      itm.polishSelection.forEach(row => {
+                                        row.checked = e.target.checked;
+                                        if (!e.target.checked) { row.type = null; row.rate = 0; }
+                                      });
+                                      setFormData({ ...formData, items: newItems });
+                                    }}
+                                    style={{ cursor: "pointer", width: 16, height: 16 }}
+                                  />
+                                </div>
+                                <div style={{ flex: 1, fontSize: 12, fontWeight: 700, color: "#374151", textTransform: "uppercase", letterSpacing: "0.05em" }}>Side</div>
+                                <div style={{ display: "flex" }}>
+                                  {["P", "H", "B"].map(type => (
+                                    <label key={type} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, minWidth: 52, cursor: "pointer" }}>
+                                      <span style={{ fontSize: 13, fontWeight: 700, color: "#374151" }}>{type}</span>
                                       <input
                                         type="checkbox"
-                                        checked={item.polishSelection?.every(row => row.checked) || false}
-                                        onChange={(e) => {
-                                          const newItems = [...formData.items];
-                                          const item = newItems[index];
-                                          if (!item.polishSelection) {
-                                            item.polishSelection = [
-                                              { side: "Height 1", checked: false, type: null, rate: 0 },
-                                              { side: "Width 1", checked: false, type: null, rate: 0 },
-                                              { side: "Height 2", checked: false, type: null, rate: 0 },
-                                              { side: "Width 2", checked: false, type: null, rate: 0 },
-                                            ];
-                                          }
-                                          item.polishSelection.forEach((row) => {
-                                            row.checked = e.target.checked;
-                                            if (!e.target.checked) {
-                                              row.type = null;
-                                              row.rate = 0;
-                                            }
-                                          });
-                                          setFormData({ ...formData, items: newItems });
-                                        }}
-                                        style={{ cursor: "pointer", width: "16px", height: "16px" }}
+                                        checked={item.polishSelection?.every(row => row.checked && row.type === type) || false}
+                                        onChange={(e) => handlePolishSelectAll(index, type, e.target.checked)}
+                                        style={{ cursor: "pointer", width: 16, height: 16 }}
                                       />
                                     </label>
-                                  </th>
-                                  <th style={{ padding: "10px", textAlign: "center", fontSize: "13px", fontWeight: "600", color: "#374151" }}>
-                                    <label style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", cursor: "pointer" }}>
-                                      <span>P</span>
-                                      <input
-                                        type="checkbox"
-                                        checked={item.polishSelection?.every(row => row.checked && row.type === "P") || false}
-                                        onChange={(e) => handlePolishSelectAll(index, "P", e.target.checked)}
-                                        style={{ cursor: "pointer", width: "16px", height: "16px" }}
-                                      />
-                                    </label>
-                                  </th>
-                                  <th style={{ padding: "10px", textAlign: "center", fontSize: "13px", fontWeight: "600", color: "#374151" }}>
-                                    <label style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", cursor: "pointer" }}>
-                                      <span>H</span>
-                                      <input
-                                        type="checkbox"
-                                        checked={item.polishSelection?.every(row => row.checked && row.type === "H") || false}
-                                        onChange={(e) => handlePolishSelectAll(index, "H", e.target.checked)}
-                                        style={{ cursor: "pointer", width: "16px", height: "16px" }}
-                                      />
-                                    </label>
-                                  </th>
-                                  <th style={{ padding: "10px", textAlign: "center", fontSize: "13px", fontWeight: "600", color: "#374151" }}>
-                                    <label style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", cursor: "pointer" }}>
-                                      <span>B</span>
-                                      <input
-                                        type="checkbox"
-                                        checked={item.polishSelection?.every(row => row.checked && row.type === "B") || false}
-                                        onChange={(e) => handlePolishSelectAll(index, "B", e.target.checked)}
-                                        style={{ cursor: "pointer", width: "16px", height: "16px" }}
-                                      />
-                                    </label>
-                                  </th>
-                                  <th style={{ padding: "10px", textAlign: "right", fontSize: "13px", fontWeight: "600", color: "#374151" }}>Rate</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {(item.polishSelection || [
-                                  { side: "Height 1", checked: false, type: null, rate: 0 },
-                                  { side: "Width 1", checked: false, type: null, rate: 0 },
-                                  { side: "Height 2", checked: false, type: null, rate: 0 },
-                                  { side: "Width 2", checked: false, type: null, rate: 0 },
-                                ]).map((row, rowIndex) => (
-                                  <tr key={rowIndex} style={{ borderBottom: "1px solid #e5e7eb" }}>
-                                    <td style={{ padding: "10px" }}>
-                                      <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                                  ))}
+                                </div>
+                              </div>
+                              {/* Rows */}
+                              {(item.polishSelection || [
+                                { side: "Height 1", checked: false, type: null, rate: 0 },
+                                { side: "Width 1",  checked: false, type: null, rate: 0 },
+                                { side: "Height 2", checked: false, type: null, rate: 0 },
+                                { side: "Width 2",  checked: false, type: null, rate: 0 },
+                              ]).map((row, rowIndex) => (
+                                <div key={rowIndex} style={{ display: "flex", alignItems: "center", padding: "10px 4px", borderBottom: "1px solid #e5e7eb" }}>
+                                  <div style={{ width: 28, flexShrink: 0 }}>
+                                    <input
+                                      type="checkbox"
+                                      checked={row.checked || false}
+                                      onChange={(e) => handlePolishCheckboxChange(index, rowIndex, e.target.checked)}
+                                      style={{ cursor: "pointer", width: 18, height: 18 }}
+                                    />
+                                  </div>
+                                  <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>{row.side}</div>
+                                    {row.checked && row.type && (
+                                      <div style={{ fontSize: 11, color: "#6366f1", fontWeight: 600, marginTop: 2 }}>₹{row.rate || 0}/ft</div>
+                                    )}
+                                  </div>
+                                  <div style={{ display: "flex" }}>
+                                    {["P", "H", "B"].map(type => (
+                                      <div key={type} style={{ width: 52, display: "flex", justifyContent: "center" }}>
+                                        <input
+                                          type="radio"
+                                          name={`polish-${index}-${rowIndex}`}
+                                          checked={row.type === type}
+                                          onChange={() => handlePolishTypeChange(index, rowIndex, type)}
+                                          disabled={!row.checked}
+                                          style={{ cursor: row.checked ? "pointer" : "not-allowed", width: 20, height: 20 }}
+                                        />
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            // Desktop: original table with scroll
+                            <div style={{ overflowX: "auto" }}>
+                              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                                <thead>
+                                  <tr style={{ borderBottom: "2px solid #e5e7eb" }}>
+                                    <th style={{ padding: "10px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#374151" }}>
+                                      <label style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "4px", cursor: "pointer" }}>
+                                        <span>Side</span>
                                         <input
                                           type="checkbox"
-                                          checked={row.checked || false}
-                                          onChange={(e) => handlePolishCheckboxChange(index, rowIndex, e.target.checked)}
-                                          style={{ cursor: "pointer", width: "18px", height: "18px" }}
+                                          checked={item.polishSelection?.every(row => row.checked) || false}
+                                          onChange={(e) => {
+                                            const newItems = [...formData.items];
+                                            const item = newItems[index];
+                                            if (!item.polishSelection) {
+                                              item.polishSelection = [
+                                                { side: "Height 1", checked: false, type: null, rate: 0 },
+                                                { side: "Width 1",  checked: false, type: null, rate: 0 },
+                                                { side: "Height 2", checked: false, type: null, rate: 0 },
+                                                { side: "Width 2",  checked: false, type: null, rate: 0 },
+                                              ];
+                                            }
+                                            item.polishSelection.forEach((row) => {
+                                              row.checked = e.target.checked;
+                                              if (!e.target.checked) { row.type = null; row.rate = 0; }
+                                            });
+                                            setFormData({ ...formData, items: newItems });
+                                          }}
+                                          style={{ cursor: "pointer", width: "16px", height: "16px" }}
                                         />
-                                        <span style={{ fontSize: "13px", color: "#374151" }}>{row.side}</span>
                                       </label>
-                                    </td>
-                                    <td style={{ padding: "10px", textAlign: "center" }}>
-                                      <input
-                                        type="radio"
-                                        name={`polish-${index}-${rowIndex}`}
-                                        checked={row.type === "P"}
-                                        onChange={() => handlePolishTypeChange(index, rowIndex, "P")}
-                                        disabled={!row.checked}
-                                        style={{ cursor: row.checked ? "pointer" : "not-allowed", width: "18px", height: "18px" }}
-                                      />
-                                    </td>
-                                    <td style={{ padding: "10px", textAlign: "center" }}>
-                                      <input
-                                        type="radio"
-                                        name={`polish-${index}-${rowIndex}`}
-                                        checked={row.type === "H"}
-                                        onChange={() => handlePolishTypeChange(index, rowIndex, "H")}
-                                        disabled={!row.checked}
-                                        style={{ cursor: row.checked ? "pointer" : "not-allowed", width: "18px", height: "18px" }}
-                                      />
-                                    </td>
-                                    <td style={{ padding: "10px", textAlign: "center" }}>
-                                      <input
-                                        type="radio"
-                                        name={`polish-${index}-${rowIndex}`}
-                                        checked={row.type === "B"}
-                                        onChange={() => handlePolishTypeChange(index, rowIndex, "B")}
-                                        disabled={!row.checked}
-                                        style={{ cursor: row.checked ? "pointer" : "not-allowed", width: "18px", height: "18px" }}
-                                      />
-                                    </td>
-                                    <td style={{ padding: "10px", textAlign: "right", fontSize: "13px", color: "#6b7280" }}>
-                                      {row.checked && row.type ? `₹${row.rate || 0}` : "-"}
-                                    </td>
+                                    </th>
+                                    <th style={{ padding: "10px", textAlign: "center", fontSize: "13px", fontWeight: "600", color: "#374151" }}>
+                                      <label style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", cursor: "pointer" }}>
+                                        <span>P</span>
+                                        <input
+                                          type="checkbox"
+                                          checked={item.polishSelection?.every(row => row.checked && row.type === "P") || false}
+                                          onChange={(e) => handlePolishSelectAll(index, "P", e.target.checked)}
+                                          style={{ cursor: "pointer", width: "16px", height: "16px" }}
+                                        />
+                                      </label>
+                                    </th>
+                                    <th style={{ padding: "10px", textAlign: "center", fontSize: "13px", fontWeight: "600", color: "#374151" }}>
+                                      <label style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", cursor: "pointer" }}>
+                                        <span>H</span>
+                                        <input
+                                          type="checkbox"
+                                          checked={item.polishSelection?.every(row => row.checked && row.type === "H") || false}
+                                          onChange={(e) => handlePolishSelectAll(index, "H", e.target.checked)}
+                                          style={{ cursor: "pointer", width: "16px", height: "16px" }}
+                                        />
+                                      </label>
+                                    </th>
+                                    <th style={{ padding: "10px", textAlign: "center", fontSize: "13px", fontWeight: "600", color: "#374151" }}>
+                                      <label style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", cursor: "pointer" }}>
+                                        <span>B</span>
+                                        <input
+                                          type="checkbox"
+                                          checked={item.polishSelection?.every(row => row.checked && row.type === "B") || false}
+                                          onChange={(e) => handlePolishSelectAll(index, "B", e.target.checked)}
+                                          style={{ cursor: "pointer", width: "16px", height: "16px" }}
+                                        />
+                                      </label>
+                                    </th>
+                                    <th style={{ padding: "10px", textAlign: "right", fontSize: "13px", fontWeight: "600", color: "#374151" }}>Rate</th>
                                   </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
+                                </thead>
+                                <tbody>
+                                  {(item.polishSelection || [
+                                    { side: "Height 1", checked: false, type: null, rate: 0 },
+                                    { side: "Width 1",  checked: false, type: null, rate: 0 },
+                                    { side: "Height 2", checked: false, type: null, rate: 0 },
+                                    { side: "Width 2",  checked: false, type: null, rate: 0 },
+                                  ]).map((row, rowIndex) => (
+                                    <tr key={rowIndex} style={{ borderBottom: "1px solid #e5e7eb" }}>
+                                      <td style={{ padding: "10px" }}>
+                                        <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                                          <input
+                                            type="checkbox"
+                                            checked={row.checked || false}
+                                            onChange={(e) => handlePolishCheckboxChange(index, rowIndex, e.target.checked)}
+                                            style={{ cursor: "pointer", width: "18px", height: "18px" }}
+                                          />
+                                          <span style={{ fontSize: "13px", color: "#374151" }}>{row.side}</span>
+                                        </label>
+                                      </td>
+                                      <td style={{ padding: "10px", textAlign: "center" }}>
+                                        <input
+                                          type="radio"
+                                          name={`polish-${index}-${rowIndex}`}
+                                          checked={row.type === "P"}
+                                          onChange={() => handlePolishTypeChange(index, rowIndex, "P")}
+                                          disabled={!row.checked}
+                                          style={{ cursor: row.checked ? "pointer" : "not-allowed", width: "18px", height: "18px" }}
+                                        />
+                                      </td>
+                                      <td style={{ padding: "10px", textAlign: "center" }}>
+                                        <input
+                                          type="radio"
+                                          name={`polish-${index}-${rowIndex}`}
+                                          checked={row.type === "H"}
+                                          onChange={() => handlePolishTypeChange(index, rowIndex, "H")}
+                                          disabled={!row.checked}
+                                          style={{ cursor: row.checked ? "pointer" : "not-allowed", width: "18px", height: "18px" }}
+                                        />
+                                      </td>
+                                      <td style={{ padding: "10px", textAlign: "center" }}>
+                                        <input
+                                          type="radio"
+                                          name={`polish-${index}-${rowIndex}`}
+                                          checked={row.type === "B"}
+                                          onChange={() => handlePolishTypeChange(index, rowIndex, "B")}
+                                          disabled={!row.checked}
+                                          style={{ cursor: row.checked ? "pointer" : "not-allowed", width: "18px", height: "18px" }}
+                                        />
+                                      </td>
+                                      <td style={{ padding: "10px", textAlign: "right", fontSize: "13px", color: "#6b7280" }}>
+                                        {row.checked && row.type ? `₹${row.rate || 0}` : "-"}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
                         </div>
                       </div>
 
-                      {/* Quantity and Rate per SqFt - Below Polish Section */}
-                      <div style={{ gridColumn: isMobile ? "1" : "1 / 2", marginTop: "20px" }}>
+                      {/* Quantity and Selling Price — always 2-per-row */}
+                      <div style={{ gridColumn: "1 / -1", display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "8px", marginTop: "8px", width: "100%", minWidth: 0 }}>
+                      <div>
                         <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
                           Quantity * <span style={{ color: "#ef4444" }}>●</span>
                         </label>
@@ -3170,7 +3183,7 @@ function QuotationManagement() {
                         />
                         <p style={{ marginTop: "5px", color: "#6b7280", fontSize: "11px" }}>🔢 Number of pieces</p>
                       </div>
-                      <div style={{ gridColumn: isMobile ? "1" : "2 / 3", marginTop: "20px" }}>
+                      <div>
                         <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
                           Selling Price (₹) * <span style={{ color: "#ef4444" }}>●</span>
                         </label>
@@ -3218,47 +3231,38 @@ function QuotationManagement() {
                           })()}
                         </p>
                       </div>
+                      </div>
 
+                      <div style={{ gridColumn: "1 / -1", display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "8px", width: "100%", minWidth: 0 }}>
                       <div style={{
                         width: "100%",
                         boxSizing: "border-box",
                       }}>
-                        <label style={{ 
-                          display: "block", 
-                          marginBottom: "8px", 
-                          color: "#374151", 
-                          fontWeight: "500", 
-                          fontSize: isMobile ? "13px" : "14px" 
-                        }}>
-                          Area ({getAreaUnitLabel(item.heightUnit, item.widthUnit)}) 🔒
+                        <label style={{ display: "block", marginBottom: "6px", color: "#374151", fontWeight: "500", fontSize: 13 }}>
+                          Area (SqFT) 🔒
                         </label>
                         <input
                           type="number"
                           readOnly
-                          value={
-                            calculateAreaInUnit(
-                              item.height || 0,
-                              item.width || 0,
-                              item.heightUnit || "FEET",
-                              item.widthUnit || "FEET"
-                            ).toFixed(2) || "0.00"
-                          }
+                          value={(
+                            convertToFeet(parseFloat(item.height) || 0, item.heightUnit || "FEET") *
+                            convertToFeet(parseFloat(item.width)  || 0, item.widthUnit  || "FEET")
+                          ).toFixed(2)}
                           style={{
                             width: "100%",
-                            maxWidth: "100%",
-                            padding: isMobile ? "14px 12px" : "12px",
-                            borderRadius: "8px",
+                            padding: "10px 12px",
+                            borderRadius: "7px",
                             border: "1px solid #d1d5db",
-                            fontSize: "16px", // Prevent iOS zoom
+                            fontSize: "16px",
                             backgroundColor: "#f3f4f6",
                             color: "#6b7280",
                             cursor: "not-allowed",
                             boxSizing: "border-box",
-                            minHeight: "44px", // Touch target
+                            minHeight: 44,
                           }}
                         />
-                        <p style={{ marginTop: "5px", color: "#6b7280", fontSize: isMobile ? "11px" : "11px" }}>
-                          ✨ Auto-calculated in {getAreaUnitLabel(item.heightUnit, item.widthUnit)} (rate calculation uses SqFt)
+                        <p style={{ marginTop: "4px", color: "#6b7280", fontSize: "11px" }}>
+                          Auto-calculated in square feet
                         </p>
                       </div>
                       <div style={{
@@ -3476,6 +3480,7 @@ function QuotationManagement() {
                           }}
                         />
                         <p style={{ marginTop: "5px", color: "#6b7280", fontSize: "11px" }}>✨ Auto-calculated: Group by polish type, sum sides, convert to ft, × polish rate, sum all, × Quantity</p>
+                      </div>
                       </div>
                     </div>
 
@@ -3995,7 +4000,7 @@ function QuotationManagement() {
                             <td style={{ padding:'8px 12px', textAlign:'right', color:'#94a3b8', fontWeight:600, width:32 }}>{idx+1}</td>
                             <td style={{ padding:'8px 12px', fontWeight:600, color:'#0f172a' }}>{item.glassType||'N/A'}</td>
                             <td style={{ padding:'8px 12px', color:'#475569' }}>{item.thickness||'—'}</td>
-                            <td style={{ padding:'8px 12px', color:'#475569', whiteSpace:'nowrap' }}>{item.height} {item.heightUnit||'FEET'} × {item.width} {item.widthUnit||'FEET'}</td>
+                            <td style={{ padding:'8px 12px', color:'#475569', whiteSpace:'nowrap' }}>{(v=>isNaN(parseFloat(v))?v:String(parseFloat(v)))(item.height)} {item.heightUnit||'FEET'} × {(v=>isNaN(parseFloat(v))?v:String(parseFloat(v)))(item.width)} {item.widthUnit||'FEET'}</td>
                             <td style={{ padding:'8px 12px', color:'#64748b' }}>{item.design ? (item.design==='POLISH'?'Polish':item.design==='BEVELING'?'Beveling':item.design==='HALF_ROUND'?'Half Round':item.design):'—'}</td>
                             <td style={{ padding:'8px 12px', color:'#374151', textAlign:'right' }}>{item.quantity}</td>
                             <td style={{ padding:'8px 12px', color:'#374151', textAlign:'right', whiteSpace:'nowrap' }}>₹{(parseFloat(item.sellingPrice||item.ratePerSqft)||0).toFixed(2)}</td>

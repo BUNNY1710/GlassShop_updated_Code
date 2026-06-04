@@ -34,7 +34,8 @@
 const { Client } = require('pg');
 const path       = require('path');
 const fs         = require('fs');
-require('dotenv').config();
+// Load .env from the backend root regardless of cwd
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -43,7 +44,11 @@ function dbConfig() {
     host:     process.env.DB_HOST     || 'localhost',
     port:     parseInt(process.env.DB_PORT, 10) || 5432,
     user:     process.env.DB_USERNAME || 'postgres',
-    password: process.env.DB_PASSWORD || '',
+    // Do NOT fall back to '' — pg converts '' to null via its own `|| null` logic,
+    // which causes SCRAM-SHA-256 to throw "client password must be a string".
+    // Passing undefined lets pg use trust-auth when no password is configured,
+    // and produces a clear server-side error when SCRAM is required.
+    password: process.env.DB_PASSWORD || undefined,
     dbName:   process.env.DB_NAME     || 'glass_shop',
   };
 }
@@ -54,26 +59,60 @@ async function createDatabaseIfNotExists() {
   const cfg = dbConfig();
   console.log(`\n🔌 Connecting to PostgreSQL at ${cfg.host}:${cfg.port} …`);
 
+  // Early warning — PostgreSQL 14+ uses SCRAM-SHA-256 which requires a
+  // non-empty password. Trust-auth setups work fine without one.
+  if (!cfg.password) {
+    console.warn('   ⚠️  DB_PASSWORD is not set in .env');
+    console.warn('      OK only if PostgreSQL is configured for trust authentication.');
+    console.warn('      If you see an auth error, set DB_PASSWORD in glassshop-backend/.env\n');
+  }
+
   const client = new Client({
-    host:                   cfg.host,
-    port:                   cfg.port,
-    user:                   cfg.user,
-    password:               cfg.password,
-    database:               'postgres',   // maintenance DB – always exists
+    host:                    cfg.host,
+    port:                    cfg.port,
+    user:                    cfg.user,
+    password:                cfg.password,
+    database:                'postgres',   // maintenance DB – always exists
     connectionTimeoutMillis: 10_000,
   });
 
   try {
     await client.connect();
   } catch (err) {
+    const msg = err.message || '';
+
+    // SASL / SCRAM error — pg received undefined/null instead of a password string.
+    // This always means DB_PASSWORD is missing or empty in .env.
+    if (msg.includes('SASL') || msg.includes('password must be a string')) {
+      console.error('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.error('  ❌  DB_PASSWORD is not set (or is empty) in .env');
+      console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.error('\n  Your PostgreSQL server uses SCRAM-SHA-256 authentication,');
+      console.error('  which requires a password.  Steps to fix:\n');
+      console.error('  1.  cd glassshop-backend');
+      console.error('  2.  cp .env.example .env');
+      console.error('  3.  Edit .env  →  set  DB_PASSWORD=your_postgres_password');
+      console.error('  4.  npm run dev\n');
+      // Throw a clean, human-readable error so "Startup failed:" line is also readable
+      throw new Error('DB_PASSWORD not set — set it in glassshop-backend/.env and restart');
+    }
+
+    // Wrong password error (SCRAM completed but password was incorrect)
+    if (msg.includes('password authentication failed')) {
+      console.error(`\n❌  Wrong password for PostgreSQL user "${cfg.user}".`);
+      console.error('    Update DB_PASSWORD in glassshop-backend/.env\n');
+      throw new Error(`Wrong PostgreSQL password for user "${cfg.user}" — update DB_PASSWORD in .env`);
+    }
+
+    // Generic connectivity error (host down, port closed, etc.)
     console.error('\n❌  Cannot connect to PostgreSQL server.');
     console.error(`    Host     : ${cfg.host}:${cfg.port}`);
     console.error(`    Username : ${cfg.user}`);
     console.error('\n    Checklist:');
-    console.error('    1. PostgreSQL service is running');
-    console.error('    2. DB_USERNAME / DB_PASSWORD in .env are correct');
+    console.error('    1. PostgreSQL service is running  (e.g.  pg_ctl status)');
+    console.error('    2. DB_HOST / DB_PORT in .env are correct');
     console.error(`    3. User "${cfg.user}" has CREATEDB privilege`);
-    console.error('\n    Original error:', err.message, '\n');
+    console.error(`\n    Error: ${msg}\n`);
     throw err;
   }
 

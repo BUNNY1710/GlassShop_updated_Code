@@ -41,6 +41,12 @@ module.exports = (sequelize) => {
     //   type: DataTypes.STRING(50),
     //   allowNull: true
     // },
+    lowStockThreshold: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 5,
+      field: 'low_stock_threshold'
+    },
     createdAt: {
       type: DataTypes.DATE,
       allowNull: false,

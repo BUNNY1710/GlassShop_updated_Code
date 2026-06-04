@@ -47,6 +47,8 @@ Convenience: `start-all.bat` (Windows) / `start-all.sh` (Linux/Mac) at the repo 
 
 ## Backend Environment
 
+On first startup, if `glassshop-backend/.env` doesn't exist, `server.js` automatically copies `.env.example` → `.env`. You still need to set `DB_PASSWORD` — the server exits immediately with a clear error message if it's missing or empty (PostgreSQL 14+ uses SCRAM-SHA-256 which requires a password).
+
 Create `glassshop-backend/.env`:
 
 ```env
@@ -56,9 +58,10 @@ DB_NAME=glass_shop
 DB_USERNAME=postgres
 DB_PASSWORD=your_password
 JWT_SECRET=your_secret_key
+JWT_EXPIRATION=24h       # Optional; defaults to 24h
 PORT=8080
 NODE_ENV=development
-EC2_IP=16.16.73.29   # Only needed in production; controls CORS origin default
+EC2_IP=16.16.73.29       # Only needed in production; controls CORS origin default
 ```
 
 On every startup the backend runs a 4-step initialization sequence (see `glassshop-backend/utils/dbInit.js`):
@@ -89,11 +92,13 @@ All business data is shop-scoped. Every User belongs to a Shop, and every query 
 
 ### Authentication Flow
 
-1. Client POSTs to `/api/auth/login` → receives a JWT (24h expiry).
+1. Client POSTs to `/api/auth/login` → receives a JWT (24h expiry, configurable via `JWT_EXPIRATION`).
 2. JWT payload: `{ sub: username, role: "ROLE_ADMIN" | "ROLE_STAFF" }`.
 3. Token is stored in `sessionStorage` (not `localStorage`).
 4. The axios instance in `glass-ai-agent-frontend/src/api/api.js` automatically attaches `Authorization: Bearer <token>` to every request and redirects to `/login` on 401.
 5. Backend `authMiddleware` validates the JWT and attaches `{ username, role }` to `req.user`.
+
+**Shop registration**: `POST /api/auth/register-shop` is public but the `Register.js` frontend component is entirely commented out — self-registration via the UI is disabled. New shops must be created by directly calling the API or via the seeder.
 
 ### Role-Based Access
 
@@ -119,10 +124,13 @@ Only `POST /api/auth/register-shop` and `POST /api/auth/login` are fully public.
 | `/api/ai` | `routes/ai.js` | `requireAdmin` (stub — not wired to an AI service) |
 | `/api/glass-price-master` | `routes/glassPriceMaster.js` | `requireAdmin` |
 | `/api/architects` | `routes/architect.js` | `requireAdmin` |
+| `/api/settings` | `routes/settings.js` | `requireAdmin` — GET returns `{ lowStockThreshold }`, PUT updates it |
 
 Debug endpoints: `GET /health` and `GET /test` (both public, no auth).
 
-**CORS**: `server.js` has two layers — a custom middleware that sets headers and handles OPTIONS, followed by the `cors` npm package as a fallback. Both are intentionally present; the custom layer was added for EC2 deployment debugging. Every request is also logged to console at the CORS layer — this is intentional for production troubleshooting, not a dev-only artifact.
+**CORS**: `server.js` has two layers — a custom middleware that sets headers and handles OPTIONS, followed by the `cors` npm package as a fallback. Both are intentionally present; the custom layer was added for EC2 deployment debugging.
+
+**Request logging**: A dedicated middleware runs *before* CORS and logs every incoming request (method, path, all headers, IP). This is intentional for production troubleshooting, not a dev-only artifact. The CORS layer adds its own origin-resolution log lines after that.
 
 ### Data Model Relationships
 

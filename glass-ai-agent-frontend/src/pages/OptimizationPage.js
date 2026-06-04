@@ -566,10 +566,22 @@ export default function OptimizationPage() {
   const toggleAll = ()  => setSel(selected.size===allItems.length?new Set():new Set(allItems.map(i=>i.key)));
 
   const runOpt = () => {
-    const chosen = allItems.filter(i=>selected.has(i.key));
+    const chosen = allItems.filter(i => selected.has(i.key));
     if (!chosen.length) return;
+
+    // Expand each order line by its quantity so the cutter receives N individual
+    // pieces instead of one piece with a quantity label.
+    // e.g. { size: 10×10, qty: 2 } → two separate 10×10 entries.
+    const expanded = [];
+    chosen.forEach(item => {
+      const qty = Math.max(1, parseInt(item.quantity) || 1);
+      for (let q = 0; q < qty; q++) {
+        expanded.push({ ...item, quantity: 1, key: `${item.key}-${q}` });
+      }
+    });
+
     setRunning(true);
-    setTimeout(() => { setResults(optimizeOrders(chosen,allStock)); setShowRes(true); setRunning(false); }, 300);
+    setTimeout(() => { setResults(optimizeOrders(expanded, allStock)); setShowRes(true); setRunning(false); }, 300);
   };
 
   const openModal = (stock, orders, best, alts) => setModal({ open:true, stock, orders, best, alternatives:alts||[], shopName, userName });

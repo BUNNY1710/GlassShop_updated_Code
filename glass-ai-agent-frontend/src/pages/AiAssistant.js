@@ -254,8 +254,8 @@ function AiAssistant() {
           ))}
         </div>
 
-        {/* Backdrop for mobile */}
-        {showHistory && (
+        {/* Backdrop — only shown on mobile so the sidebar acts like a modal */}
+        {showHistory && window.innerWidth < 768 && (
           <div
             style={backdrop}
             onClick={() => setShowHistory(false)}
@@ -264,7 +264,11 @@ function AiAssistant() {
 
         {/* Query History Sidebar */}
         {showHistory && (
-          <div style={historySidebar}>
+          <div style={{
+            ...historySidebar,
+            width:      window.innerWidth < 768 ? "100%" : "320px",
+            borderLeft: window.innerWidth < 768 ? "none"  : "1px solid rgba(226, 232, 240, 0.8)",
+          }}>
             <div style={historyHeader}>
               <h3>Query History</h3>
               <button style={closeBtn} onClick={() => setShowHistory(false)}>✕</button>
@@ -716,11 +720,11 @@ const historySidebar = {
   position: "fixed",
   right: 0,
   top: "70px",
-  width: window.innerWidth < 768 ? "100%" : "320px",
+  width: "320px",
   height: "calc(100vh - 70px)",
   background: "rgba(255, 255, 255, 0.98)",
   boxShadow: "-4px 0 6px -1px rgba(0, 0, 0, 0.1)",
-  borderLeft: window.innerWidth < 768 ? "none" : "1px solid rgba(226, 232, 240, 0.8)",
+  borderLeft: "1px solid rgba(226, 232, 240, 0.8)",
   zIndex: 1000,
   display: "flex",
   flexDirection: "column",
@@ -801,7 +805,6 @@ const backdrop = {
   bottom: 0,
   background: "rgba(0, 0, 0, 0.5)",
   zIndex: 999,
-  display: window.innerWidth < 768 ? "block" : "none",
 };
 
 const spinner = {
