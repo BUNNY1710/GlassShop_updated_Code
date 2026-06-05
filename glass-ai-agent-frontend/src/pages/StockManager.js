@@ -1,6 +1,4 @@
 import { useState, useEffect } from "react";
-import PageWrapper from "../components/PageWrapper";
-import { Card, Button, Input, Select } from "../components/ui";
 import api from "../api/api";
 import ConfirmModal from "../components/ConfirmModal";
 import "../styles/design-system.css";
@@ -112,10 +110,10 @@ function StockManager() {
       return;
     }
 
-    const thicknessValue = thicknessMode === "SELECT" 
-      ? parseFloat(thickness) 
+    const thicknessValue = thicknessMode === "SELECT"
+      ? parseFloat(thickness)
       : parseFloat(manualThickness);
-    
+
     // Add custom glass type if manual entry was used
     if (glassTypeMode === "MANUAL" && finalGlassType) {
       addCustomGlassType(finalGlassType);
@@ -156,8 +154,8 @@ function StockManager() {
       setHsnNo("");
     } catch (error) {
       const errorData = error.response?.data;
-      const errorMessage = typeof errorData === 'string' 
-        ? errorData 
+      const errorMessage = typeof errorData === 'string'
+        ? errorData
         : (errorData?.error || errorData?.message || error.message || "❌ Failed to update stock");
       setStockMessage(errorMessage);
     } finally {
@@ -169,8 +167,8 @@ function StockManager() {
   const undoLastAction = async () => {
     try {
       const res = await api.post("/api/stock/undo");
-      const responseMessage = typeof res.data === 'string' 
-        ? res.data 
+      const responseMessage = typeof res.data === 'string'
+        ? res.data
         : (res.data?.message || "✅ Stock updated successfully");
       setStockMessage(responseMessage);
       setShowUndo(false);
@@ -189,387 +187,409 @@ function StockManager() {
     }
   };
 
+  // ── Shared dark style tokens ──
+  const darkInput = {
+    width: "100%",
+    height: 44,
+    padding: "0 12px",
+    background: "rgba(255,255,255,0.06)",
+    border: "1px solid rgba(255,255,255,0.1)",
+    borderRadius: 12,
+    color: "#fff",
+    fontSize: 14,
+    outline: "none",
+    boxSizing: "border-box",
+    fontFamily: "inherit",
+  };
+
+  const darkSelect = {
+    ...darkInput,
+    cursor: "pointer",
+  };
+
+  const fieldLabel = {
+    display: "block",
+    fontSize: 11,
+    fontWeight: 700,
+    color: "#7180A6",
+    textTransform: "uppercase",
+    letterSpacing: "0.08em",
+    marginBottom: 6,
+  };
+
+  const sectionCard = {
+    background: "rgba(17,27,53,0.9)",
+    border: "1px solid rgba(255,255,255,0.08)",
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+  };
+
+  const sectionHeaderRow = {
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 16,
+  };
+
+  const formGrid2 = {
+    display: "grid",
+    gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+    gap: 14,
+  };
+
+  const formGrid4 = {
+    display: "grid",
+    gridTemplateColumns: isMobile ? "1fr" : "repeat(4, 1fr)",
+    gap: 14,
+  };
+
   return (
-    <PageWrapper>
-      <div style={getContainerStyle(isMobile)}>
-        {/* Header Section */}
-        <div style={headerSection}>
+    <div style={{ padding: "16px 16px 24px", minHeight: "100vh" }}>
+
+      {/* PAGE HEADER */}
+      <div style={{ marginBottom: 20 }}>
+        <h1 style={{ fontSize: 26, fontWeight: 800, color: "#fff", margin: "0 0 4px", letterSpacing: "-0.02em" }}>
+          Manage Stock
+        </h1>
+        <p style={{ fontSize: 13, color: "#A9B3D1", margin: 0 }}>
+          Add or remove stock from your inventory with precision.
+        </p>
+      </div>
+
+      {/* SECTION 1: Glass Type & Thickness */}
+      <div style={sectionCard}>
+        <div style={sectionHeaderRow}>
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(79,93,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4F5DFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+          </div>
           <div>
-            <h1 style={pageTitle}>Manage Stock</h1>
-            <p style={pageSubtitle}>Add or remove stock from your inventory</p>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "#fff" }}>Glass Type &amp; Thickness</div>
+            <div style={{ fontSize: 11.5, color: "#7180A6" }}>Select glass type, mode, and thickness</div>
           </div>
         </div>
 
-        {/* Main Form Card */}
-        <Card style={getFormCardStyle(isMobile)}>
-          {/* Glass Type and Thickness Section */}
-          <div style={section}>
-            <div style={sectionHeader}>
-              <div style={sectionIcon}>🔷</div>
+        <div style={formGrid4}>
+          {/* Glass Type Mode */}
+          <div>
+            <label style={fieldLabel}>Glass Type Mode</label>
+            <select
+              value={glassTypeMode}
+              onChange={e => {
+                setGlassTypeMode(e.target.value);
+                setGlassType("");
+                setManualGlassType("");
+              }}
+              style={darkSelect}
+            >
+              <option value="SELECT">Select from list</option>
+              <option value="MANUAL">Manual entry</option>
+            </select>
+          </div>
+
+          {/* Glass Type value */}
+          {glassTypeMode === "SELECT" ? (
+            <div>
+              <label style={fieldLabel}>Glass Type <span style={{ color: "#FF6B81" }}>*</span></label>
               <div>
-                <h3 style={sectionTitle}>Glass Type & Thickness</h3>
-                <p style={sectionSubtitle}>Select glass type, mode, and thickness</p>
-              </div>
-            </div>
-
-            <div style={getGlassThicknessGridStyle(isMobile)}>
-              <div style={formGroup}>
-                <Select
-                  label="Glass Type Mode"
-                  value={glassTypeMode}
-                  onChange={e => {
-                    setGlassTypeMode(e.target.value);
-                    setGlassType("");
-                    setManualGlassType("");
-                  }}
-                  icon="🔷"
+                <select
+                  value={glassType}
+                  onChange={e => setGlassType(e.target.value)}
+                  style={darkSelect}
+                  required
                 >
-                  <option value="SELECT">Select from list</option>
-                  <option value="MANUAL">Manual entry</option>
-                </Select>
-              </div>
-
-              {glassTypeMode === "SELECT" ? (
-                <div style={formGroup}>
-                  <label style={label}>
-                    Glass Type <span style={required}>*</span>
-                  </label>
-                  <div style={{ position: "relative" }}>
-                    <Select
-                      value={glassType}
-                      onChange={e => setGlassType(e.target.value)}
-                      icon="🔷"
-                      required
-                    >
-                      <option value="">Select glass type</option>
-                      {defaultGlassTypeOptions.map((type) => (
+                  <option value="">Select glass type</option>
+                  {defaultGlassTypeOptions.map((type) => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                  {customGlassTypes.length > 0 && (
+                    <>
+                      <option disabled>--- Custom Types ---</option>
+                      {customGlassTypes.map((type) => (
                         <option key={type} value={type}>{type}</option>
                       ))}
-                      {customGlassTypes.length > 0 && (
-                        <>
-                          <option disabled>--- Custom Types ---</option>
-                          {customGlassTypes.map((type) => (
-                            <option key={type} value={type}>{type}</option>
-                          ))}
-                        </>
-                      )}
-                    </Select>
-                    {customGlassTypes.length > 0 && (
-                      <div style={{
-                        marginTop: "8px",
-                        padding: "8px",
-                        backgroundColor: "#f8fafc",
-                        borderRadius: "6px",
-                        border: "1px solid #e2e8f0"
-                      }}>
-                        <div style={{ fontSize: "12px", color: "#64748b", marginBottom: "6px", fontWeight: "600" }}>
-                          Custom Glass Types:
-                        </div>
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                          {customGlassTypes.map((type) => (
-                            <span
-                              key={type}
-                              style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: "4px",
-                                padding: "4px 8px",
-                                backgroundColor: "white",
-                                border: "1px solid #d1d5db",
-                                borderRadius: "4px",
-                                fontSize: "12px",
-                                color: "#374151"
-                              }}
-                            >
-                              {type}
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  removeCustomGlassType(type);
-                                }}
-                                style={{
-                                  background: "none",
-                                  border: "none",
-                                  color: "#ef4444",
-                                  cursor: "pointer",
-                                  padding: "0",
-                                  marginLeft: "4px",
-                                  fontSize: "14px",
-                                  lineHeight: "1",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center"
-                                }}
-                                title="Remove custom glass type"
-                              >
-                                ✕
-                              </button>
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                    </>
+                  )}
+                </select>
+                {customGlassTypes.length > 0 && (
+                  <div style={{ marginTop: 8, padding: "8px 10px", background: "rgba(255,255,255,0.04)", borderRadius: 8, border: "1px solid rgba(255,255,255,0.08)" }}>
+                    <div style={{ fontSize: 11, color: "#7180A6", marginBottom: 6, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>Custom Glass Types:</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                      {customGlassTypes.map((type) => (
+                        <span
+                          key={type}
+                          style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 8px", background: "rgba(79,93,255,0.15)", border: "1px solid rgba(79,93,255,0.25)", borderRadius: 6, fontSize: 12, color: "#A9B3D1" }}
+                        >
+                          {type}
+                          <button
+                            type="button"
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeCustomGlassType(type); }}
+                            style={{ background: "none", border: "none", color: "#FF6B81", cursor: "pointer", padding: 0, marginLeft: 2, fontSize: 13, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center" }}
+                            title="Remove custom glass type"
+                          >
+                            ✕
+                          </button>
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <div style={formGroup}>
-                  <Input
-                    label="Manual Glass Type"
-                    type="text"
-                    placeholder="Enter custom glass type"
-                    value={manualGlassType}
-                    onChange={e => setManualGlassType(e.target.value)}
-                    icon="🔷"
-                    required
-                  />
-                  <p style={{ marginTop: "4px", fontSize: "12px", color: "#6b7280" }}>
-                    This will be added to the dropdown list after saving
-                  </p>
-                </div>
-              )}
-
-              <div style={formGroup}>
-                  <Select
-                    label="Selection Mode"
-                    value={thicknessMode} 
-                    onChange={e => {
-                      setThicknessMode(e.target.value);
-                      setThicknessFocused(false);
-                    }}
-                    icon="📏"
-                  >
-                  <option value="SELECT">Select from list</option>
-                  <option value="MANUAL">Manual entry</option>
-                </Select>
-              </div>
-
-              {thicknessMode === "SELECT" ? (
-                <div style={formGroup}>
-                  <Select
-                    label="Thickness"
-                    value={thickness}
-                    onChange={e => setThickness(e.target.value)}
-                    icon="📏"
-                    required
-                  >
-                    <option value="">Select thickness</option>
-                    <option value="3.5">3.5 MM</option>
-                    <option value="4">4 MM</option>
-                    <option value="5">5 MM</option>
-                    <option value="6">6 MM</option>
-                    <option value="8">8 MM</option>
-                    <option value="10">10 MM</option>
-                    <option value="12">12 MM</option>
-                    <option value="15">15 MM</option>
-                    <option value="19">19 MM</option>
-                  </Select>
-                </div>
-              ) : (
-                <div style={formGroup}>
-                  <Input
-                    label="Manual Thickness (MM)"
-                    type="text"
-                    placeholder="Enter thickness (e.g., 2)"
-                    value={thicknessFocused ? manualThickness : (manualThickness ? `${manualThickness} MM` : "")}
-                    onChange={e => {
-                      let inputVal = e.target.value;
-                      // Remove "MM" if user types it, keep only the number
-                      inputVal = inputVal.replace(/mm/gi, '').trim();
-                      // Extract only numbers and decimal point
-                      inputVal = inputVal.replace(/[^\d.]/g, '');
-                      setManualThickness(inputVal);
-                    }}
-                    onFocus={(e) => {
-                      // On focus, show just the number (remove MM) so user can edit
-                      setThicknessFocused(true);
-                      let inputVal = e.target.value.replace(/mm/gi, '').trim();
-                      inputVal = inputVal.replace(/[^\d.]/g, '');
-                      setManualThickness(inputVal);
-                    }}
-                    onBlur={(e) => {
-                      // On blur (when moving to next field), format with MM if valid number
-                      setThicknessFocused(false);
-                      let inputVal = e.target.value.replace(/mm/gi, '').trim();
-                      inputVal = inputVal.replace(/[^\d.]/g, '');
-                      if (inputVal && !isNaN(parseFloat(inputVal))) {
-                        setManualThickness(inputVal);
-                      } else if (!inputVal) {
-                        setManualThickness("");
-                      }
-                    }}
-                    icon="📏"
-                    required
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Dimensions Section */}
-          <div style={section}>
-            <div style={sectionHeader}>
-              <div style={sectionIcon}>📐</div>
-              <div>
-                <h3 style={sectionTitle}>Dimensions</h3>
-                <p style={sectionSubtitle}>Enter glass dimensions</p>
+                )}
               </div>
             </div>
-
-            <div style={getFormGridStyle(isMobile)}>
-              <div style={formGroup}>
-                <Select
-                  label="Unit"
-                  value={unit} 
-                  onChange={e => setUnit(e.target.value)}
-                  icon="📐"
-                >
-                  <option value="">Select unit</option>
-                  <option value="MM">MM (Millimeters)</option>
-                  <option value="INCH">INCH (Inches)</option>
-                  <option value="FEET">FEET (Feet)</option>
-                </Select>
-              </div>
-
-              <div style={formGroup}>
-                <Input
-                  label="Height"
-                  type="text"
-                  placeholder={getPlaceholder("height", unit)}
-                  value={height}
-                  onChange={e => setHeight(e.target.value)}
-                  icon="📏"
-                  required
-                />
-              </div>
-
-              <div style={formGroup}>
-                <Input
-                  label="Width"
-                  type="text"
-                  placeholder={getPlaceholder("width", unit)}
-                  value={width}
-                  onChange={e => setWidth(e.target.value)}
-                  icon="📏"
-                  required
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Stock Details Section */}
-          <div style={section}>
-            <div style={sectionHeader}>
-              <div style={sectionIcon}>📦</div>
-              <div>
-                <h3 style={sectionTitle}>Stock Details</h3>
-                <p style={sectionSubtitle}>Stand number and quantity</p>
-              </div>
-            </div>
-
-            <div style={getFormGridStyle(isMobile)}>
-              <div style={formGroup}>
-                <Input
-                  label="Stand Number"
-                  type="number"
-                  placeholder="Enter stand number"
-                  value={standNo}
-                  onChange={e => setStandNo(e.target.value)}
-                  icon="🏷️"
-                  required
-                />
-              </div>
-
-              <div style={formGroup}>
-                <Input
-                  label="Quantity"
-                  type="number"
-                  placeholder="Enter quantity"
-                  value={quantity}
-                  onChange={e => setQuantity(e.target.value)}
-                  icon="🔢"
-                  required
-                />
-              </div>
-            </div>
-          </div>
-
-
-          {/* Additional Information Section */}
-          <div style={section}>
-            <div style={sectionHeader}>
-              <div style={sectionIcon}>📋</div>
-              <div>
-                <h3 style={sectionTitle}>Additional Information</h3>
-                <p style={sectionSubtitle}>Optional details for GST</p>
-              </div>
-            </div>
-
-            <div style={formGroup}>
-              <Input
-                label="HSN Code (Optional)"
+          ) : (
+            <div>
+              <label style={fieldLabel}>Manual Glass Type <span style={{ color: "#FF6B81" }}>*</span></label>
+              <input
                 type="text"
-                placeholder="e.g., 7003, 7004"
-                value={hsnNo}
-                onChange={e => setHsnNo(e.target.value)}
-                icon="🏷️"
-                helperText="HSN code for GST billing (optional)"
+                placeholder="Enter custom glass type"
+                value={manualGlassType}
+                onChange={e => setManualGlassType(e.target.value)}
+                style={darkInput}
+                required
               />
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div style={actionsSection}>
-            <div style={buttonGroup}>
-              <Button
-                variant="success"
-                size="lg"
-                icon="➕"
-                fullWidth={isMobile}
-                onClick={() => updateStock("ADD")}
-                style={{ flex: isMobile ? "1" : "none" }}
-              >
-                Add Stock
-              </Button>
-
-              <Button
-                variant="danger"
-                size="lg"
-                icon="➖"
-                fullWidth={isMobile}
-                onClick={() => updateStock("REMOVE")}
-                style={{ flex: isMobile ? "1" : "none" }}
-              >
-                Remove Stock
-              </Button>
-            </div>
-
-            {showUndo && (
-              <Button
-                variant="outline"
-                size="md"
-                icon="↩"
-                fullWidth
-                onClick={undoLastAction}
-                style={{ marginTop: "12px" }}
-              >
-                Undo Last Action
-              </Button>
-            )}
-          </div>
-
-          {/* Message Display */}
-          {stockMessage && (
-            <div style={getMessageStyle(stockMessage && typeof stockMessage === 'string' && stockMessage.includes("✅"))}>
-              <span style={messageIcon}>
-                {stockMessage.includes("✅") ? "✅" : "❌"}
-              </span>
-              <span>{stockMessage.replace("✅", "").replace("❌", "").trim()}</span>
+              <div style={{ marginTop: 4, fontSize: 11, color: "#7180A6" }}>Will be added to the dropdown after saving</div>
             </div>
           )}
-        </Card>
+
+          {/* Thickness Selection Mode */}
+          <div>
+            <label style={fieldLabel}>Selection Mode</label>
+            <select
+              value={thicknessMode}
+              onChange={e => {
+                setThicknessMode(e.target.value);
+                setThicknessFocused(false);
+              }}
+              style={darkSelect}
+            >
+              <option value="SELECT">Select from list</option>
+              <option value="MANUAL">Manual entry</option>
+            </select>
+          </div>
+
+          {/* Thickness value */}
+          {thicknessMode === "SELECT" ? (
+            <div>
+              <label style={fieldLabel}>Thickness <span style={{ color: "#FF6B81" }}>*</span></label>
+              <select
+                value={thickness}
+                onChange={e => setThickness(e.target.value)}
+                style={darkSelect}
+                required
+              >
+                <option value="">Select thickness</option>
+                <option value="3.5">3.5 MM</option>
+                <option value="4">4 MM</option>
+                <option value="5">5 MM</option>
+                <option value="6">6 MM</option>
+                <option value="8">8 MM</option>
+                <option value="10">10 MM</option>
+                <option value="12">12 MM</option>
+                <option value="15">15 MM</option>
+                <option value="19">19 MM</option>
+              </select>
+            </div>
+          ) : (
+            <div>
+              <label style={fieldLabel}>Manual Thickness (MM) <span style={{ color: "#FF6B81" }}>*</span></label>
+              <input
+                type="text"
+                placeholder="Enter thickness (e.g., 2)"
+                value={thicknessFocused ? manualThickness : (manualThickness ? `${manualThickness} MM` : "")}
+                onChange={e => {
+                  let inputVal = e.target.value;
+                  inputVal = inputVal.replace(/mm/gi, '').trim();
+                  inputVal = inputVal.replace(/[^\d.]/g, '');
+                  setManualThickness(inputVal);
+                }}
+                onFocus={(e) => {
+                  setThicknessFocused(true);
+                  let inputVal = e.target.value.replace(/mm/gi, '').trim();
+                  inputVal = inputVal.replace(/[^\d.]/g, '');
+                  setManualThickness(inputVal);
+                }}
+                onBlur={(e) => {
+                  setThicknessFocused(false);
+                  let inputVal = e.target.value.replace(/mm/gi, '').trim();
+                  inputVal = inputVal.replace(/[^\d.]/g, '');
+                  if (inputVal && !isNaN(parseFloat(inputVal))) {
+                    setManualThickness(inputVal);
+                  } else if (!inputVal) {
+                    setManualThickness("");
+                  }
+                }}
+                style={darkInput}
+                required
+              />
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* SECTION 2: Dimensions */}
+      <div style={sectionCard}>
+        <div style={sectionHeaderRow}>
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(55,227,165,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#37E3A5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3h7v7H3z"/><path d="M14 3h7v7h-7z"/><path d="M14 14h7v7h-7z"/><path d="M3 14h7v7H3z"/></svg>
+          </div>
+          <div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "#fff" }}>Dimensions</div>
+            <div style={{ fontSize: 11.5, color: "#7180A6" }}>Enter glass dimensions</div>
+          </div>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 14 }}>
+          <div>
+            <label style={fieldLabel}>Unit</label>
+            <select
+              value={unit}
+              onChange={e => setUnit(e.target.value)}
+              style={darkSelect}
+            >
+              <option value="">Select unit</option>
+              <option value="MM">MM (Millimeters)</option>
+              <option value="INCH">INCH (Inches)</option>
+              <option value="FEET">FEET (Feet)</option>
+            </select>
+          </div>
+
+          <div>
+            <label style={fieldLabel}>Height <span style={{ color: "#FF6B81" }}>*</span></label>
+            <input
+              type="text"
+              placeholder={getPlaceholder("height", unit)}
+              value={height}
+              onChange={e => setHeight(e.target.value)}
+              style={darkInput}
+              required
+            />
+          </div>
+
+          <div>
+            <label style={fieldLabel}>Width <span style={{ color: "#FF6B81" }}>*</span></label>
+            <input
+              type="text"
+              placeholder={getPlaceholder("width", unit)}
+              value={width}
+              onChange={e => setWidth(e.target.value)}
+              style={darkInput}
+              required
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* SECTION 3: Stock Details */}
+      <div style={sectionCard}>
+        <div style={sectionHeaderRow}>
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(255,185,94,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFB95E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+          </div>
+          <div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "#fff" }}>Stock Details</div>
+            <div style={{ fontSize: 11.5, color: "#7180A6" }}>Stand number and quantity</div>
+          </div>
+        </div>
+
+        <div style={formGrid2}>
+          <div>
+            <label style={fieldLabel}>Stand Number <span style={{ color: "#FF6B81" }}>*</span></label>
+            <input
+              type="number"
+              placeholder="Enter stand number"
+              value={standNo}
+              onChange={e => setStandNo(e.target.value)}
+              style={darkInput}
+              required
+            />
+          </div>
+
+          <div>
+            <label style={fieldLabel}>Quantity <span style={{ color: "#FF6B81" }}>*</span></label>
+            <input
+              type="number"
+              placeholder="Enter quantity"
+              value={quantity}
+              onChange={e => setQuantity(e.target.value)}
+              style={darkInput}
+              required
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* SECTION 4: Additional Information */}
+      <div style={sectionCard}>
+        <div style={sectionHeaderRow}>
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(169,179,209,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A9B3D1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          </div>
+          <div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "#fff" }}>Additional Information</div>
+            <div style={{ fontSize: 11.5, color: "#7180A6" }}>Optional details for GST</div>
+          </div>
+        </div>
+
+        <div>
+          <label style={fieldLabel}>HSN Code (Optional)</label>
+          <input
+            type="text"
+            placeholder="e.g., 7003, 7004"
+            value={hsnNo}
+            onChange={e => setHsnNo(e.target.value)}
+            style={darkInput}
+          />
+          <div style={{ marginTop: 4, fontSize: 11, color: "#7180A6" }}>HSN code for GST billing (optional)</div>
+        </div>
+      </div>
+
+      {/* ACTION BUTTONS */}
+      <div style={{ display: "flex", gap: 12, marginBottom: 12 }}>
+        <button
+          onClick={() => updateStock("ADD")}
+          style={{ flex: 1, height: 46, borderRadius: 12, background: "rgba(55,227,165,0.15)", border: "1px solid rgba(55,227,165,0.3)", color: "#37E3A5", fontSize: 15, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", outline: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Stock
+        </button>
+        <button
+          onClick={() => updateStock("REMOVE")}
+          style={{ flex: 1, height: 46, borderRadius: 12, background: "rgba(255,107,129,0.15)", border: "1px solid rgba(255,107,129,0.3)", color: "#FF6B81", fontSize: 15, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", outline: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Remove Stock
+        </button>
+      </div>
+
+      {showUndo && (
+        <button
+          onClick={undoLastAction}
+          style={{ width: "100%", height: 42, borderRadius: 12, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "#A9B3D1", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", outline: "none", marginBottom: 12 }}
+        >
+          ↩ Undo Last Action
+        </button>
+      )}
+
+      {/* Message Display */}
+      {stockMessage && (
+        <div style={{
+          padding: "14px 16px",
+          borderRadius: 12,
+          background: stockMessage && typeof stockMessage === 'string' && stockMessage.includes("✅") ? "rgba(55,227,165,0.08)" : "rgba(255,107,129,0.08)",
+          border: `1px solid ${stockMessage && typeof stockMessage === 'string' && stockMessage.includes("✅") ? "rgba(55,227,165,0.25)" : "rgba(255,107,129,0.25)"}`,
+          color: stockMessage && typeof stockMessage === 'string' && stockMessage.includes("✅") ? "#37E3A5" : "#FF6B81",
+          fontSize: 13.5,
+          fontWeight: 500,
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+        }}>
+          <span style={{ fontSize: 18, flexShrink: 0 }}>
+            {stockMessage.includes("✅") ? "✅" : "❌"}
+          </span>
+          <span>{stockMessage.replace("✅", "").replace("❌", "").trim()}</span>
+        </div>
+      )}
 
       {/* Confirmation Modal */}
       <ConfirmModal
@@ -578,146 +598,8 @@ function StockManager() {
         onCancel={() => setShowConfirm(false)}
         onConfirm={confirmSaveStock}
       />
-    </PageWrapper>
+    </div>
   );
 }
 
 export default StockManager;
-
-/* ================= STYLES ================= */
-
-const getContainerStyle = (isMobile) => ({
-  maxWidth: "1000px",
-  margin: "0 auto",
-  padding: isMobile ? "16px 12px" : "20px 16px",
-  width: "100%",
-});
-
-const headerSection = {
-  marginBottom: "16px",
-};
-
-const pageTitle = {
-  fontSize: "26px",
-  fontWeight: "800",
-  color: "#0f172a",
-  margin: "0 0 8px 0",
-  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-  WebkitBackgroundClip: "text",
-  WebkitTextFillColor: "transparent",
-  backgroundClip: "text",
-};
-
-const pageSubtitle = {
-  fontSize: "16px",
-  color: "#64748b",
-  margin: "0",
-  fontWeight: "400",
-};
-
-const getFormCardStyle = (isMobile) => ({
-  padding: isMobile ? "16px" : "24px",
-});
-
-const section = {
-  marginBottom: "20px",
-  paddingBottom: "16px",
-  borderBottom: "1px solid #e2e8f0",
-};
-
-const sectionHeader = {
-  display: "flex",
-  alignItems: "center",
-  gap: "12px",
-  marginBottom: "14px",
-};
-
-const sectionIcon = {
-  width: "36px",
-  height: "36px",
-  borderRadius: "8px",
-  background: "linear-gradient(135deg, #667eea15, #764ba225)",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  fontSize: "18px",
-  flexShrink: 0,
-};
-
-const sectionTitle = {
-  fontSize: "16px",
-  fontWeight: "700",
-  color: "#0f172a",
-  margin: "0 0 4px 0",
-};
-
-const sectionSubtitle = {
-  fontSize: "14px",
-  color: "#64748b",
-  margin: "0",
-  fontWeight: "400",
-};
-
-const getFormGridStyle = (isMobile) => ({
-  display: "grid",
-  gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit, minmax(250px, 1fr))",
-  gap: "20px",
-});
-
-const getGlassThicknessGridStyle = (isMobile) => ({
-  display: "grid",
-  gridTemplateColumns: isMobile ? "1fr" : "repeat(4, 1fr)",
-  gap: "20px",
-});
-
-const formGroup = {
-  display: "flex",
-  flexDirection: "column",
-  gap: "8px",
-};
-
-const label = {
-  fontSize: "13px",
-  fontWeight: "600",
-  color: "#475569",
-  marginBottom: "4px",
-};
-
-const required = {
-  color: "#ef4444",
-  marginLeft: "2px",
-};
-
-
-const actionsSection = {
-  marginTop: "16px",
-  paddingTop: "16px",
-  borderTop: "2px solid #e2e8f0",
-};
-
-const buttonGroup = {
-  display: "flex",
-  gap: "16px",
-  flexWrap: "wrap",
-};
-
-const getMessageStyle = (isSuccess) => ({
-  marginTop: "24px",
-  padding: "16px 20px",
-  borderRadius: "12px",
-  background: isSuccess 
-    ? "rgba(34, 197, 94, 0.1)" 
-    : "rgba(239, 68, 68, 0.1)",
-  border: `1.5px solid ${isSuccess ? "rgba(34, 197, 94, 0.2)" : "rgba(239, 68, 68, 0.2)"}`,
-  color: isSuccess ? "#16a34a" : "#dc2626",
-  fontSize: "14px",
-  fontWeight: "500",
-  display: "flex",
-  alignItems: "center",
-  gap: "12px",
-});
-
-const messageIcon = {
-  fontSize: "20px",
-  flexShrink: 0,
-};

@@ -5,16 +5,16 @@ import { useResponsive } from "../hooks/useResponsive";
 
 const ROLE_LABEL = { ROLE_ADMIN: "Administrator", ROLE_STAFF: "Staff" };
 const ROLE_COLOR = {
-  ROLE_ADMIN: { bg: "#eef2ff", color: "#4f46e5", border: "#c7d2fe" },
-  ROLE_STAFF: { bg: "#f0fdf4", color: "#16a34a", border: "#bbf7d0" },
+  ROLE_ADMIN: { bg: "rgba(79,93,255,0.2)", color: "#818CF8", border: "rgba(79,93,255,0.3)" },
+  ROLE_STAFF: { bg: "rgba(55,227,165,0.15)", color: "#37E3A5", border: "rgba(55,227,165,0.3)" },
 };
 
 function Field({ label, type = "text", value, onChange, placeholder, required, autoComplete, readOnly }) {
   const [focused, setFocused] = useState(false);
   return (
     <div style={{ marginBottom: 14 }}>
-      <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#475569", marginBottom: 5 }}>
-        {label}{required && <span style={{ color: "#ef4444", marginLeft: 2 }}>*</span>}
+      <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#7180A6", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 5 }}>
+        {label}{required && <span style={{ color: "#FF6B81", marginLeft: 2 }}>*</span>}
       </label>
       <input
         type={type}
@@ -26,9 +26,9 @@ function Field({ label, type = "text", value, onChange, placeholder, required, a
         autoComplete={autoComplete}
         style={{
           width: "100%", padding: "9px 12px", borderRadius: 8, boxSizing: "border-box",
-          border: `1.5px solid ${focused ? "#6366f1" : "#e2e8f0"}`,
-          fontSize: 14, color: readOnly ? "#94a3b8" : "#0f172a", outline: "none",
-          background: readOnly ? "#f8fafc" : "#fff",
+          border: `1.5px solid ${focused ? "rgba(79,93,255,0.6)" : "rgba(255,255,255,0.1)"}`,
+          fontSize: 14, color: readOnly ? "#7180A6" : "#fff", outline: "none",
+          background: readOnly ? "rgba(255,255,255,0.03)" : "rgba(255,255,255,0.06)",
           transition: "border-color 140ms ease", cursor: readOnly ? "not-allowed" : "text",
         }}
         onFocus={() => { if (!readOnly) setFocused(true); }}
@@ -44,9 +44,9 @@ function Banner({ msg }) {
   return (
     <div style={{
       padding: "9px 12px", borderRadius: 8, marginBottom: 14, fontSize: 13,
-      background: ok ? "#f0fdf4" : "#fef2f2",
-      color: ok ? "#15803d" : "#dc2626",
-      border: `1px solid ${ok ? "#bbf7d0" : "#fecaca"}`,
+      background: ok ? "rgba(55,227,165,0.1)" : "rgba(255,107,129,0.1)",
+      color: ok ? "#37E3A5" : "#FF6B81",
+      border: `1px solid ${ok ? "rgba(55,227,165,0.3)" : "rgba(255,107,129,0.3)"}`,
     }}>
       {msg}
     </div>
@@ -55,9 +55,9 @@ function Banner({ msg }) {
 
 function InfoRow({ label, value }) {
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid #f1f5f9" }}>
-      <span style={{ fontSize: 12.5, color: "#94a3b8", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>{label}</span>
-      <span style={{ fontSize: 13.5, color: "#0f172a", fontWeight: 500 }}>{value || "—"}</span>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+      <span style={{ fontSize: 12.5, color: "#7180A6", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>{label}</span>
+      <span style={{ fontSize: 13.5, color: "#fff", fontWeight: 500 }}>{value || "—"}</span>
     </div>
   );
 }
@@ -97,19 +97,19 @@ export default function Profile() {
   };
 
   const card = {
-    background: "#fff", borderRadius: 12,
-    border: "1px solid #e2e8f0",
-    boxShadow: "0 1px 3px rgba(0,0,0,0.07)",
+    background: "rgba(17,27,53,0.9)", borderRadius: 12,
+    border: "1px solid rgba(255,255,255,0.08)",
+    boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
   };
 
   const primaryBtn = (busy) => ({
     padding: "9px 20px", borderRadius: 8, border: "none",
-    background: busy ? "#a5b4fc" : "#4f46e5", color: "#fff",
+    background: busy ? "rgba(79,93,255,0.4)" : "#4F5DFF", color: "#fff",
     fontSize: 13, fontWeight: 600, cursor: busy ? "not-allowed" : "pointer",
     transition: "all 140ms ease",
   });
 
-  const rc = profile ? (ROLE_COLOR[profile.role] || { bg: "#f1f5f9", color: "#64748b", border: "#e2e8f0" }) : null;
+  const rc = profile ? (ROLE_COLOR[profile.role] || { bg: "rgba(255,255,255,0.08)", color: "#A9B3D1", border: "rgba(255,255,255,0.12)" }) : null;
 
   return (
     <PageWrapper>
@@ -117,18 +117,18 @@ export default function Profile() {
 
         {/* ── Profile card ── */}
         <div style={{ ...card, marginBottom: 20 }}>
-          <div style={{ padding: "18px 20px 16px", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ padding: "18px 20px 16px", borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", gap: 14 }}>
             <div style={{
               width: 50, height: 50, borderRadius: 12, flexShrink: 0,
-              background: "linear-gradient(135deg,#4f46e5,#7c3aed)",
+              background: "rgba(79,93,255,0.25)",
               display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 22, fontWeight: 700, color: "#fff",
-              boxShadow: "0 3px 10px rgba(79,70,229,.25)",
+              fontSize: 22, fontWeight: 700, color: "#818CF8",
+              boxShadow: "0 3px 10px rgba(79,70,229,.2)",
             }}>
               {profile ? profile.username.charAt(0).toUpperCase() : "?"}
             </div>
             <div>
-              <div style={{ fontSize: 17, fontWeight: 700, color: "#0f172a" }}>
+              <div style={{ fontSize: 17, fontWeight: 700, color: "#fff" }}>
                 {loading ? "Loading…" : profile?.username || "—"}
               </div>
               {profile && rc && (
@@ -145,7 +145,7 @@ export default function Profile() {
 
           <div style={{ padding: "4px 20px 16px" }}>
             {loading ? (
-              <div style={{ color: "#94a3b8", fontSize: 13.5, padding: "20px 0", textAlign: "center" }}>Loading profile…</div>
+              <div style={{ color: "#7180A6", fontSize: 13.5, padding: "20px 0", textAlign: "center" }}>Loading profile…</div>
             ) : profile ? (
               <>
                 <InfoRow label="Username"  value={profile.username} />
@@ -153,14 +153,14 @@ export default function Profile() {
                 <InfoRow label="Shop"      value={profile.shopName} />
               </>
             ) : (
-              <div style={{ color: "#ef4444", fontSize: 13.5, padding: "16px 0" }}>Failed to load profile</div>
+              <div style={{ color: "#FF6B81", fontSize: 13.5, padding: "16px 0" }}>Failed to load profile</div>
             )}
           </div>
         </div>
 
         {/* ── Change password card ── */}
         <div style={{ ...card, padding: "18px 20px" }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "#374151", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 14 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#7180A6", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 14 }}>
             🔒 Change My Password
           </div>
           <Banner msg={cpMsg} />

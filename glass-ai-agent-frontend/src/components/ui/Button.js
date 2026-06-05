@@ -5,27 +5,27 @@ const V = {
   primary: {
     bg: '#4f46e5', color: '#fff', border: 'none',
     shadow: '0 1px 2px rgba(79,70,229,.20)',
-    hBg: '#4338ca', hShadow: '0 3px 10px rgba(79,70,229,.30)',
+    hBg: '#4338ca', hShadow: '0 4px 12px rgba(79,70,229,.30)',
   },
   secondary: {
-    bg: '#f8fafc', color: '#374151', border: '1px solid #e2e8f0',
+    bg: '#ffffff', color: '#374151', border: '1.5px solid #e2e8f0',
     shadow: '0 1px 2px rgba(15,23,42,.04)',
-    hBg: '#f1f5f9', hShadow: '0 2px 6px rgba(15,23,42,.07)',
+    hBg: '#f8fafc', hShadow: '0 2px 6px rgba(15,23,42,.07)',
   },
   success: {
-    bg: '#16a34a', color: '#fff', border: 'none',
-    shadow: '0 1px 2px rgba(22,163,74,.20)',
-    hBg: '#15803d', hShadow: '0 3px 10px rgba(22,163,74,.28)',
+    bg: '#10b981', color: '#fff', border: 'none',
+    shadow: '0 1px 2px rgba(16,185,129,.20)',
+    hBg: '#059669', hShadow: '0 4px 12px rgba(16,185,129,.28)',
   },
   danger: {
-    bg: '#ef4444', color: '#fff', border: 'none',
-    shadow: '0 1px 2px rgba(239,68,68,.20)',
-    hBg: '#dc2626', hShadow: '0 3px 10px rgba(239,68,68,.28)',
+    bg: '#f43f5e', color: '#fff', border: 'none',
+    shadow: '0 1px 2px rgba(244,63,94,.20)',
+    hBg: '#e11d48', hShadow: '0 4px 12px rgba(244,63,94,.28)',
   },
   warning: {
     bg: '#f59e0b', color: '#fff', border: 'none',
     shadow: '0 1px 2px rgba(245,158,11,.20)',
-    hBg: '#d97706', hShadow: '0 3px 10px rgba(245,158,11,.28)',
+    hBg: '#d97706', hShadow: '0 4px 12px rgba(245,158,11,.28)',
   },
   outline: {
     bg: 'transparent', color: '#4f46e5', border: '1.5px solid #4f46e5',
@@ -40,32 +40,32 @@ const V = {
 };
 
 const S = {
-  xs: { p: '4px 9px',  fs: '11.5px', h: '28px', r: '6px',  gap: '4px', iconFs: '12px' },
-  sm: { p: '5px 11px', fs: '12.5px', h: '30px', r: '7px',  gap: '5px', iconFs: '13px' },
-  md: { p: '7px 15px', fs: '13px',   h: '34px', r: '8px',  gap: '6px', iconFs: '14px' },
-  lg: { p: '9px 20px', fs: '14px',   h: '38px', r: '9px',  gap: '7px', iconFs: '15px' },
+  xs: { p: '0 9px',  fs: '11.5px', h: '28px', r: '6px',  gap: '4px', spinSz: '10px' },
+  sm: { p: '0 10px', fs: '12px',   h: '30px', r: '8px',  gap: '5px', spinSz: '11px' },
+  md: { p: '0 16px', fs: '13px',   h: '36px', r: '10px', gap: '6px', spinSz: '12px' },
+  lg: { p: '0 24px', fs: '14px',   h: '42px', r: '12px', gap: '7px', spinSz: '13px' },
 };
 
 /* ─── Button ────────────────────────────────────────────────────────────────── */
 const Button = ({
   children,
-  variant  = 'primary',
-  size     = 'md',
-  fullWidth = false,
-  loading  = false,
+  variant      = 'primary',
+  size         = 'md',
+  fullWidth    = false,
+  loading      = false,
   icon,
-  iconOnly = false,
+  iconOnly     = false,
   iconPosition = 'left',
   onClick,
-  type     = 'button',
-  disabled = false,
+  type         = 'button',
+  disabled     = false,
   title,
-  className = '',
+  className    = '',
   style: extra = {},
   ...rest
 }) => {
-  const v = V[variant] || V.primary;
-  const s = S[size]    || S.md;
+  const v   = V[variant] || V.primary;
+  const s   = S[size]    || S.md;
   const off = disabled || loading;
 
   const base = {
@@ -73,7 +73,7 @@ const Button = ({
     alignItems:     'center',
     justifyContent: 'center',
     gap:            iconOnly ? 0 : s.gap,
-    fontWeight:     600,
+    fontWeight:     500,
     fontSize:       s.fs,
     fontFamily:     "'Inter',-apple-system,sans-serif",
     letterSpacing:  '-0.01em',
@@ -81,11 +81,11 @@ const Button = ({
     borderRadius:   s.r,
     border:         v.border || 'none',
     cursor:         off ? 'not-allowed' : 'pointer',
-    transition:     'background 150ms ease,box-shadow 150ms ease,transform 150ms ease,opacity 150ms ease',
+    transition:     'background 150ms ease, box-shadow 150ms ease, transform 150ms ease, opacity 150ms ease',
     width:          fullWidth ? '100%' : 'auto',
     opacity:        off ? 0.5 : 1,
     padding:        iconOnly ? '0' : s.p,
-    minHeight:      s.h,
+    height:         iconOnly ? s.h : s.h,
     minWidth:       iconOnly ? s.h : undefined,
     background:     v.bg,
     color:          v.color,
@@ -95,6 +95,7 @@ const Button = ({
     textDecoration: 'none',
     userSelect:     'none',
     flexShrink:     0,
+    boxSizing:      'border-box',
     ...extra,
   };
 
@@ -113,6 +114,14 @@ const Button = ({
   const down = (e) => { if (!off) e.currentTarget.style.transform = 'translateY(0) scale(0.97)'; };
   const up   = (e) => { if (!off) e.currentTarget.style.transform = 'translateY(-1px) scale(1)'; };
 
+  /* Spinner color: white for filled variants, muted for ghost/secondary */
+  const spinBorder = (variant === 'secondary' || variant === 'ghost' || variant === 'outline')
+    ? 'rgba(100,116,139,0.3)'
+    : 'rgba(255,255,255,0.3)';
+  const spinTop = (variant === 'secondary' || variant === 'ghost' || variant === 'outline')
+    ? '#64748b'
+    : '#ffffff';
+
   return (
     <button
       type={type}
@@ -130,22 +139,30 @@ const Button = ({
       {loading ? (
         <>
           <span style={{
-            width: '13px', height: '13px',
-            border: `2px solid ${variant === 'secondary' || variant === 'ghost' ? '#cbd5e1' : 'rgba(255,255,255,0.35)'}`,
-            borderTopColor: v.color,
-            borderRadius: '50%',
-            animation: 'spin 0.7s linear infinite',
-            flexShrink: 0,
+            width:          s.spinSz,
+            height:         s.spinSz,
+            border:         `1.5px solid ${spinBorder}`,
+            borderTopColor: spinTop,
+            borderRadius:   '50%',
+            animation:      'spin 0.7s linear infinite',
+            flexShrink:     0,
+            display:        'block',
           }} />
           {!iconOnly && <span>Loading…</span>}
         </>
       ) : iconOnly ? (
-        <span style={{ fontSize: s.iconFs, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{icon || children}</span>
+        <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {icon || children}
+        </span>
       ) : (
         <>
-          {icon && iconPosition === 'left'  && <span style={{ fontSize: s.iconFs, lineHeight: 1, flexShrink: 0, display: 'flex', alignItems: 'center' }}>{icon}</span>}
+          {icon && iconPosition === 'left'  && (
+            <span style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>{icon}</span>
+          )}
           {children && <span>{children}</span>}
-          {icon && iconPosition === 'right' && <span style={{ fontSize: s.iconFs, lineHeight: 1, flexShrink: 0, display: 'flex', alignItems: 'center' }}>{icon}</span>}
+          {icon && iconPosition === 'right' && (
+            <span style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>{icon}</span>
+          )}
         </>
       )}
     </button>

@@ -1,6 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import PageWrapper from "../components/PageWrapper";
-import aiBg from "../assets/ai-bg.jpg";
 import api from "../api/api";
 
 function AiAssistant() {
@@ -34,7 +32,7 @@ function AiAssistant() {
 
   const askAI = async (quickAction = null) => {
     const selectedAction = quickAction || action;
-    
+
     if (!selectedAction) {
       setResult("⚠️ Please select an action or use a quick action button");
       return;
@@ -65,7 +63,7 @@ function AiAssistant() {
       // Animate typing effect
       const response = res.data?.message || res.data || "No response";
       animateTyping(response);
-      
+
       // Save to history
       const historyItem = {
         id: Date.now(),
@@ -74,11 +72,11 @@ function AiAssistant() {
         response: response,
         timestamp: new Date().toISOString(),
       };
-      
+
       const newHistory = [historyItem, ...queryHistory.slice(0, 9)]; // Keep last 10
       setQueryHistory(newHistory);
       localStorage.setItem("aiQueryHistory", JSON.stringify(newHistory));
-      
+
     } catch (error) {
       console.error(error);
       setResult("❌ Failed to fetch AI response. Please try again.");
@@ -154,660 +152,481 @@ function AiAssistant() {
       icon: "🚨",
       title: "Low Stock Alert",
       description: "Get alerts for items running low",
-      color: "#ef4444",
+      color: "#FF6B81",
     },
     {
       id: "PREDICT",
       icon: "🔮",
       title: "Predict Demand",
       description: "AI-powered future demand prediction",
-      color: "#8b5cf6",
+      color: "#A78BFA",
     },
     {
       id: "AVAILABLE",
       icon: "📦",
       title: "Check Stock",
       description: "Find available stock by type",
-      color: "#3b82f6",
+      color: "#4F5DFF",
     },
     {
       id: "INSTALLED",
       icon: "🏢",
       title: "Installed Glass",
       description: "View glass installed by client",
-      color: "#22c55e",
+      color: "#37E3A5",
     },
   ];
 
+  const inputStyle = {
+    width: "100%",
+    padding: "0 12px",
+    height: 44,
+    borderRadius: 10,
+    border: "1.5px solid rgba(255,255,255,0.1)",
+    background: "rgba(255,255,255,0.06)",
+    color: "#fff",
+    fontSize: 14,
+    outline: "none",
+    boxSizing: "border-box",
+    transition: "border 140ms ease",
+  };
+
+  const selectStyle = {
+    ...inputStyle,
+    cursor: "pointer",
+  };
+
   return (
-    <PageWrapper background={aiBg}>
-      <div style={container}>
-        {/* Header */}
-        <div style={headerCard}>
-          <div style={headerContent}>
-            <div>
-              <h1 style={title}>🤖 Smart AI Assistant</h1>
-              <p style={subtitle}>
-                Get instant insights about your inventory with AI-powered analysis
-              </p>
-            </div>
-            <div style={headerActions}>
-              <button
-                style={historyButton}
-                onClick={() => setShowHistory(!showHistory)}
-                title="View Query History"
-              >
-                📜 History {queryHistory.length > 0 && `(${queryHistory.length})`}
-              </button>
-            </div>
-          </div>
+    <div style={{ padding: "16px 16px 24px", minHeight: "100vh", fontFamily: "'Inter', -apple-system, sans-serif" }}>
+      {/* Page header */}
+      <div style={{ marginBottom: 24, display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
+        <div>
+          <h1 style={{ fontSize: 26, fontWeight: 800, color: "#fff", margin: "0 0 4px", letterSpacing: "-0.02em" }}>
+            🤖 AI Assistant
+          </h1>
+          <p style={{ fontSize: 13, color: "#A9B3D1", margin: 0 }}>
+            Get instant insights about your inventory with AI-powered analysis
+          </p>
         </div>
+        <button
+          style={{
+            padding: "0 20px",
+            height: 40,
+            borderRadius: 10,
+            border: "1px solid rgba(255,255,255,0.12)",
+            background: "rgba(255,255,255,0.08)",
+            color: "#A9B3D1",
+            fontWeight: 600,
+            fontSize: 13,
+            cursor: "pointer",
+            transition: "all 140ms ease",
+            whiteSpace: "nowrap",
+          }}
+          onClick={() => setShowHistory(!showHistory)}
+          onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.12)"; e.currentTarget.style.color = "#fff"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "#A9B3D1"; }}
+          title="View Query History"
+        >
+          📜 History {queryHistory.length > 0 && `(${queryHistory.length})`}
+        </button>
+      </div>
 
-        {/* Quick Actions */}
-        <div style={quickActionsGrid}>
-          {quickActions.map((qa) => (
-            <div
-              key={qa.id}
-              style={quickActionCard}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-4px)";
-                e.currentTarget.style.boxShadow = "0 8px 12px -2px rgba(0, 0, 0, 0.15)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)";
-              }}
-              onClick={() => {
-                setAction(qa.id);
-                if (qa.id === "AVAILABLE") {
-                  // Auto-focus glass type selection
-                  setTimeout(() => {
-                    const select = document.getElementById("glassTypeSelect");
-                    if (select) select.focus();
-                  }, 100);
-                }
-                if (qa.id === "INSTALLED") {
-                  setTimeout(() => {
-                    const input = document.getElementById("siteInput");
-                    if (input) input.focus();
-                  }, 100);
-                }
-              }}
-            >
-              <div style={{ ...quickActionIcon, background: `${qa.color}15`, color: qa.color }}>
-                {qa.icon}
-              </div>
-              <div style={quickActionContent}>
-                <h3 style={quickActionTitle}>{qa.title}</h3>
-                <p style={quickActionDesc}>{qa.description}</p>
-              </div>
-              <button
-                style={{ ...quickActionBtn, background: qa.color }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  askAI(qa.id);
-                }}
-              >
-                Ask AI →
-              </button>
-            </div>
-          ))}
-        </div>
-
-        {/* Backdrop — only shown on mobile so the sidebar acts like a modal */}
-        {showHistory && window.innerWidth < 768 && (
+      {/* Quick Actions Grid */}
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+        gap: 16,
+        marginBottom: 24,
+      }}>
+        {quickActions.map((qa) => (
           <div
-            style={backdrop}
-            onClick={() => setShowHistory(false)}
-          />
-        )}
-
-        {/* Query History Sidebar */}
-        {showHistory && (
-          <div style={{
-            ...historySidebar,
-            width:      window.innerWidth < 768 ? "100%" : "320px",
-            borderLeft: window.innerWidth < 768 ? "none"  : "1px solid rgba(226, 232, 240, 0.8)",
-          }}>
-            <div style={historyHeader}>
-              <h3>Query History</h3>
-              <button style={closeBtn} onClick={() => setShowHistory(false)}>✕</button>
+            key={qa.id}
+            style={{
+              background: "rgba(17,27,53,0.9)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 16,
+              padding: 20,
+              boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
+              cursor: "pointer",
+              transition: "transform 180ms ease, box-shadow 180ms ease",
+              display: "flex",
+              flexDirection: "column",
+              gap: 12,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-4px)";
+              e.currentTarget.style.boxShadow = "0 8px 32px rgba(0,0,0,0.5)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 4px 24px rgba(0,0,0,0.4)";
+            }}
+            onClick={() => {
+              setAction(qa.id);
+              if (qa.id === "AVAILABLE") {
+                setTimeout(() => {
+                  const select = document.getElementById("glassTypeSelect");
+                  if (select) select.focus();
+                }, 100);
+              }
+              if (qa.id === "INSTALLED") {
+                setTimeout(() => {
+                  const input = document.getElementById("siteInput");
+                  if (input) input.focus();
+                }, 100);
+              }
+            }}
+          >
+            <div style={{
+              width: 52,
+              height: 52,
+              borderRadius: 12,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 26,
+              background: `${qa.color}18`,
+              border: `1px solid ${qa.color}30`,
+            }}>
+              {qa.icon}
             </div>
-            {queryHistory.length === 0 ? (
-              <div style={emptyHistory}>No queries yet</div>
-            ) : (
-              <>
-                <button style={clearHistoryBtn} onClick={clearHistory}>
-                  Clear History
-                </button>
-                <div style={historyList}>
-                  {queryHistory.map((item) => (
-                    <div
-                      key={item.id}
-                      style={historyItem}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = "#f1f5f9";
-                        e.currentTarget.style.transform = "translateX(-4px)";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = "#f8fafc";
-                        e.currentTarget.style.transform = "translateX(0)";
-                      }}
-                      onClick={() => loadFromHistory(item)}
-                    >
-                      <div style={historyQuery}>{item.query}</div>
-                      <div style={historyTime}>
-                        {new Date(item.timestamp).toLocaleString()}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-        )}
-
-        {/* Manual Query Form */}
-        <div style={formCard}>
-          <h3 style={formTitle}>Custom Query</h3>
-          
-          <div style={formGroup}>
-            <label style={label}>Action Type</label>
-            <select
-              style={select}
-              value={action}
-              onChange={(e) => setAction(e.target.value)}
+            <div style={{ flex: 1 }}>
+              <h3 style={{ fontSize: 15, fontWeight: 700, color: "#fff", margin: "0 0 4px" }}>{qa.title}</h3>
+              <p style={{ fontSize: 12, color: "#A9B3D1", margin: 0 }}>{qa.description}</p>
+            </div>
+            <button
+              style={{
+                padding: "8px 14px",
+                borderRadius: 8,
+                border: "none",
+                background: qa.color,
+                color: "#fff",
+                fontWeight: 600,
+                fontSize: 13,
+                cursor: "pointer",
+                alignSelf: "flex-start",
+                transition: "opacity 140ms ease",
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                askAI(qa.id);
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.85"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
             >
-              <option value="">Select an action</option>
-              <option value="LOW_STOCK">🚨 Low Stock Alert</option>
-              <option value="AVAILABLE">📦 Available Stock</option>
-              <option value="INSTALLED">🏢 Installed Glass by Client</option>
-              <option value="PREDICT">🔮 Predict Future Demand</option>
+              Ask AI →
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {/* Backdrop — only shown on mobile */}
+      {showHistory && window.innerWidth < 768 && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0, left: 0, right: 0, bottom: 0,
+            background: "rgba(0,0,0,0.6)",
+            zIndex: 999,
+          }}
+          onClick={() => setShowHistory(false)}
+        />
+      )}
+
+      {/* Query History Sidebar */}
+      {showHistory && (
+        <div style={{
+          position: "fixed",
+          right: 0,
+          top: "70px",
+          width: window.innerWidth < 768 ? "100%" : "320px",
+          height: "calc(100vh - 70px)",
+          background: "rgba(11,18,38,0.98)",
+          boxShadow: "-4px 0 24px rgba(0,0,0,0.5)",
+          borderLeft: window.innerWidth < 768 ? "none" : "1px solid rgba(255,255,255,0.08)",
+          zIndex: 1000,
+          display: "flex",
+          flexDirection: "column",
+          padding: 20,
+          overflowY: "auto",
+        }}>
+          <div style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 16,
+            paddingBottom: 16,
+            borderBottom: "1px solid rgba(255,255,255,0.08)",
+          }}>
+            <h3 style={{ margin: 0, color: "#fff", fontSize: 15, fontWeight: 700 }}>Query History</h3>
+            <button
+              style={{ background: "transparent", border: "none", fontSize: 18, cursor: "pointer", color: "#A9B3D1", padding: "4px 8px" }}
+              onClick={() => setShowHistory(false)}
+            >✕</button>
+          </div>
+          {queryHistory.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "40px 20px", color: "#7180A6", fontSize: 14 }}>No queries yet</div>
+          ) : (
+            <>
+              <button
+                style={{
+                  width: "100%",
+                  padding: "8px 16px",
+                  borderRadius: 8,
+                  border: "1px solid rgba(255,107,129,0.3)",
+                  background: "rgba(255,107,129,0.1)",
+                  color: "#FF6B81",
+                  fontWeight: 600,
+                  fontSize: 13,
+                  cursor: "pointer",
+                  marginBottom: 16,
+                }}
+                onClick={clearHistory}
+              >
+                Clear History
+              </button>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {queryHistory.map((item) => (
+                  <div
+                    key={item.id}
+                    style={{
+                      padding: 12,
+                      borderRadius: 10,
+                      background: "rgba(255,255,255,0.04)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      cursor: "pointer",
+                      transition: "all 160ms ease",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "rgba(79,93,255,0.12)";
+                      e.currentTarget.style.borderColor = "rgba(79,93,255,0.3)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
+                    }}
+                    onClick={() => loadFromHistory(item)}
+                  >
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "#fff", marginBottom: 4 }}>{item.query}</div>
+                    <div style={{ fontSize: 11, color: "#7180A6" }}>{new Date(item.timestamp).toLocaleString()}</div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Manual Query Form */}
+      <div style={{
+        background: "rgba(17,27,53,0.9)",
+        border: "1px solid rgba(255,255,255,0.08)",
+        borderRadius: 16,
+        padding: 24,
+        marginBottom: 24,
+        boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
+      }}>
+        <h3 style={{ fontSize: 16, fontWeight: 700, color: "#fff", margin: "0 0 20px" }}>Custom Query</h3>
+
+        <div style={{ marginBottom: 18 }}>
+          <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#7180A6", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>
+            Action Type
+          </label>
+          <select
+            style={selectStyle}
+            value={action}
+            onChange={(e) => setAction(e.target.value)}
+            onFocus={(e) => { e.target.style.borderColor = "rgba(79,93,255,0.6)"; e.target.style.boxShadow = "0 0 0 3px rgba(79,93,255,0.15)"; }}
+            onBlur={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.1)"; e.target.style.boxShadow = "none"; }}
+          >
+            <option value="" style={{ background: "#0b1226" }}>Select an action</option>
+            <option value="LOW_STOCK" style={{ background: "#0b1226" }}>🚨 Low Stock Alert</option>
+            <option value="AVAILABLE" style={{ background: "#0b1226" }}>📦 Available Stock</option>
+            <option value="INSTALLED" style={{ background: "#0b1226" }}>🏢 Installed Glass by Client</option>
+            <option value="PREDICT" style={{ background: "#0b1226" }}>🔮 Predict Future Demand</option>
+          </select>
+        </div>
+
+        {action === "AVAILABLE" && (
+          <div style={{ marginBottom: 18 }}>
+            <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#7180A6", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>
+              Glass Type
+            </label>
+            <select
+              id="glassTypeSelect"
+              style={selectStyle}
+              value={glassType}
+              onChange={(e) => setGlassType(e.target.value)}
+              onFocus={(e) => { e.target.style.borderColor = "rgba(79,93,255,0.6)"; e.target.style.boxShadow = "0 0 0 3px rgba(79,93,255,0.15)"; }}
+              onBlur={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.1)"; e.target.style.boxShadow = "none"; }}
+            >
+              <option value="" style={{ background: "#0b1226" }}>Select glass type</option>
+              <option value="5MM" style={{ background: "#0b1226" }}>5 MM</option>
+              <option value="8MM" style={{ background: "#0b1226" }}>8 MM</option>
+              <option value="10MM" style={{ background: "#0b1226" }}>10 MM</option>
             </select>
           </div>
+        )}
 
-          {action === "AVAILABLE" && (
-            <div style={formGroup}>
-              <label style={label}>Glass Type</label>
-              <select
-                id="glassTypeSelect"
-                style={select}
-                value={glassType}
-                onChange={(e) => setGlassType(e.target.value)}
-              >
-                <option value="">Select glass type</option>
-                <option value="5MM">5 MM</option>
-                <option value="8MM">8 MM</option>
-                <option value="10MM">10 MM</option>
-              </select>
-            </div>
-          )}
-
-          {action === "INSTALLED" && (
-            <div style={formGroup}>
-              <label style={label}>Site/Client Name</label>
-              <input
-                id="siteInput"
-                style={input}
-                type="text"
-                placeholder="Enter site or client name"
-                value={site}
-                onChange={(e) => setSite(e.target.value)}
-              />
-            </div>
-          )}
-
-          <button
-            style={askButton}
-            onClick={() => askAI()}
-            disabled={loading || !action}
-          >
-            {loading ? (
-              <>
-                <span style={spinner}>⏳</span> AI is thinking...
-              </>
-            ) : (
-              <>
-                <span>✨</span> Ask AI Assistant
-              </>
-            )}
-          </button>
-        </div>
-
-        {/* AI Response */}
-        {result && (
-          <div style={resultCard} ref={resultRef}>
-            <div style={resultHeader}>
-              <div style={resultTitle}>
-                <span style={aiIcon}>🤖</span> AI Response
-              </div>
-              <div style={resultActions}>
-                <button
-                  id="copyBtn"
-                  style={copyButton}
-                  onClick={copyToClipboard}
-                  title="Copy to clipboard"
-                >
-                  📋 Copy
-                </button>
-              </div>
-            </div>
-            <div style={resultContent}>
-              <pre style={resultText}>{result}</pre>
-            </div>
-            <div style={resultFooter}>
-              <span style={resultMeta}>
-                Generated at {new Date().toLocaleTimeString()}
-              </span>
-            </div>
+        {action === "INSTALLED" && (
+          <div style={{ marginBottom: 18 }}>
+            <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#7180A6", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>
+              Site / Client Name
+            </label>
+            <input
+              id="siteInput"
+              style={inputStyle}
+              type="text"
+              placeholder="Enter site or client name"
+              value={site}
+              onChange={(e) => setSite(e.target.value)}
+              onFocus={(e) => { e.target.style.borderColor = "rgba(79,93,255,0.6)"; e.target.style.boxShadow = "0 0 0 3px rgba(79,93,255,0.15)"; }}
+              onBlur={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.1)"; e.target.style.boxShadow = "none"; }}
+            />
           </div>
         )}
 
-        {/* Loading State */}
-        {loading && !result && (
-          <div style={loadingCard}>
-            <div style={loadingAnimation}>
-              <div style={loadingDot}></div>
-              <div style={loadingDot}></div>
-              <div style={loadingDot}></div>
-            </div>
-            <p style={loadingText}>AI is analyzing your request...</p>
-          </div>
-        )}
+        <button
+          style={{
+            width: "100%",
+            height: 46,
+            borderRadius: 10,
+            border: "none",
+            background: loading || !action ? "rgba(79,93,255,0.45)" : "#4F5DFF",
+            color: "#fff",
+            fontWeight: 700,
+            fontSize: 15,
+            cursor: loading || !action ? "not-allowed" : "pointer",
+            transition: "background 140ms ease",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+          }}
+          onClick={() => askAI()}
+          disabled={loading || !action}
+          onMouseEnter={(e) => { if (!loading && action) e.currentTarget.style.background = "#3D4DE8"; }}
+          onMouseLeave={(e) => { if (!loading && action) e.currentTarget.style.background = "#4F5DFF"; }}
+        >
+          {loading ? (
+            <>
+              <span style={{ display: "inline-block", animation: "spin 1s linear infinite" }}>⏳</span> AI is thinking...
+            </>
+          ) : (
+            <>
+              <span>✨</span> Ask AI Assistant
+            </>
+          )}
+        </button>
       </div>
-    </PageWrapper>
+
+      {/* Loading State */}
+      {loading && !result && (
+        <div style={{
+          background: "rgba(17,27,53,0.9)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: 16,
+          padding: 40,
+          textAlign: "center",
+          boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
+          marginBottom: 24,
+        }}>
+          <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 16 }}>
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                style={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: "50%",
+                  background: "#4F5DFF",
+                  animation: `bounce 1.4s infinite ease-in-out ${i * 0.16}s`,
+                }}
+              />
+            ))}
+          </div>
+          <p style={{ fontSize: 14, color: "#A9B3D1", margin: 0 }}>AI is analyzing your request...</p>
+        </div>
+      )}
+
+      {/* AI Response */}
+      {result && (
+        <div
+          style={{
+            background: "rgba(17,27,53,0.9)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: 16,
+            padding: 24,
+            boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
+            borderLeft: "4px solid #4F5DFF",
+          }}
+          ref={resultRef}
+        >
+          <div style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 16,
+            paddingBottom: 16,
+            borderBottom: "1px solid rgba(255,255,255,0.08)",
+          }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "#fff", display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 22 }}>🤖</span> AI Response
+            </div>
+            <button
+              id="copyBtn"
+              style={{
+                padding: "6px 14px",
+                borderRadius: 8,
+                border: "1px solid rgba(255,255,255,0.12)",
+                background: "rgba(255,255,255,0.06)",
+                color: "#A9B3D1",
+                fontWeight: 600,
+                fontSize: 12,
+                cursor: "pointer",
+                transition: "all 140ms ease",
+              }}
+              onClick={copyToClipboard}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.12)"; e.currentTarget.style.color = "#fff"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.color = "#A9B3D1"; }}
+              title="Copy to clipboard"
+            >
+              📋 Copy
+            </button>
+          </div>
+          <div style={{ marginBottom: 16 }}>
+            <pre style={{
+              fontSize: 14,
+              lineHeight: 1.7,
+              color: "#37E3A5",
+              whiteSpace: "pre-wrap",
+              wordWrap: "break-word",
+              margin: 0,
+              fontFamily: "'Fira Mono', 'Consolas', monospace",
+            }}>
+              {result}
+            </pre>
+          </div>
+          <div style={{ paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+            <span style={{ fontSize: 11, color: "#7180A6" }}>
+              Generated at {new Date().toLocaleTimeString()}
+            </span>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes bounce {
+          0%, 80%, 100% { transform: scale(0); opacity: 0.4; }
+          40% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
+    </div>
   );
 }
 
 export default AiAssistant;
-
-/* ================= STYLES ================= */
-
-const container = {
-  maxWidth: "1400px",
-  margin: "0 auto",
-  padding: "24px 16px",
-};
-
-const headerCard = {
-  background: "rgba(255, 255, 255, 0.95)",
-  borderRadius: "16px",
-  padding: "32px",
-  marginBottom: "24px",
-  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-  border: "1px solid rgba(226, 232, 240, 0.8)",
-};
-
-const headerContent = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  flexWrap: "wrap",
-  gap: "16px",
-};
-
-const title = {
-  fontSize: "32px",
-  fontWeight: "700",
-  color: "#0f172a",
-  margin: 0,
-  marginBottom: "8px",
-  background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
-  WebkitBackgroundClip: "text",
-  WebkitTextFillColor: "transparent",
-};
-
-const subtitle = {
-  fontSize: "16px",
-  color: "#64748b",
-  margin: 0,
-};
-
-const headerActions = {
-  display: "flex",
-  gap: "12px",
-};
-
-const historyButton = {
-  padding: "10px 20px",
-  borderRadius: "8px",
-  border: "1px solid rgba(226, 232, 240, 0.8)",
-  background: "#ffffff",
-  color: "#475569",
-  fontWeight: "600",
-  fontSize: "14px",
-  cursor: "pointer",
-  transition: "all 0.2s ease",
-};
-
-const quickActionsGrid = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-  gap: "20px",
-  marginBottom: "24px",
-};
-
-const quickActionCard = {
-  background: "rgba(255, 255, 255, 0.95)",
-  borderRadius: "12px",
-  padding: "24px",
-  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-  border: "1px solid rgba(226, 232, 240, 0.8)",
-  cursor: "pointer",
-  transition: "all 0.2s ease",
-  display: "flex",
-  flexDirection: "column",
-  gap: "16px",
-};
-
-// Add hover effect via inline style with onMouseEnter/onMouseLeave
-
-const quickActionIcon = {
-  width: "56px",
-  height: "56px",
-  borderRadius: "12px",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  fontSize: "28px",
-  marginBottom: "8px",
-};
-
-const quickActionContent = {
-  flex: 1,
-};
-
-const quickActionTitle = {
-  fontSize: "18px",
-  fontWeight: "700",
-  color: "#0f172a",
-  margin: 0,
-  marginBottom: "4px",
-};
-
-const quickActionDesc = {
-  fontSize: "13px",
-  color: "#64748b",
-  margin: 0,
-};
-
-const quickActionBtn = {
-  padding: "10px 16px",
-  borderRadius: "8px",
-  border: "none",
-  color: "white",
-  fontWeight: "600",
-  fontSize: "14px",
-  cursor: "pointer",
-  transition: "all 0.2s ease",
-  alignSelf: "flex-start",
-};
-
-const formCard = {
-  background: "rgba(255, 255, 255, 0.95)",
-  borderRadius: "16px",
-  padding: "28px",
-  marginBottom: "24px",
-  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-  border: "1px solid rgba(226, 232, 240, 0.8)",
-};
-
-const formTitle = {
-  fontSize: "20px",
-  fontWeight: "700",
-  color: "#0f172a",
-  margin: 0,
-  marginBottom: "20px",
-};
-
-const formGroup = {
-  marginBottom: "20px",
-};
-
-const label = {
-  display: "block",
-  fontSize: "13px",
-  fontWeight: "600",
-  color: "#475569",
-  marginBottom: "8px",
-};
-
-const select = {
-  width: "100%",
-  padding: "12px 16px",
-  borderRadius: "8px",
-  border: "1px solid rgba(226, 232, 240, 0.8)",
-  background: "#ffffff",
-  color: "#0f172a",
-  fontSize: "14px",
-  cursor: "pointer",
-  transition: "all 0.2s ease",
-};
-
-const input = {
-  width: "100%",
-  padding: "12px 16px",
-  borderRadius: "8px",
-  border: "1px solid rgba(226, 232, 240, 0.8)",
-  background: "#ffffff",
-  color: "#0f172a",
-  fontSize: "14px",
-  transition: "all 0.2s ease",
-};
-
-const askButton = {
-  width: "100%",
-  padding: "16px 24px",
-  borderRadius: "8px",
-  border: "none",
-  background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
-  color: "white",
-  fontWeight: "700",
-  fontSize: "16px",
-  cursor: "pointer",
-  transition: "all 0.2s ease",
-  boxShadow: "0 4px 12px rgba(99, 102, 241, 0.3)",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: "8px",
-};
-
-const resultCard = {
-  background: "rgba(255, 255, 255, 0.95)",
-  borderRadius: "16px",
-  padding: "24px",
-  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-  border: "1px solid rgba(226, 232, 240, 0.8)",
-  marginTop: "24px",
-  animation: "slideIn 0.3s ease-out",
-};
-
-const resultHeader = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  marginBottom: "16px",
-  paddingBottom: "16px",
-  borderBottom: "1px solid rgba(226, 232, 240, 0.8)",
-};
-
-const resultTitle = {
-  fontSize: "18px",
-  fontWeight: "700",
-  color: "#0f172a",
-  display: "flex",
-  alignItems: "center",
-  gap: "8px",
-};
-
-const aiIcon = {
-  fontSize: "24px",
-};
-
-const resultActions = {
-  display: "flex",
-  gap: "8px",
-};
-
-const copyButton = {
-  padding: "8px 16px",
-  borderRadius: "6px",
-  border: "1px solid rgba(226, 232, 240, 0.8)",
-  background: "#f8fafc",
-  color: "#475569",
-  fontWeight: "600",
-  fontSize: "13px",
-  cursor: "pointer",
-  transition: "all 0.2s ease",
-};
-
-const resultContent = {
-  marginBottom: "16px",
-};
-
-const resultText = {
-  fontSize: "14px",
-  lineHeight: "1.6",
-  color: "#0f172a",
-  whiteSpace: "pre-wrap",
-  wordWrap: "break-word",
-  margin: 0,
-  fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif",
-};
-
-const resultFooter = {
-  paddingTop: "12px",
-  borderTop: "1px solid rgba(226, 232, 240, 0.8)",
-};
-
-const resultMeta = {
-  fontSize: "12px",
-  color: "#94a3b8",
-};
-
-const loadingCard = {
-  background: "rgba(255, 255, 255, 0.95)",
-  borderRadius: "16px",
-  padding: "40px",
-  textAlign: "center",
-  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-  border: "1px solid rgba(226, 232, 240, 0.8)",
-};
-
-const loadingAnimation = {
-  display: "flex",
-  justifyContent: "center",
-  gap: "8px",
-  marginBottom: "16px",
-};
-
-const loadingDot = {
-  width: "12px",
-  height: "12px",
-  borderRadius: "50%",
-  background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
-  animation: "bounce 1.4s infinite ease-in-out",
-};
-
-const loadingText = {
-  fontSize: "14px",
-  color: "#64748b",
-  margin: 0,
-};
-
-const historySidebar = {
-  position: "fixed",
-  right: 0,
-  top: "70px",
-  width: "320px",
-  height: "calc(100vh - 70px)",
-  background: "rgba(255, 255, 255, 0.98)",
-  boxShadow: "-4px 0 6px -1px rgba(0, 0, 0, 0.1)",
-  borderLeft: "1px solid rgba(226, 232, 240, 0.8)",
-  zIndex: 1000,
-  display: "flex",
-  flexDirection: "column",
-  padding: "20px",
-  overflowY: "auto",
-};
-
-const historyHeader = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  marginBottom: "16px",
-  paddingBottom: "16px",
-  borderBottom: "1px solid rgba(226, 232, 240, 0.8)",
-};
-
-const closeBtn = {
-  background: "transparent",
-  border: "none",
-  fontSize: "20px",
-  cursor: "pointer",
-  color: "#64748b",
-  padding: "4px 8px",
-};
-
-const clearHistoryBtn = {
-  width: "100%",
-  padding: "8px 16px",
-  borderRadius: "6px",
-  border: "1px solid rgba(226, 232, 240, 0.8)",
-  background: "#f8fafc",
-  color: "#ef4444",
-  fontWeight: "600",
-  fontSize: "13px",
-  cursor: "pointer",
-  marginBottom: "16px",
-};
-
-const historyList = {
-  display: "flex",
-  flexDirection: "column",
-  gap: "8px",
-};
-
-const historyItem = {
-  padding: "12px",
-  borderRadius: "8px",
-  background: "#f8fafc",
-  border: "1px solid rgba(226, 232, 240, 0.8)",
-  cursor: "pointer",
-  transition: "all 0.2s ease",
-};
-
-const historyQuery = {
-  fontSize: "13px",
-  fontWeight: "600",
-  color: "#0f172a",
-  marginBottom: "4px",
-};
-
-const historyTime = {
-  fontSize: "11px",
-  color: "#94a3b8",
-};
-
-const emptyHistory = {
-  textAlign: "center",
-  padding: "40px 20px",
-  color: "#94a3b8",
-  fontSize: "14px",
-};
-
-const backdrop = {
-  position: "fixed",
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  background: "rgba(0, 0, 0, 0.5)",
-  zIndex: 999,
-};
-
-const spinner = {
-  display: "inline-block",
-  animation: "spin 1s linear infinite",
-};

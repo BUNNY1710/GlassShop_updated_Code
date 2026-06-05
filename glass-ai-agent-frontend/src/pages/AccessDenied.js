@@ -1,43 +1,100 @@
 import { useNavigate } from "react-router-dom";
-import PageWrapper from "../components/PageWrapper";
 
 function AccessDenied() {
   const navigate = useNavigate();
   return (
-    <PageWrapper>
+    <div style={{
+      minHeight: "100vh",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "24px",
+      fontFamily: "'Inter', -apple-system, sans-serif",
+    }}>
       <div style={{
-        display: "flex", flexDirection: "column", alignItems: "center",
-        justifyContent: "center", minHeight: "60vh", textAlign: "center",
-        gap: 12, fontFamily: "'Inter',-apple-system,sans-serif",
+        background: "rgba(17,27,53,0.9)",
+        border: "1.5px solid rgba(255,107,129,0.35)",
+        borderRadius: 20,
+        padding: "48px 40px",
+        maxWidth: 420,
+        width: "100%",
+        textAlign: "center",
+        boxShadow: "0 4px 40px rgba(0,0,0,0.5)",
       }}>
-        <div style={{ fontSize: 52, opacity: 0.15, lineHeight: 1 }}>⊘</div>
+        {/* Icon */}
         <div style={{
-          fontSize: 52, fontWeight: 800, color: "#ef4444",
-          letterSpacing: "-0.04em", lineHeight: 1,
+          width: 80,
+          height: 80,
+          borderRadius: "50%",
+          background: "rgba(255,107,129,0.12)",
+          border: "2px solid rgba(255,107,129,0.3)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          margin: "0 auto 24px",
+          fontSize: 36,
+        }}>
+          🚫
+        </div>
+
+        {/* 403 */}
+        <div style={{
+          fontSize: 56,
+          fontWeight: 800,
+          color: "#FF6B81",
+          letterSpacing: "-0.04em",
+          lineHeight: 1,
+          marginBottom: 12,
         }}>
           403
         </div>
-        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#0f172a", margin: "8px 0 0" }}>
+
+        {/* Title */}
+        <h2 style={{
+          fontSize: 22,
+          fontWeight: 700,
+          color: "#FFFFFF",
+          margin: "0 0 10px",
+          letterSpacing: "-0.01em",
+        }}>
           Access Denied
         </h2>
-        <p style={{ fontSize: 14, color: "#64748b", margin: "4px 0 0", maxWidth: 340, lineHeight: 1.6 }}>
+
+        {/* Subtitle */}
+        <p style={{
+          fontSize: 14,
+          color: "#A9B3D1",
+          margin: "0 0 32px",
+          lineHeight: 1.6,
+          maxWidth: 300,
+          marginLeft: "auto",
+          marginRight: "auto",
+        }}>
           You do not have permission to access this module.
         </p>
+
+        {/* Button */}
         <button
           onClick={() => navigate("/dashboard")}
           style={{
-            marginTop: 16, padding: "10px 28px", borderRadius: 8,
-            background: "#4f46e5", color: "#fff", border: "none",
-            fontSize: 14, fontWeight: 600, cursor: "pointer",
+            padding: "11px 32px",
+            borderRadius: 10,
+            background: "#4F5DFF",
+            color: "#fff",
+            border: "none",
+            fontSize: 14,
+            fontWeight: 600,
+            cursor: "pointer",
             transition: "background 140ms ease",
+            height: 44,
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = "#4338ca"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = "#4f46e5"; }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = "#3D4DE8"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "#4F5DFF"; }}
         >
           Back to Dashboard
         </button>
       </div>
-    </PageWrapper>
+    </div>
   );
 }
 

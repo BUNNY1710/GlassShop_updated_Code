@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PageWrapper from "../components/PageWrapper";
-import dashboardBg from "../assets/dashboard-bg.jpg";
 import api from "../api/api";
 
 function ManageStaff() {
@@ -25,7 +24,7 @@ function ManageStaff() {
   };
 
   return (
-    <PageWrapper background={dashboardBg}>
+    <PageWrapper>
       <div style={card}>
         {/* ❌ CLOSE BUTTON */}
         <button
@@ -36,14 +35,14 @@ function ManageStaff() {
           ✕
         </button>
 
-        <h2 style={{ marginBottom: "20px" }}>👥 Manage Staff</h2>
+        <h2 style={{ marginBottom: "20px", color: "#fff" }}>👥 Manage Staff</h2>
 
         {staff.length === 0 ? (
-          <p style={{ opacity: 0.8 }}>No staff found</p>
+          <p style={{ color: "#A9B3D1", opacity: 0.8 }}>No staff found</p>
         ) : (
           staff.map(s => (
             <div key={s.id} style={row}>
-              <span>{s.userName}</span>
+              <span style={{ color: "#fff" }}>{s.userName}</span>
 
               <button
                 style={removeBtn}
@@ -60,11 +59,11 @@ function ManageStaff() {
       {confirmUser && (
         <div style={overlay}>
           <div style={confirmCard}>
-            <h3>Remove Staff</h3>
+            <h3 style={{ color: "#fff" }}>Remove Staff</h3>
 
-            <p style={{ opacity: 0.85 }}>
+            <p style={{ color: "#A9B3D1", opacity: 0.85 }}>
               Are you sure you want to remove
-              <b> {confirmUser.userName} </b>?
+              <b style={{ color: "#fff" }}> {confirmUser.userName} </b>?
             </p>
 
             <div style={actions}>
@@ -97,10 +96,11 @@ const card = {
   width: "100%",
   maxWidth: "520px",
   padding: "30px",
-  background: "rgba(0,0,0,0.65)",
+  background: "rgba(17,27,53,0.9)",
   borderRadius: "16px",
   color: "white",
-  boxShadow: "0 20px 50px rgba(0,0,0,0.7)",
+  boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
+  border: "1px solid rgba(255,255,255,0.08)",
   position: "relative",
   boxSizing: "border-box",
 };
@@ -111,7 +111,7 @@ const closeBtn = {
   right: "14px",
   background: "transparent",
   border: "none",
-  color: "#aaa",
+  color: "#7180A6",
   fontSize: "20px",
   cursor: "pointer",
 };
@@ -121,16 +121,17 @@ const row = {
   justifyContent: "space-between",
   alignItems: "center",
   padding: "12px 0",
-  borderBottom: "1px solid rgba(255,255,255,0.1)",
+  borderBottom: "1px solid rgba(255,255,255,0.08)",
 };
 
 const removeBtn = {
-  background: "#dc2626",
-  border: "none",
-  color: "white",
+  background: "rgba(255,107,129,0.15)",
+  border: "1px solid rgba(255,107,129,0.3)",
+  color: "#FF6B81",
   padding: "6px 14px",
   borderRadius: "8px",
   cursor: "pointer",
+  fontWeight: "600",
 };
 
 /* MODAL */
@@ -138,7 +139,7 @@ const removeBtn = {
 const overlay = {
   position: "fixed",
   inset: 0,
-  background: "rgba(0,0,0,0.65)",
+  background: "rgba(0,0,0,0.7)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
@@ -150,10 +151,12 @@ const confirmCard = {
   maxWidth: "360px",
   padding: "25px",
   borderRadius: "16px",
-  background: "rgba(20,20,20,0.95)",
+  background: "rgba(17,27,53,0.98)",
+  border: "1px solid rgba(255,255,255,0.1)",
   color: "white",
   textAlign: "center",
   boxSizing: "border-box",
+  boxShadow: "0 20px 60px rgba(0,0,0,0.6)",
 };
 
 const actions = {
@@ -163,18 +166,19 @@ const actions = {
 };
 
 const dangerBtn = {
-  background: "#dc2626",
-  color: "white",
-  border: "none",
+  background: "rgba(255,107,129,0.15)",
+  color: "#FF6B81",
+  border: "1px solid rgba(255,107,129,0.3)",
   padding: "10px 16px",
   borderRadius: "10px",
   cursor: "pointer",
+  fontWeight: "600",
 };
 
 const cancelBtn = {
-  background: "#374151",
-  color: "white",
-  border: "none",
+  background: "rgba(255,255,255,0.08)",
+  color: "#A9B3D1",
+  border: "1px solid rgba(255,255,255,0.12)",
   padding: "10px 16px",
   borderRadius: "10px",
   cursor: "pointer",

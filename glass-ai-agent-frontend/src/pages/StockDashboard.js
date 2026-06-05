@@ -1,8 +1,6 @@
 import { useEffect, useState, useMemo, useRef } from "react";
 import { toast } from "react-toastify";
 import api from "../api/api";
-import PageWrapper from "../components/PageWrapper";
-import { Card, Button, Input, Select, StatCard } from "../components/ui";
 import ConfirmModal from "../components/ConfirmModal";
 import { getUserRole } from "../utils/auth";
 import "../styles/design-system.css";
@@ -21,9 +19,9 @@ const formatThicknessMM = (value) =>
 // Helper functions for dimension parsing and conversion
 const parseDimension = (value) => {
   if (!value || value.trim() === "") return null;
-  
+
   const trimmed = value.trim();
-  
+
   // Handle fraction format (e.g., "5 1/4")
   const fractionMatch = trimmed.match(/^(\d+)\s+(\d+)\/(\d+)$/);
   if (fractionMatch) {
@@ -32,19 +30,19 @@ const parseDimension = (value) => {
     const denominator = parseFloat(fractionMatch[3]);
     return whole + (numerator / denominator);
   }
-  
+
   // Handle decimal format (e.g., "5.5")
   const decimal = parseFloat(trimmed);
   if (!isNaN(decimal)) {
     return decimal;
   }
-  
+
   return null;
 };
 
 const convertToMM = (value, unit) => {
   if (value === null || value === undefined) return null;
-  
+
   switch (unit?.toUpperCase()) {
     case "MM":
       return value;
@@ -59,7 +57,7 @@ const convertToMM = (value, unit) => {
 
 const convertFromMM = (valueInMM, targetUnit) => {
   if (valueInMM === null || valueInMM === undefined) return null;
-  
+
   switch (targetUnit?.toUpperCase()) {
     case "MM":
       return valueInMM;
@@ -122,7 +120,7 @@ function StockDashboard() {
     try {
       setLoading(true);
       const res = await api.get("/api/stock/all");
-      const stockWithQuantity = res.data.filter(item => 
+      const stockWithQuantity = res.data.filter(item =>
         item.quantity != null && item.quantity > 0
       );
       setAllStock(stockWithQuantity);
@@ -200,7 +198,7 @@ function StockDashboard() {
       if (pendingPayload) {
         await api.post("/api/stock/update", pendingPayload);
       }
-      
+
       setShowConfirm(false);
       setPendingPayload(null);
       toast.success("✅ Stock updated successfully");
@@ -284,8 +282,8 @@ function StockDashboard() {
         quantity: Number(transferQuantity)
       });
 
-      const responseMessage = typeof res.data === 'string' 
-        ? res.data 
+      const responseMessage = typeof res.data === 'string'
+        ? res.data
         : (res.data?.message || "✅ Transfer completed successfully");
       setTransferMessage(responseMessage);
       setShowTransferConfirm(false);
@@ -296,8 +294,8 @@ function StockDashboard() {
       }, 2000);
     } catch (error) {
       const errorData = error.response?.data;
-      const errorMessage = typeof errorData === 'string' 
-        ? errorData 
+      const errorMessage = typeof errorData === 'string'
+        ? errorData
         : (errorData?.error || error.message || "❌ Transfer failed");
       setTransferMessage(errorMessage);
       setShowTransferConfirm(false);
@@ -368,18 +366,18 @@ function StockDashboard() {
   };
 
   const filteredStock = useMemo(() => {
-    const stockWithQuantity = allStock.filter(s => 
+    const stockWithQuantity = allStock.filter(s =>
       s.quantity != null && s.quantity > 0
     );
-    
+
     const searchHeightValue = parseDimension(filterHeight);
     const searchWidthValue = parseDimension(filterWidth);
-    
-    const searchHeightMM = searchHeightValue !== null 
-      ? convertToMM(searchHeightValue, searchUnit) 
+
+    const searchHeightMM = searchHeightValue !== null
+      ? convertToMM(searchHeightValue, searchUnit)
       : null;
-    const searchWidthMM = searchWidthValue !== null 
-      ? convertToMM(searchWidthValue, searchUnit) 
+    const searchWidthMM = searchWidthValue !== null
+      ? convertToMM(searchWidthValue, searchUnit)
       : null;
 
     const filtered = stockWithQuantity.map(s => {
@@ -388,12 +386,12 @@ function StockDashboard() {
       if (filterThickness && filterThickness.trim() !== "") {
         const searchValue = filterThickness.trim().toLowerCase();
         const stockThickness = s.glass?.thickness;
-        
+
         if (stockThickness) {
           // Match exact number or contains match for instant results
           // e.g., typing "5" will immediately show all items with thickness 5mm
           const stockThicknessStr = String(stockThickness).toLowerCase();
-          matchThickness = stockThicknessStr === searchValue || 
+          matchThickness = stockThicknessStr === searchValue ||
                           stockThicknessStr.includes(searchValue) ||
                           stockThicknessStr.startsWith(searchValue);
         } else {
@@ -406,7 +404,7 @@ function StockDashboard() {
       // Normal search: height matches height, width matches width
       let matchHeight = true;
       let matchWidth = true;
-      
+
       if (searchHeightMM !== null) {
         const stockHeightValue = parseDimension(s.height);
         if (stockHeightValue !== null) {
@@ -492,12 +490,12 @@ function StockDashboard() {
       if (a.isReverseMatch !== b.isReverseMatch) {
         return a.isReverseMatch ? -1 : 1; // Reverse matches first
       }
-      
+
       const aHeightValue = parseDimension(a.height);
       const bHeightValue = parseDimension(b.height);
       const aWidthValue = parseDimension(a.width);
       const bWidthValue = parseDimension(b.width);
-      
+
       const aHeightMM = aHeightValue !== null ? convertToMM(aHeightValue, a.glass?.unit) : 0;
       const bHeightMM = bHeightValue !== null ? convertToMM(bHeightValue, b.glass?.unit) : 0;
       const aWidthMM = aWidthValue !== null ? convertToMM(aWidthValue, a.glass?.unit) : 0;
@@ -515,528 +513,634 @@ function StockDashboard() {
   const lowStockCount = filteredStock.filter(s => s.quantity < s.minQuantity).length;
   const totalQuantity = filteredStock.reduce((sum, s) => sum + (s.quantity || 0), 0);
 
+  // Dark modal input style
+  const darkInput = {
+    width: "100%",
+    height: 44,
+    padding: "0 12px",
+    background: "rgba(255,255,255,0.06)",
+    border: "1px solid rgba(255,255,255,0.1)",
+    borderRadius: 12,
+    color: "#fff",
+    fontSize: 14,
+    outline: "none",
+    boxSizing: "border-box",
+    fontFamily: "inherit",
+  };
+
+  const darkSelect = {
+    ...darkInput,
+    cursor: "pointer",
+  };
+
+  const darkLabel = {
+    display: "block",
+    fontSize: 11,
+    fontWeight: 700,
+    color: "#7180A6",
+    textTransform: "uppercase",
+    letterSpacing: "0.08em",
+    marginBottom: 6,
+  };
+
+  const modalOverlay = {
+    position: "fixed",
+    inset: 0,
+    background: "rgba(5,11,31,0.85)",
+    zIndex: 9999,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 16,
+    backdropFilter: "blur(8px)",
+  };
+
+  const modalCard = {
+    background: "rgba(17,27,53,0.98)",
+    border: "1px solid rgba(255,255,255,0.1)",
+    borderRadius: 20,
+    width: "100%",
+    maxWidth: 400,
+    overflow: "hidden",
+    boxShadow: "0 24px 64px rgba(0,0,0,0.6)",
+  };
+
+  const modalHeader = {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "18px 20px",
+    borderBottom: "1px solid rgba(255,255,255,0.07)",
+  };
+
+  const modalBody = {
+    padding: "18px 20px",
+    display: "flex",
+    flexDirection: "column",
+    gap: 14,
+  };
+
+  const modalFooter = {
+    padding: "14px 20px",
+    borderTop: "1px solid rgba(255,255,255,0.07)",
+    display: "flex",
+    gap: 10,
+    justifyContent: "flex-end",
+  };
+
+  const stockInfoBox = {
+    background: "rgba(255,255,255,0.04)",
+    border: "1px solid rgba(255,255,255,0.08)",
+    borderRadius: 12,
+    padding: "12px 14px",
+  };
+
   return (
-    <PageWrapper>
-      <div style={getContainerStyle(isMobile)}>
-        {/* Header Section */}
-        <div style={headerSection}>
-          <div>
-            <h1 style={getPageTitleStyle(isMobile)}>View Stock</h1>
-            <p style={pageSubtitle}>Browse and manage your inventory</p>
+    <div style={{ padding: "16px 16px 24px", minHeight: "100vh" }}>
+
+      {/* PAGE HEADER */}
+      <div style={{ marginBottom: 20 }}>
+        <h1 style={{ fontSize: 26, fontWeight: 800, color: "#fff", margin: "0 0 4px", letterSpacing: "-0.02em" }}>
+          View Stock
+        </h1>
+        <p style={{ fontSize: 13, color: "#A9B3D1", margin: 0 }}>
+          <span style={{ color: "#37E3A5", fontWeight: 700 }}>{filteredStock.length}</span>
+          {" "}total items found in inventory
+        </p>
+      </div>
+
+      {/* KPI CARDS — desktop: scrollable row | mobile: 3-column mini strip */}
+      {isMobile ? (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, marginBottom: 12 }}>
+          {/* STOCK */}
+          <div style={{ background: "rgba(17,27,53,0.9)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, padding: "8px 6px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, minHeight: 68 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4F5DFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+            {loading
+              ? <div style={{ height: 22, width: 36, borderRadius: 4, background: "rgba(255,255,255,0.06)" }} />
+              : <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: "-0.04em", lineHeight: 1 }}>{totalQuantity.toLocaleString()}</div>
+            }
+            <div style={{ fontSize: 10, fontWeight: 600, color: "#7180A6", textTransform: "uppercase", letterSpacing: "0.06em" }}>Stock</div>
+          </div>
+
+          {/* LOW */}
+          <div style={{ background: lowStockCount > 0 ? "rgba(255,107,129,0.1)" : "rgba(17,27,53,0.9)", border: lowStockCount > 0 ? "1px solid rgba(255,107,129,0.3)" : "1px solid rgba(255,255,255,0.08)", borderRadius: 10, padding: "8px 6px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, minHeight: 68 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF6B81" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            {loading
+              ? <div style={{ height: 22, width: 24, borderRadius: 4, background: "rgba(255,255,255,0.06)" }} />
+              : <div style={{ fontSize: 22, fontWeight: 800, color: lowStockCount > 0 ? "#FF6B81" : "#fff", letterSpacing: "-0.04em", lineHeight: 1 }}>{lowStockCount}</div>
+            }
+            <div style={{ fontSize: 10, fontWeight: 600, color: "#7180A6", textTransform: "uppercase", letterSpacing: "0.06em" }}>Low</div>
+          </div>
+
+          {/* ITEMS */}
+          <div style={{ background: "rgba(17,27,53,0.9)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, padding: "8px 6px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, minHeight: 68 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#37E3A5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            {loading
+              ? <div style={{ height: 22, width: 28, borderRadius: 4, background: "rgba(255,255,255,0.06)" }} />
+              : <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: "-0.04em", lineHeight: 1 }}>{totalStock}</div>
+            }
+            <div style={{ fontSize: 10, fontWeight: 600, color: "#7180A6", textTransform: "uppercase", letterSpacing: "0.06em" }}>Items</div>
           </div>
         </div>
-
-        {/* Stats Cards — compact single-row KPI layout */}
-        <div style={getStatsGridStyle(isMobile)}>
-          <StatCard compact icon="📦" label="Total Items"    value={totalStock}                   color="#6366f1" loading={loading} />
-          <StatCard compact icon="⚠️" label="Low Stock"      value={lowStockCount}                color="#ef4444" loading={loading} trend={lowStockCount > 0 ? -1 : undefined} />
-          <StatCard compact icon="🔢" label="Total Quantity"  value={totalQuantity.toLocaleString()} color="#22c55e" loading={loading} />
-        </div>
-
-        {/* Filters Card */}
-        <Card style={getFilterCardStyle(isMobile)}>
-          <div style={filterHeader}>
-            <div style={filterIcon}>🔍</div>
-            <div>
-              <h3 style={filterTitle}>Search & Filter</h3>
-              <p style={filterSubtitle}>Search & Filter stock by type, dimensions, or unit</p>
+      ) : (
+        <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 4, marginBottom: 20, scrollbarWidth: "none" }}>
+          {/* TOTAL STOCK card — desktop */}
+          <div style={{ minWidth: 150, background: "rgba(17,27,53,0.9)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "14px 16px", flexShrink: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+              <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(79,93,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4F5DFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+              </div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: "#7180A6", textTransform: "uppercase", letterSpacing: "0.08em" }}>TOTAL STOCK</div>
             </div>
-          </div>
-
-          <div style={getFilterGridStyle(isMobile)}>
-            <Input
-              placeholder="Thickness (e.g., 5, 8, 10)"
-              value={filterThickness}
-              onChange={e => setFilterThickness(e.target.value)}
-              icon="📏"
-            />
-            <Input
-              type="text"
-              placeholder="Height (e.g. 5, 5.5, 5 1/4)"
-              value={filterHeight}
-              onChange={e => setFilterHeight(e.target.value)}
-              icon="📏"
-            />
-            <Input
-              type="text"
-              placeholder="Width (e.g. 7, 7.5, 7 3/8)"
-              value={filterWidth}
-              onChange={e => setFilterWidth(e.target.value)}
-              icon="📐"
-            />
-            <Select
-              value={searchUnit}
-              onChange={e => setSearchUnit(e.target.value)}
-              icon="📏"
-            >
-              <option value="MM">MM</option>
-              <option value="INCH">INCH</option>
-              <option value="FEET">FEET</option>
-            </Select>
-            <Button
-              variant="secondary"
-              onClick={() => {
-                setFilterThickness("");
-                setFilterHeight("");
-                setFilterWidth("");
-                setSearchUnit("MM");
-              }}
-              fullWidth={isMobile}
-            >
-              Clear Filters
-            </Button>
-          </div>
-        </Card>
-
-        {/* Stock Table Card */}
-        <Card style={getTableCardStyle(isMobile)}>
-          <div style={tableHeader}>
-            <div>
-              <h3 style={tableTitle}>Stock Inventory</h3>
-              <p style={tableSubtitle}>
-                {filteredStock.length} {filteredStock.length === 1 ? "item" : "items"} found
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              icon="🔄"
-              onClick={loadStock}
-            >
-              Refresh
-            </Button>
-          </div>
-
-          <div style={tableWrapper}>
             {loading ? (
-              <div style={loadingState}>
-                <div style={skeletonRow}></div>
-                <div style={skeletonRow}></div>
-                <div style={skeletonRow}></div>
-              </div>
-            ) : filteredStock.length === 0 ? (
-              <div style={emptyState}>
-                <div style={emptyIcon}>📦</div>
-                <p style={emptyText}>No stock found</p>
-                <p style={emptySubtext}>
-                  {filterThickness || filterHeight || filterWidth 
-                    ? "Try adjusting your filters" 
-                    : "Add stock to get started"}
-                </p>
-              </div>
-            ) : isMobile ? (
-              /* ── MOBILE: ultra-compact single-line cards ── */
-              <div style={mobileCardList}>
-                {filteredStock.map((s, i) => {
-                  const isLow = s.quantity < s.minQuantity;
-                  const isReverseMatch = s.isReverseMatch || false;
-                  const unit = s.glass?.unit || "MM";
-                  const summary = [
-                    `#${s.standNo}`,
-                    s.glass?.thickness ? formatThicknessMM(s.glass.thickness) : null,
-                    s.glass?.type || "N/A",
-                    (s.height && s.width) ? `${s.height}×${s.width} ${unitAbbr(unit)}` : null,
-                    `Qty ${s.quantity}`,
-                  ].filter(Boolean).join(" • ");
-
-                  return (
-                    <div
-                      key={i}
-                      style={{
-                        ...mobileCard,
-                        borderLeft: isLow ? "3px solid #ef4444" : "3px solid #e2e8f0",
-                        background: isReverseMatch ? "#fef9ec" : "#fff",
-                      }}
-                    >
-                      {/* Single info line */}
-                      <div style={mobileSummaryRow}>
-                        <span style={mobileSummaryText}>{summary}</span>
-                        <span style={getMobileStatusChip(isLow)}>
-                          {isLow ? "LOW" : "OK"}
-                        </span>
-                      </div>
-
-                      {/* Pending tag + reverse tag (only when needed) */}
-                      {(s.status === "PENDING" || isReverseMatch) && (
-                        <div style={{ display: "flex", gap: "6px", marginTop: "3px", flexWrap: "wrap" }}>
-                          {s.status === "PENDING" && <span style={mobilePendingTag}>⏳ Pending</span>}
-                          {isReverseMatch && <span style={mobileRevTag}>🔄 Reversed</span>}
-                        </div>
-                      )}
-
-                      {/* Icon-only action row */}
-                      <div style={mobileCardActions}>
-                        <button title="Add / Remove Stock" style={mobileIconBtn("primary")} onClick={() => openAddRemoveModal(s)}>±</button>
-                        <button title="Transfer Stock"     style={mobileIconBtn("outline")}  onClick={() => openTransferModal(s)}>⇄</button>
-                        <button title="Edit Stock"         style={mobileIconBtn("secondary")} onClick={() => openEditModal(s)}>✎</button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+              <div style={{ height: 22, width: 80, borderRadius: 6, background: "rgba(255,255,255,0.06)" }} />
             ) : (
-              /* ── DESKTOP: existing table ── */
-              <div style={tableContainer}>
-                <table style={table}>
-                  <thead>
-                    <tr>
-                      <th style={tableHeaderCell}>Stand</th>
-                      <th style={tableHeaderCell}>Thickness</th>
-                      <th style={tableHeaderCell}>Glass Type</th>
-                      <th style={tableHeaderCell}>Height</th>
-                      <th style={tableHeaderCell}>Width</th>
-                      <th style={tableHeaderCell}>Quantity</th>
-                      <th style={tableHeaderCell}>Status</th>
-                      <th style={{ ...tableHeaderCell, width: "116px", textAlign: "center" }}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredStock.map((s, i) => {
-                      const isLow = s.quantity < s.minQuantity;
-                      const isReverseMatch = s.isReverseMatch || false;
-                      return (
-                        <tr
-                          key={i}
-                          className={isLow ? "low-stock" : ""}
-                          style={{
-                            ...getTableRowStyle(isLow),
-                            ...(isReverseMatch ? { backgroundColor: "#fef3c7" } : {})
-                          }}
-                        >
-                          <td style={tableCell}>
-                            <span style={standBadge}>#{s.standNo}</span>
-                            {isReverseMatch && (
-                              <span style={{ marginLeft: "6px", fontSize: "10px", padding: "2px 6px", backgroundColor: "#f59e0b", color: "white", borderRadius: "4px", fontWeight: "600" }}>
-                                🔄 REVERSED
-                              </span>
-                            )}
-                          </td>
-                          <td style={tableCell}>{formatThickness(s.glass?.thickness)}</td>
-                          <td style={{ ...tableCell, ...glassTypeCell }}>
-                            <strong>{s.glass?.type || "N/A"}</strong>
-                          </td>
-                          <td style={tableCell}>
-                            {s.height || "N/A"}{" "}
-                            {s.glass?.unit === "FEET" && "ft"}
-                            {s.glass?.unit === "INCH" && "in"}
-                            {s.glass?.unit === "MM" && "mm"}
-                            {isReverseMatch && <span style={{ marginLeft: "4px", fontSize: "11px", color: "#f59e0b", fontWeight: "600" }}>(matches width)</span>}
-                          </td>
-                          <td style={tableCell}>
-                            {s.width || "N/A"}{" "}
-                            {s.glass?.unit === "FEET" && "ft"}
-                            {s.glass?.unit === "INCH" && "in"}
-                            {s.glass?.unit === "MM" && "mm"}
-                            {isReverseMatch && <span style={{ marginLeft: "4px", fontSize: "11px", color: "#f59e0b", fontWeight: "600" }}>(matches height)</span>}
-                          </td>
-                          <td style={tableCell}>
-                            <span style={getQuantityBadgeStyle(isLow)}>{s.quantity}</span>
-                          </td>
-                          <td style={tableCell}>
-                            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                              <span style={getStatusBadgeStyle(isLow)}>{isLow ? "🔴 LOW" : "✅ OK"}</span>
-                              {s.status === "PENDING" && (
-                                <span style={{ fontSize: "11px", color: "#f59e0b", fontWeight: "600" }}>⏳ Pending</span>
-                              )}
-                            </div>
-                          </td>
-                          <td style={actionCell}>
-                            <div style={iconActionRow}>
-                              <button title="Add / Remove Stock" style={iconBtnStyle("primary")} onClick={() => openAddRemoveModal(s)} onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.opacity = "0.88"; }} onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.opacity = "1"; }}>±</button>
-                              <button title="Transfer Stock" style={iconBtnStyle("outline")} onClick={() => openTransferModal(s)} onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.background = "#667eea"; e.currentTarget.style.color = "#fff"; }} onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#667eea"; }}>⇄</button>
-                              <button title="Edit Stock" style={iconBtnStyle("secondary")} onClick={() => openEditModal(s)} onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.background = "#e2e8f0"; }} onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.background = "#f1f5f9"; }}>✎</button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: "-0.03em" }}>{totalQuantity.toLocaleString()} <span style={{ fontSize: 12, fontWeight: 500, color: "#A9B3D1" }}>Units</span></div>
             )}
           </div>
-        </Card>
+
+          {/* LOW STOCK card — desktop */}
+          <div style={{ minWidth: 150, background: lowStockCount > 0 ? "rgba(255,107,129,0.1)" : "rgba(17,27,53,0.9)", border: lowStockCount > 0 ? "1px solid rgba(255,107,129,0.3)" : "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "14px 16px", flexShrink: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+              <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(255,107,129,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF6B81" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              </div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: "#7180A6", textTransform: "uppercase", letterSpacing: "0.08em" }}>LOW STOCK</div>
+            </div>
+            {loading ? (
+              <div style={{ height: 22, width: 60, borderRadius: 6, background: "rgba(255,255,255,0.06)" }} />
+            ) : (
+              <div style={{ fontSize: 20, fontWeight: 800, color: lowStockCount > 0 ? "#FF6B81" : "#fff", letterSpacing: "-0.03em" }}>{lowStockCount} <span style={{ fontSize: 12, fontWeight: 500, color: "#A9B3D1" }}>Stands</span></div>
+            )}
+          </div>
+
+          {/* TOTAL ITEMS card — desktop */}
+          <div style={{ minWidth: 140, background: "rgba(17,27,53,0.9)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "14px 16px", flexShrink: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+              <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(55,227,165,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#37E3A5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            </div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: "#7180A6", textTransform: "uppercase", letterSpacing: "0.08em" }}>ITEMS</div>
+            </div>
+            {loading ? (
+              <div style={{ height: 22, width: 50, borderRadius: 6, background: "rgba(255,255,255,0.06)" }} />
+            ) : (
+              <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: "-0.03em" }}>{totalStock}</div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* SEARCH BAR */}
+      <div style={{ position: "relative", marginBottom: isMobile ? 8 : 12 }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7180A6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", flexShrink: 0 }}><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input
+          className="app-input"
+          style={{ paddingLeft: 42 }}
+          placeholder="Search by type or dimensions..."
+          value={filterThickness}
+          onChange={e => setFilterThickness(e.target.value)}
+        />
       </div>
+
+      {/* FILTER CHIPS */}
+      <div style={{
+        display: "flex",
+        gap: isMobile ? 6 : 8,
+        marginBottom: isMobile ? 10 : 16,
+        ...(isMobile
+          ? { flexWrap: "nowrap" }
+          : { overflowX: "auto", paddingBottom: 4, scrollbarWidth: "none" }),
+      }}>
+        {/* Thickness */}
+        <div style={{ display: "flex", alignItems: "center", gap: 4, padding: isMobile ? "0 8px" : "8px 14px", height: isMobile ? 38 : undefined, borderRadius: isMobile ? 8 : 999, background: "rgba(17,27,53,0.9)", border: "1px solid rgba(255,255,255,0.1)", cursor: "pointer", ...(isMobile ? { flex: 1, minWidth: 0 } : { flexShrink: 0 }) }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#A9B3D1" strokeWidth="2" style={{ flexShrink: 0 }}><path d="M21 3H3v7l9 11 9-11V3z"/></svg>
+          <input
+            style={{ background: "transparent", border: "none", color: "#A9B3D1", fontSize: isMobile ? 12 : 13, fontWeight: 500, width: isMobile ? "100%" : 70, outline: "none", minWidth: 0 }}
+            placeholder={isMobile ? "T" : "Thickness"}
+            value={filterThickness}
+            onChange={e => setFilterThickness(e.target.value)}
+          />
+        </div>
+        {/* Height */}
+        <div style={{ display: "flex", alignItems: "center", gap: 4, padding: isMobile ? "0 8px" : "8px 14px", height: isMobile ? 38 : undefined, borderRadius: isMobile ? 8 : 999, background: "rgba(17,27,53,0.9)", border: "1px solid rgba(255,255,255,0.1)", cursor: "pointer", ...(isMobile ? { flex: 1, minWidth: 0 } : { flexShrink: 0 }) }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#A9B3D1" strokeWidth="2" style={{ flexShrink: 0 }}><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+          <input
+            style={{ background: "transparent", border: "none", color: "#A9B3D1", fontSize: isMobile ? 12 : 13, fontWeight: 500, width: isMobile ? "100%" : 60, outline: "none", minWidth: 0 }}
+            placeholder={isMobile ? "H" : "Height"}
+            value={filterHeight}
+            onChange={e => setFilterHeight(e.target.value)}
+          />
+        </div>
+        {/* Width */}
+        <div style={{ display: "flex", alignItems: "center", gap: 4, padding: isMobile ? "0 8px" : "8px 14px", height: isMobile ? 38 : undefined, borderRadius: isMobile ? 8 : 999, background: "rgba(17,27,53,0.9)", border: "1px solid rgba(255,255,255,0.1)", cursor: "pointer", ...(isMobile ? { flex: 1, minWidth: 0 } : { flexShrink: 0 }) }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#A9B3D1" strokeWidth="2" style={{ flexShrink: 0 }}><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          <input
+            style={{ background: "transparent", border: "none", color: "#A9B3D1", fontSize: isMobile ? 12 : 13, fontWeight: 500, width: isMobile ? "100%" : 60, outline: "none", minWidth: 0 }}
+            placeholder={isMobile ? "W" : "Width"}
+            value={filterWidth}
+            onChange={e => setFilterWidth(e.target.value)}
+          />
+        </div>
+        {/* Unit */}
+        <select
+          value={searchUnit}
+          onChange={e => setSearchUnit(e.target.value)}
+          style={{ padding: isMobile ? "0 6px" : "8px 14px", height: isMobile ? 38 : undefined, borderRadius: isMobile ? 8 : 999, background: "rgba(17,27,53,0.9)", border: "1px solid rgba(255,255,255,0.1)", color: "#A9B3D1", fontSize: isMobile ? 12 : 13, fontWeight: 500, cursor: "pointer", outline: "none", ...(isMobile ? { flex: "0 0 56px" } : { flexShrink: 0 }) }}
+        >
+          <option value="MM">MM</option>
+          <option value="INCH">IN</option>
+          <option value="FEET">FT</option>
+        </select>
+        {/* Clear */}
+        {(filterThickness || filterHeight || filterWidth) && (
+          <button
+            onClick={() => { setFilterThickness(""); setFilterHeight(""); setFilterWidth(""); setSearchUnit("MM"); }}
+            style={isMobile
+              ? { width: 38, height: 38, borderRadius: 8, background: "rgba(255,107,129,0.15)", border: "1px solid rgba(255,107,129,0.3)", color: "#FF6B81", fontSize: 16, fontWeight: 700, cursor: "pointer", flexShrink: 0, outline: "none", display: "flex", alignItems: "center", justifyContent: "center" }
+              : { padding: "8px 14px", borderRadius: 999, background: "rgba(255,107,129,0.15)", border: "1px solid rgba(255,107,129,0.3)", color: "#FF6B81", fontSize: 13, fontWeight: 600, cursor: "pointer", flexShrink: 0, outline: "none" }
+            }
+          >
+            {isMobile ? "×" : "Clear"}
+          </button>
+        )}
+      </div>
+
+      {/* STOCK LIST */}
+      {loading ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 8 : 10 }}>
+          {[1,2,3].map(i => (
+            <div key={i} style={{ height: isMobile ? 96 : 148, borderRadius: isMobile ? 12 : 16, background: "rgba(255,255,255,0.04)", backgroundSize: "200% 100%", backgroundImage: "linear-gradient(90deg,rgba(255,255,255,0.04) 25%,rgba(255,255,255,0.08) 50%,rgba(255,255,255,0.04) 75%)" }} />
+          ))}
+        </div>
+      ) : filteredStock.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "60px 24px", background: "rgba(17,27,53,0.9)", borderRadius: 16, border: "1px solid rgba(255,255,255,0.08)" }}>
+          <div style={{ fontSize: 40, marginBottom: 12, opacity: 0.3 }}>📦</div>
+          <p style={{ fontSize: 15, fontWeight: 600, color: "#fff", margin: "0 0 6px" }}>No stock found</p>
+          <p style={{ fontSize: 13, color: "#7180A6", margin: 0 }}>{filterThickness || filterHeight || filterWidth ? "Try adjusting your filters" : "Add stock to get started"}</p>
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 8 : 12 }}>
+          {filteredStock.map((s, i) => {
+            const isLow = s.quantity < s.minQuantity;
+            const isReverseMatch = s.isReverseMatch || false;
+            const unit = s.glass?.unit || "MM";
+            const dimStr = (s.height && s.width) ? `${s.height}×${s.width} ${unitAbbr(unit)}` : null;
+            const thickStr = s.glass?.thickness ? formatThicknessMM(s.glass.thickness).replace(" mm", "MM") : null;
+
+            const cardBase = {
+              background: isLow ? "rgba(255,107,129,0.07)" : "rgba(17,27,53,0.9)",
+              border: isLow ? "1px solid rgba(255,107,129,0.25)" : "1px solid rgba(255,255,255,0.08)",
+              borderLeft: isLow ? "3px solid #FF6B81" : "3px solid transparent",
+              transition: "all 160ms ease",
+            };
+
+            if (isMobile) {
+              /* ── COMPACT MOBILE CARD (~100px) ── */
+              return (
+                <div key={i} style={{ ...cardBase, borderRadius: 12, padding: "10px 12px" }}>
+                  {/* Row 1: Stand + reverse badge | Status dot */}
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 5 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                      <span style={{ padding: "2px 7px", borderRadius: 5, background: "rgba(79,93,255,0.2)", border: "1px solid rgba(79,93,255,0.3)", color: "#818CF8", fontSize: 10, fontWeight: 700, letterSpacing: "0.04em" }}>
+                        STAND #{s.standNo}
+                      </span>
+                      {isReverseMatch && (
+                        <span style={{ padding: "2px 5px", borderRadius: 4, background: "rgba(255,185,94,0.2)", color: "#FFB95E", fontSize: 9, fontWeight: 700 }}>REV</span>
+                      )}
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: isLow ? "#FF6B81" : "#37E3A5", display: "inline-block", boxShadow: isLow ? "0 0 5px #FF6B81" : "0 0 5px #37E3A5" }} />
+                      <span style={{ fontSize: 11, fontWeight: 700, color: isLow ? "#FF6B81" : "#37E3A5" }}>{isLow ? "LOW" : "OK"}</span>
+                    </div>
+                  </div>
+
+                  {/* Row 2: Type • Thickness • Size */}
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "#ffffff", marginBottom: 6, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {[s.glass?.type || "N/A", thickStr, dimStr].filter(Boolean).join(" • ")}
+                    {s.status === "PENDING" && <span style={{ marginLeft: 6, fontSize: 10, color: "#FFB95E", fontWeight: 600 }}>⏳</span>}
+                  </div>
+
+                  {/* Row 3: Qty | icon buttons */}
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: 3 }}>
+                      <span style={{ fontSize: 10, fontWeight: 600, color: "#7180A6", textTransform: "uppercase", letterSpacing: "0.05em" }}>Qty</span>
+                      <span style={{ fontSize: 19, fontWeight: 800, color: "#ffffff", letterSpacing: "-0.03em", lineHeight: 1 }}>{s.quantity}</span>
+                    </div>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <button
+                        onClick={() => openEditModal(s)}
+                        title="Edit"
+                        style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "#A9B3D1", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, outline: "none", transition: "all 120ms ease" }}
+                        onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.13)"; e.currentTarget.style.color = "#fff"; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.color = "#A9B3D1"; }}
+                      >
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      </button>
+                      <button
+                        onClick={() => openTransferModal(s)}
+                        title="Move"
+                        style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "#A9B3D1", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, outline: "none", transition: "all 120ms ease" }}
+                        onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.13)"; e.currentTarget.style.color = "#fff"; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.color = "#A9B3D1"; }}
+                      >
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
+                      </button>
+                      <button
+                        onClick={() => openAddRemoveModal(s)}
+                        title="Add/Remove"
+                        style={{ width: 32, height: 32, borderRadius: 8, background: "#4F5DFF", border: "none", color: "#fff", fontSize: 18, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, outline: "none", boxShadow: "0 2px 10px rgba(79,93,255,0.4)", transition: "all 120ms ease" }}
+                        onMouseEnter={e => { e.currentTarget.style.background = "#3D4DE8"; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = "#4F5DFF"; }}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
+            /* ── DESKTOP CARD (unchanged premium style) ── */
+            const thickStrFull = s.glass?.thickness ? `${formatThicknessMM(s.glass.thickness)} thickness` : null;
+            const dimStrFull = (s.height && s.width) ? `${s.height} × ${s.width} ${unitAbbr(unit)}` : null;
+            return (
+              <div
+                key={i}
+                style={{ ...cardBase, borderRadius: 16, padding: "14px 16px" }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = isLow ? "rgba(255,107,129,0.4)" : "rgba(255,255,255,0.14)"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = isLow ? "rgba(255,107,129,0.25)" : "rgba(255,255,255,0.08)"; }}
+              >
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0, flex: 1 }}>
+                    <span style={{ display: "inline-flex", alignItems: "center", padding: "3px 8px", borderRadius: 6, background: "rgba(79,93,255,0.2)", border: "1px solid rgba(79,93,255,0.3)", color: "#818CF8", fontSize: 10.5, fontWeight: 700, flexShrink: 0, letterSpacing: "0.04em" }}>
+                      STAND #{s.standNo}
+                    </span>
+                    {isReverseMatch && (
+                      <span style={{ display: "inline-flex", padding: "3px 7px", borderRadius: 6, background: "rgba(255,185,94,0.2)", color: "#FFB95E", fontSize: 10, fontWeight: 700, flexShrink: 0 }}>REVERSED</span>
+                    )}
+                  </div>
+                  <div style={{ textAlign: "right", flexShrink: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 5, justifyContent: "flex-end", marginBottom: 2 }}>
+                      <span style={{ width: 7, height: 7, borderRadius: "50%", background: isLow ? "#FF6B81" : "#37E3A5", display: "inline-block", boxShadow: isLow ? "0 0 6px #FF6B81" : "0 0 6px #37E3A5" }} />
+                      <span style={{ fontSize: 13, fontWeight: 700, color: isLow ? "#FF6B81" : "#37E3A5", letterSpacing: "0.02em" }}>{isLow ? "LOW" : "OK"}</span>
+                    </div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em", lineHeight: 1 }}>{s.quantity}</div>
+                    <div style={{ fontSize: 9.5, fontWeight: 700, color: "#7180A6", textTransform: "uppercase", letterSpacing: "0.08em" }}>UNITS</div>
+                  </div>
+                </div>
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: "#fff", marginBottom: 3, letterSpacing: "-0.01em" }}>
+                    {s.glass?.type || "N/A"}
+                  </div>
+                  <div style={{ fontSize: 12.5, color: "#A9B3D1" }}>
+                    {[thickStrFull, dimStrFull].filter(Boolean).join(" | ")}
+                  </div>
+                  {s.status === "PENDING" && (
+                    <span style={{ display: "inline-flex", marginTop: 5, padding: "2px 8px", borderRadius: 999, background: "rgba(255,185,94,0.15)", color: "#FFB95E", fontSize: 10.5, fontWeight: 600 }}>⏳ Pending approval</span>
+                  )}
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button
+                    onClick={() => openEditModal(s)}
+                    style={{ flex: 1, height: 36, borderRadius: 10, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "#A9B3D1", fontSize: 12.5, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 5, transition: "all 140ms ease", fontFamily: "inherit", outline: "none" }}
+                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.12)"; e.currentTarget.style.color = "#fff"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.color = "#A9B3D1"; }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => openTransferModal(s)}
+                    style={{ flex: 1, height: 36, borderRadius: 10, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "#A9B3D1", fontSize: 12.5, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 5, transition: "all 140ms ease", fontFamily: "inherit", outline: "none" }}
+                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.12)"; e.currentTarget.style.color = "#fff"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.color = "#A9B3D1"; }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
+                    Move
+                  </button>
+                  <button
+                    onClick={() => openAddRemoveModal(s)}
+                    style={{ width: 36, height: 36, borderRadius: 10, background: "#4F5DFF", border: "none", color: "#fff", fontSize: 18, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 140ms ease", flexShrink: 0, fontFamily: "inherit", outline: "none", boxShadow: "0 2px 12px rgba(79,93,255,0.35)" }}
+                    onMouseEnter={e => { e.currentTarget.style.background = "#3D4DE8"; e.currentTarget.style.transform = "scale(1.05)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "#4F5DFF"; e.currentTarget.style.transform = "scale(1)"; }}
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ConfirmModal */}
+      <ConfirmModal
+        show={showConfirm}
+        payload={pendingPayload || {}}
+        onCancel={() => setShowConfirm(false)}
+        onConfirm={confirmSaveStock}
+      />
 
       {/* Add/Remove Modal */}
       {showAddRemoveModal && selectedStock && (
-        <div style={getModalOverlayStyle(isMobile)} onClick={closeAddRemoveModal}>
-          <Card style={getModalCardStyle(isMobile)} onClick={(e) => e.stopPropagation()}>
-
-            {/* Drag handle — mobile only */}
-            {isMobile && <div style={dragHandle} />}
-
-            {/* Header */}
-            <div style={{ ...getModalHeaderStyle(isMobile), padding: isMobile ? "0 0 8px" : undefined }}>
-              <h3 style={getModalTitleStyle(isMobile)}>Add / Remove Stock</h3>
-              <button style={getCloseModalBtnStyle(isMobile)} onClick={closeAddRemoveModal}>✕</button>
+        <div style={modalOverlay} onClick={closeAddRemoveModal}>
+          <div style={modalCard} onClick={e => e.stopPropagation()}>
+            <div style={modalHeader}>
+              <h3 style={{ fontSize: 16, fontWeight: 700, color: "#fff", margin: 0, letterSpacing: "-0.02em" }}>Add / Remove Stock</h3>
+              <button
+                onClick={closeAddRemoveModal}
+                style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(255,255,255,0.08)", border: "none", color: "#A9B3D1", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}
+              >✕</button>
             </div>
-
-            <div style={getModalContentStyle(isMobile)}>
-
-              {/* Stock summary — compact on mobile, detailed card on desktop */}
-              {isMobile ? (
-                <div style={compactStockSummary}>
-                  <div style={compactSummaryRow}>
-                    <span style={compactSummaryMain}>
-                      #{selectedStock.standNo} • {formatThicknessMM(selectedStock.glass?.thickness)} • {selectedStock.glass?.type || "N/A"}
-                    </span>
-                    <span style={getCompactStatusPill(selectedStock.status === "PENDING")}>
-                      {selectedStock.status === "PENDING" ? "Pending" : "Approved"}
-                    </span>
-                  </div>
-                  <span style={compactSummaryDetail}>
-                    {selectedStock.height}×{selectedStock.width} {unitAbbr(selectedStock.glass?.unit)} • Qty {selectedStock.quantity}
-                  </span>
+            <div style={modalBody}>
+              {/* Stock summary */}
+              <div style={stockInfoBox}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 6 }}>
+                  Stand #{selectedStock.standNo} &mdash; {selectedStock.glass?.type || "N/A"}
                 </div>
-              ) : (
-                <Card style={getStockInfoCardStyle(isMobile)}>
-                  <h4 style={getInfoTitleStyle(isMobile)}>Stock Details</h4>
-                  <div style={getInfoGridStyle(isMobile)}>
-                    <div style={getInfoItemStyle(isMobile)}>
-                      <span style={getInfoLabelStyle(isMobile)}>Glass Type</span>
-                      <span style={getInfoValueStyle(isMobile)}>{selectedStock.glass?.type || "N/A"}</span>
-                    </div>
-                    <div style={getInfoItemStyle(isMobile)}>
-                      <span style={getInfoLabelStyle(isMobile)}>Thickness</span>
-                      <span style={getInfoValueStyle(isMobile)}>{formatThickness(selectedStock.glass?.thickness)}</span>
-                    </div>
-                    <div style={getInfoItemStyle(isMobile)}>
-                      <span style={getInfoLabelStyle(isMobile)}>Size</span>
-                      <span style={getInfoValueStyle(isMobile)}>{selectedStock.height} × {selectedStock.width} {unitAbbr(selectedStock.glass?.unit)}</span>
-                    </div>
-                    <div style={getInfoItemStyle(isMobile)}>
-                      <span style={getInfoLabelStyle(isMobile)}>Stand No</span>
-                      <span style={getInfoValueStyle(isMobile)}>#{selectedStock.standNo}</span>
-                    </div>
-                    <div style={getInfoItemStyle(isMobile)}>
-                      <span style={getInfoLabelStyle(isMobile)}>Current Qty</span>
-                      <span style={getInfoValueStyle(isMobile)}>{selectedStock.quantity}</span>
-                    </div>
-                  </div>
-                </Card>
-              )}
+                <div style={{ fontSize: 12, color: "#A9B3D1" }}>
+                  {formatThicknessMM(selectedStock.glass?.thickness)} &nbsp;|&nbsp; {selectedStock.height}×{selectedStock.width} {unitAbbr(selectedStock.glass?.unit)} &nbsp;|&nbsp; Qty {selectedStock.quantity}
+                </div>
+                {selectedStock.status === "PENDING" && (
+                  <div style={{ marginTop: 6, fontSize: 12, color: "#FFB95E" }}>⚠️ This stock is pending price approval from Admin</div>
+                )}
+              </div>
 
-              <Input
-                label="Quantity"
-                type="number"
-                placeholder="Enter quantity"
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-                icon="🔢"
-                required
-                min="1"
-                size={isMobile ? "sm" : "md"}
-              />
+              <div>
+                <label style={darkLabel}>Quantity</label>
+                <input
+                  type="number"
+                  placeholder="Enter quantity"
+                  value={quantity}
+                  onChange={e => setQuantity(e.target.value)}
+                  style={darkInput}
+                  min="1"
+                />
+              </div>
 
-              {selectedStock.status === "PENDING" && !isMobile && (
-                <p style={{ margin: "0", fontSize: "12px", color: "#f59e0b" }}>
-                  ⚠️ This stock is pending price approval from Admin
-                </p>
-              )}
-
-              <div style={getButtonGroupStyle(isMobile)}>
-                <Button variant="success" icon="➕" fullWidth={isMobile} size={isMobile ? "sm" : "md"} onClick={() => updateStock("ADD")}>
-                  Add Stock
-                </Button>
-                <Button variant="danger" icon="➖" fullWidth={isMobile} size={isMobile ? "sm" : "md"} onClick={() => updateStock("REMOVE")}>
-                  Remove Stock
-                </Button>
+              <div style={{ display: "flex", gap: 10 }}>
+                <button
+                  onClick={() => updateStock("ADD")}
+                  style={{ flex: 1, height: 40, borderRadius: 10, background: "rgba(55,227,165,0.15)", border: "1px solid rgba(55,227,165,0.3)", color: "#37E3A5", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", outline: "none" }}
+                >
+                  + Add
+                </button>
+                <button
+                  onClick={() => updateStock("REMOVE")}
+                  style={{ flex: 1, height: 40, borderRadius: 10, background: "rgba(255,107,129,0.15)", border: "1px solid rgba(255,107,129,0.3)", color: "#FF6B81", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", outline: "none" }}
+                >
+                  − Remove
+                </button>
               </div>
 
               {showUndo && (
-                <Button variant="outline" icon="↩" fullWidth size={isMobile ? "sm" : "md"} onClick={undoLastAction}>
-                  Undo Last Action
-                </Button>
+                <button
+                  onClick={undoLastAction}
+                  style={{ width: "100%", height: 40, borderRadius: 10, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "#A9B3D1", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", outline: "none" }}
+                >
+                  ↩ Undo Last Action
+                </button>
               )}
 
               {stockMessage && (
-                <div style={getMessageStyle(stockMessage.includes("✅"))}>
-                  <span style={messageIcon}>{stockMessage.includes("✅") ? "✅" : "❌"}</span>
-                  <span>{stockMessage.replace("✅", "").replace("❌", "").trim()}</span>
+                <div style={{ fontSize: 12.5, color: stockMessage.includes("✅") ? "#37E3A5" : "#FF6B81", padding: "10px 12px", background: stockMessage.includes("✅") ? "rgba(55,227,165,0.08)" : "rgba(255,107,129,0.08)", borderRadius: 8, border: `1px solid ${stockMessage.includes("✅") ? "rgba(55,227,165,0.2)" : "rgba(255,107,129,0.2)"}` }}>
+                  {stockMessage}
                 </div>
               )}
             </div>
-          </Card>
+          </div>
         </div>
       )}
 
       {/* Transfer Modal */}
       {showTransferModal && transferStock && (
-        <div style={getModalOverlayStyle(isMobile)} onClick={closeTransferModal}>
-          <Card style={getModalCardStyle(isMobile)} onClick={(e) => e.stopPropagation()}>
-
-            {isMobile && <div style={dragHandle} />}
-
-            <div style={{ ...getModalHeaderStyle(isMobile), padding: isMobile ? "0 0 8px" : undefined }}>
-              <h3 style={getModalTitleStyle(isMobile)}>Transfer Stock</h3>
-              <button style={getCloseModalBtnStyle(isMobile)} onClick={closeTransferModal}>✕</button>
+        <div style={modalOverlay} onClick={closeTransferModal}>
+          <div style={modalCard} onClick={e => e.stopPropagation()}>
+            <div style={modalHeader}>
+              <h3 style={{ fontSize: 16, fontWeight: 700, color: "#fff", margin: 0, letterSpacing: "-0.02em" }}>Transfer Stock</h3>
+              <button
+                onClick={closeTransferModal}
+                style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(255,255,255,0.08)", border: "none", color: "#A9B3D1", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}
+              >✕</button>
             </div>
-
-            <div style={getModalContentStyle(isMobile)}>
-
-              {isMobile ? (
-                <div style={compactStockSummary}>
-                  <span style={compactSummaryMain}>
-                    #{transferStock.standNo} • {formatThicknessMM(transferStock.glass?.thickness)} • {transferStock.glass?.type || "N/A"}
-                  </span>
-                  <span style={compactSummaryDetail}>
-                    {transferStock.height}×{transferStock.width} {unitAbbr(transferStock.glass?.unit)} • Available {transferStock.quantity}
-                  </span>
+            <div style={modalBody}>
+              <div style={stockInfoBox}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 6 }}>
+                  Stand #{transferStock.standNo} &mdash; {transferStock.glass?.type || "N/A"}
                 </div>
-              ) : (
-                <Card style={getStockInfoCardStyle(isMobile)}>
-                  <h4 style={getInfoTitleStyle(isMobile)}>Stock Details</h4>
-                  <div style={getInfoGridStyle(isMobile)}>
-                    <div style={getInfoItemStyle(isMobile)}>
-                      <span style={getInfoLabelStyle(isMobile)}>Glass Type</span>
-                      <span style={getInfoValueStyle(isMobile)}>{transferStock.glass?.type || "N/A"}</span>
-                    </div>
-                    <div style={getInfoItemStyle(isMobile)}>
-                      <span style={getInfoLabelStyle(isMobile)}>Thickness</span>
-                      <span style={getInfoValueStyle(isMobile)}>{formatThickness(transferStock.glass?.thickness)}</span>
-                    </div>
-                    <div style={getInfoItemStyle(isMobile)}>
-                      <span style={getInfoLabelStyle(isMobile)}>Size</span>
-                      <span style={getInfoValueStyle(isMobile)}>{transferStock.height} × {transferStock.width} {unitAbbr(transferStock.glass?.unit)}</span>
-                    </div>
-                    <div style={getInfoItemStyle(isMobile)}>
-                      <span style={getInfoLabelStyle(isMobile)}>From Stand</span>
-                      <span style={getInfoValueStyle(isMobile)}>#{transferStock.standNo}</span>
-                    </div>
-                    <div style={getInfoItemStyle(isMobile)}>
-                      <span style={getInfoLabelStyle(isMobile)}>Available</span>
-                      <span style={getInfoValueStyle(isMobile)}>{transferStock.quantity} units</span>
-                    </div>
-                  </div>
-                </Card>
-              )}
+                <div style={{ fontSize: 12, color: "#A9B3D1" }}>
+                  {formatThicknessMM(transferStock.glass?.thickness)} &nbsp;|&nbsp; {transferStock.height}×{transferStock.width} {unitAbbr(transferStock.glass?.unit)} &nbsp;|&nbsp; Available: {transferStock.quantity}
+                </div>
+              </div>
 
-              <Input
-                label="To Stand Number"
-                type="number"
-                placeholder="Destination stand"
-                value={toStand}
-                onChange={(e) => setToStand(e.target.value)}
-                icon="🏷️"
-                required
-                min="1"
-                size={isMobile ? "sm" : "md"}
-              />
+              <div>
+                <label style={darkLabel}>To Stand Number</label>
+                <input
+                  type="number"
+                  placeholder="Destination stand"
+                  value={toStand}
+                  onChange={e => setToStand(e.target.value)}
+                  style={darkInput}
+                  min="1"
+                />
+              </div>
 
-              <Input
-                label="Quantity to Transfer"
-                type="number"
-                placeholder="Enter quantity"
-                value={transferQuantity}
-                onChange={(e) => setTransferQuantity(e.target.value)}
-                icon="🔢"
-                required
-                min="1"
-                helperText={`Max: ${transferStock.quantity}`}
-                size={isMobile ? "sm" : "md"}
-              />
+              <div>
+                <label style={darkLabel}>Quantity to Transfer</label>
+                <input
+                  type="number"
+                  placeholder="Enter quantity"
+                  value={transferQuantity}
+                  onChange={e => setTransferQuantity(e.target.value)}
+                  style={darkInput}
+                  min="1"
+                />
+                <div style={{ fontSize: 11, color: "#7180A6", marginTop: 4 }}>Max: {transferStock.quantity}</div>
+              </div>
 
-              <Button variant="primary" icon="⇄" fullWidth size={isMobile ? "sm" : "md"} onClick={handleTransfer}>
+              <button
+                onClick={handleTransfer}
+                style={{ width: "100%", height: 42, borderRadius: 10, background: "#4F5DFF", border: "none", color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", outline: "none", boxShadow: "0 2px 12px rgba(79,93,255,0.35)" }}
+              >
                 Transfer Stock
-              </Button>
+              </button>
 
               {transferMessage && (
-                <div style={getMessageStyle(typeof transferMessage === 'string' && transferMessage.includes("✅"))}>
-                  <span style={messageIcon}>{transferMessage.includes("✅") ? "✅" : "❌"}</span>
-                  <span>{transferMessage.replace("✅", "").replace("❌", "").trim()}</span>
+                <div style={{ fontSize: 12.5, color: typeof transferMessage === 'string' && transferMessage.includes("✅") ? "#37E3A5" : "#FF6B81", padding: "10px 12px", background: typeof transferMessage === 'string' && transferMessage.includes("✅") ? "rgba(55,227,165,0.08)" : "rgba(255,107,129,0.08)", borderRadius: 8, border: `1px solid ${typeof transferMessage === 'string' && transferMessage.includes("✅") ? "rgba(55,227,165,0.2)" : "rgba(255,107,129,0.2)"}` }}>
+                  {transferMessage}
                 </div>
               )}
             </div>
-          </Card>
+          </div>
         </div>
       )}
 
       {/* Transfer Confirm Modal */}
       {showTransferConfirm && transferStock && (
-        <div style={getModalOverlayStyle(isMobile)} onClick={() => setShowTransferConfirm(false)}>
-          <Card style={getModalCardStyle(isMobile)} onClick={(e) => e.stopPropagation()}>
-
-            {isMobile && <div style={dragHandle} />}
-
-            <div style={{ ...getModalHeaderStyle(isMobile), padding: isMobile ? "0 0 8px" : undefined }}>
-              <h3 style={getModalTitleStyle(isMobile)}>Confirm Transfer</h3>
-              <button style={getCloseModalBtnStyle(isMobile)} onClick={() => setShowTransferConfirm(false)}>✕</button>
+        <div style={modalOverlay} onClick={() => setShowTransferConfirm(false)}>
+          <div style={modalCard} onClick={e => e.stopPropagation()}>
+            <div style={modalHeader}>
+              <h3 style={{ fontSize: 16, fontWeight: 700, color: "#fff", margin: 0, letterSpacing: "-0.02em" }}>Confirm Transfer</h3>
+              <button
+                onClick={() => setShowTransferConfirm(false)}
+                style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(255,255,255,0.08)", border: "none", color: "#A9B3D1", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}
+              >✕</button>
             </div>
-
-            <div style={getModalContentStyle(isMobile)}>
-
-              {isMobile ? (
-                <div style={compactStockSummary}>
-                  <span style={compactSummaryMain}>
-                    #{transferStock.standNo} → Stand #{toStand}
-                  </span>
-                  <span style={compactSummaryDetail}>
-                    {transferStock.glass?.type} • {formatThicknessMM(transferStock.glass?.thickness)} • {transferStock.height}×{transferStock.width} {unitAbbr(transferStock.glass?.unit)} • Qty {transferQuantity}
-                  </span>
-                </div>
-              ) : (
-                <Card style={getStockInfoCardStyle(isMobile)}>
-                  <h4 style={getInfoTitleStyle(isMobile)}>Transfer Summary</h4>
-                  <div style={getInfoGridStyle(isMobile)}>
-                    <div style={getInfoItemStyle(isMobile)}>
-                      <span style={getInfoLabelStyle(isMobile)}>Glass Type</span>
-                      <span style={getInfoValueStyle(isMobile)}>{transferStock.glass?.type || "N/A"}</span>
-                    </div>
-                    <div style={getInfoItemStyle(isMobile)}>
-                      <span style={getInfoLabelStyle(isMobile)}>Size</span>
-                      <span style={getInfoValueStyle(isMobile)}>{transferStock.height} × {transferStock.width} {unitAbbr(transferStock.glass?.unit)}</span>
-                    </div>
-                    <div style={getInfoItemStyle(isMobile)}>
-                      <span style={getInfoLabelStyle(isMobile)}>From Stand</span>
-                      <span style={getInfoValueStyle(isMobile)}>#{transferStock.standNo}</span>
-                    </div>
-                    <div style={getInfoItemStyle(isMobile)}>
-                      <span style={getInfoLabelStyle(isMobile)}>To Stand</span>
-                      <span style={getInfoValueStyle(isMobile)}>#{toStand}</span>
-                    </div>
-                    <div style={getInfoItemStyle(isMobile)}>
-                      <span style={getInfoLabelStyle(isMobile)}>Quantity</span>
-                      <span style={getInfoValueStyle(isMobile)}>{transferQuantity} units</span>
-                    </div>
+            <div style={modalBody}>
+              <div style={stockInfoBox}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 8 }}>Transfer Summary</div>
+                {[
+                  ["Glass Type", transferStock.glass?.type || "N/A"],
+                  ["Size", `${transferStock.height} × ${transferStock.width} ${unitAbbr(transferStock.glass?.unit)}`],
+                  ["From Stand", `#${transferStock.standNo}`],
+                  ["To Stand", `#${toStand}`],
+                  ["Quantity", `${transferQuantity} units`],
+                ].map(([lbl, val]) => (
+                  <div key={lbl} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "4px 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: "#7180A6", textTransform: "uppercase", letterSpacing: "0.06em" }}>{lbl}</span>
+                    <span style={{ fontSize: 13, fontWeight: 500, color: "#fff" }}>{val}</span>
                   </div>
-                </Card>
-              )}
-
-              <div style={getButtonGroupStyle(isMobile)}>
-                <Button variant="secondary" fullWidth={isMobile} size={isMobile ? "sm" : "md"}
-                  onClick={() => { setShowTransferConfirm(false); setShowTransferModal(true); }}>
-                  Cancel
-                </Button>
-                <Button variant="primary" icon="✅" fullWidth={isMobile} size={isMobile ? "sm" : "md"} onClick={confirmTransfer}>
-                  Confirm Transfer
-                </Button>
+                ))}
               </div>
             </div>
-          </Card>
+            <div style={modalFooter}>
+              <button
+                onClick={() => { setShowTransferConfirm(false); setShowTransferModal(true); }}
+                style={{ height: 38, padding: "0 18px", borderRadius: 10, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "#A9B3D1", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", outline: "none" }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmTransfer}
+                style={{ height: 38, padding: "0 18px", borderRadius: 10, background: "#4F5DFF", border: "none", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", outline: "none", boxShadow: "0 2px 12px rgba(79,93,255,0.35)" }}
+              >
+                Confirm Transfer
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
       {/* Edit Stock Modal */}
       {showEditModal && editStock && (
-        <div style={getModalOverlayStyle(isMobile)} onClick={closeEditModal}>
-          <Card style={{ ...getModalCardStyle(isMobile), maxWidth: isMobile ? "100%" : "460px" }} onClick={(e) => e.stopPropagation()}>
-
-            {isMobile && <div style={dragHandle} />}
-
-            <div style={{ ...getModalHeaderStyle(isMobile), padding: isMobile ? "0 0 8px" : undefined }}>
-              <h3 style={getModalTitleStyle(isMobile)}>Edit Stock · Stand #{editStock.standNo}</h3>
-              <button style={getCloseModalBtnStyle(isMobile)} onClick={closeEditModal}>✕</button>
+        <div style={modalOverlay} onClick={closeEditModal}>
+          <div style={{ ...modalCard, maxWidth: 440 }} onClick={e => e.stopPropagation()}>
+            <div style={modalHeader}>
+              <h3 style={{ fontSize: 16, fontWeight: 700, color: "#fff", margin: 0, letterSpacing: "-0.02em" }}>Edit Stock · Stand #{editStock.standNo}</h3>
+              <button
+                onClick={closeEditModal}
+                style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(255,255,255,0.08)", border: "none", color: "#A9B3D1", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}
+              >✕</button>
             </div>
-
-            <div style={getModalContentStyle(isMobile)}>
+            <div style={modalBody}>
               {/* Glass Type */}
               <div>
-                <label style={editLabelStyle}>Glass Type <span style={{ color: "#ef4444" }}>*</span></label>
+                <label style={darkLabel}>Glass Type <span style={{ color: "#FF6B81" }}>*</span></label>
                 <select
                   value={editGlassType}
                   onChange={e => setEditGlassType(e.target.value)}
-                  style={editSelectStyle}
+                  style={darkSelect}
                 >
                   <option value="">Select glass type</option>
                   {["Plan","Extra Clear","Grey Tinted","Brown Tinted","One Way","Star","Karakachi","Bajari","Diomand","Mirror"].map(t => (
@@ -1049,13 +1153,13 @@ function StockDashboard() {
               </div>
 
               {/* Thickness & Unit side by side */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: isMobile ? "8px" : "12px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 <div>
-                  <label style={editLabelStyle}>Thickness (MM) <span style={{ color: "#ef4444" }}>*</span></label>
+                  <label style={darkLabel}>Thickness (MM) <span style={{ color: "#FF6B81" }}>*</span></label>
                   <select
                     value={editThickness}
                     onChange={e => setEditThickness(e.target.value)}
-                    style={editSelectStyle}
+                    style={darkSelect}
                   >
                     <option value="">Select thickness</option>
                     {["3.5","4","5","6","8","10","12","15","19"].map(t => (
@@ -1067,11 +1171,11 @@ function StockDashboard() {
                   </select>
                 </div>
                 <div>
-                  <label style={editLabelStyle}>Unit <span style={{ color: "#ef4444" }}>*</span></label>
+                  <label style={darkLabel}>Unit <span style={{ color: "#FF6B81" }}>*</span></label>
                   <select
                     value={editUnit}
                     onChange={e => setEditUnit(e.target.value)}
-                    style={editSelectStyle}
+                    style={darkSelect}
                   >
                     <option value="">Select unit</option>
                     <option value="MM">MM</option>
@@ -1082,697 +1186,67 @@ function StockDashboard() {
               </div>
 
               {/* Height & Width side by side */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: isMobile ? "8px" : "12px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 <div>
-                  <label style={editLabelStyle}>Height <span style={{ color: "#ef4444" }}>*</span></label>
+                  <label style={darkLabel}>Height <span style={{ color: "#FF6B81" }}>*</span></label>
                   <input
                     type="text"
                     value={editHeight}
                     onChange={e => setEditHeight(e.target.value)}
                     placeholder="e.g. 10"
-                    style={editInputStyle}
+                    style={darkInput}
                   />
                 </div>
                 <div>
-                  <label style={editLabelStyle}>Width <span style={{ color: "#ef4444" }}>*</span></label>
+                  <label style={darkLabel}>Width <span style={{ color: "#FF6B81" }}>*</span></label>
                   <input
                     type="text"
                     value={editWidth}
                     onChange={e => setEditWidth(e.target.value)}
                     placeholder="e.g. 10"
-                    style={editInputStyle}
+                    style={darkInput}
                   />
                 </div>
               </div>
 
               {/* Quantity */}
               <div>
-                <label style={editLabelStyle}>Quantity <span style={{ color: "#ef4444" }}>*</span></label>
+                <label style={darkLabel}>Quantity <span style={{ color: "#FF6B81" }}>*</span></label>
                 <input
                   type="number"
                   value={editQuantity}
                   onChange={e => setEditQuantity(e.target.value)}
                   placeholder="Enter quantity"
                   min="0"
-                  style={editInputStyle}
+                  style={darkInput}
                 />
               </div>
 
-              <div style={getButtonGroupStyle(isMobile)}>
-                <Button variant="secondary" fullWidth={isMobile} size={isMobile ? "sm" : "md"} onClick={closeEditModal}>
-                  Cancel
-                </Button>
-                <Button variant="primary" icon="💾" fullWidth={isMobile} size={isMobile ? "sm" : "md"} onClick={saveEditStock}>
-                  Save Changes
-                </Button>
-              </div>
-
               {editMessage && (
-                <div style={getMessageStyle(editMessage.includes("✅"))}>
-                  <span style={messageIcon}>{editMessage.includes("✅") ? "✅" : "❌"}</span>
-                  <span>{editMessage.replace("✅", "").replace("❌", "").trim()}</span>
+                <div style={{ fontSize: 12.5, color: editMessage.includes("✅") ? "#37E3A5" : "#FF6B81", padding: "10px 12px", background: editMessage.includes("✅") ? "rgba(55,227,165,0.08)" : "rgba(255,107,129,0.08)", borderRadius: 8, border: `1px solid ${editMessage.includes("✅") ? "rgba(55,227,165,0.2)" : "rgba(255,107,129,0.2)"}` }}>
+                  {editMessage}
                 </div>
               )}
             </div>
-          </Card>
+            <div style={modalFooter}>
+              <button
+                onClick={closeEditModal}
+                style={{ height: 38, padding: "0 18px", borderRadius: 10, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "#A9B3D1", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", outline: "none" }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={saveEditStock}
+                style={{ height: 38, padding: "0 18px", borderRadius: 10, background: "#4F5DFF", border: "none", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", outline: "none", boxShadow: "0 2px 12px rgba(79,93,255,0.35)" }}
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
         </div>
       )}
-
-      {/* Confirm Modal for Add/Remove */}
-      <ConfirmModal
-        show={showConfirm}
-        payload={pendingPayload || {}}
-        onCancel={() => setShowConfirm(false)}
-        onConfirm={confirmSaveStock}
-      />
-    </PageWrapper>
+    </div>
   );
 }
 
 export default StockDashboard;
-
-/* ================= STYLES ================= */
-
-const getContainerStyle = (isMobile) => ({
-  maxWidth: "1400px",
-  margin: "0 auto",
-  padding: isMobile ? "16px 12px" : "20px 16px",
-  width: "100%",
-  boxSizing: "border-box",
-  overflowX: "hidden",
-});
-
-const headerSection = {
-  marginBottom: "14px",
-};
-
-const getPageTitleStyle = (isMobile) => ({
-  fontSize: isMobile ? "22px" : "28px",
-  fontWeight: "800",
-  color: "#0f172a",
-  margin: "0 0 8px 0",
-  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-  WebkitBackgroundClip: "text",
-  WebkitTextFillColor: "transparent",
-  backgroundClip: "text",
-});
-
-const pageSubtitle = {
-  fontSize: "16px",
-  color: "#64748b",
-  margin: "0",
-  fontWeight: "400",
-};
-
-const getStatsGridStyle = (isMobile) => ({
-  display: "grid",
-  gridTemplateColumns: "repeat(3, 1fr)",
-  gap: isMobile ? "8px" : "10px",
-  marginBottom: isMobile ? "12px" : "14px",
-});
-
-const getFilterCardStyle = (isMobile) => ({
-  padding: isMobile ? "14px" : "18px",
-  marginBottom: "14px",
-});
-
-const filterHeader = {
-  display: "flex",
-  alignItems: "center",
-  gap: "12px",
-  marginBottom: "12px",
-};
-
-const filterIcon = {
-  width: "36px",
-  height: "36px",
-  borderRadius: "8px",
-  background: "linear-gradient(135deg, #667eea15, #764ba225)",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  fontSize: "18px",
-  flexShrink: 0,
-};
-
-const filterTitle = {
-  fontSize: "15px",
-  fontWeight: "700",
-  color: "#0f172a",
-  margin: "0 0 4px 0",
-};
-
-const filterSubtitle = {
-  fontSize: "14px",
-  color: "#64748b",
-  margin: "0",
-};
-
-const getFilterGridStyle = (isMobile) => ({
-  display: "grid",
-  gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit, minmax(150px, 1fr))",
-  gap: "10px",
-  alignItems: "start",
-});
-
-const getTableCardStyle = (isMobile) => ({
-  padding: isMobile ? "14px" : "18px",
-});
-
-const tableHeader = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "flex-start",
-  marginBottom: "12px",
-  flexWrap: "wrap",
-  gap: "10px",
-};
-
-const tableTitle = {
-  fontSize: "15px",
-  fontWeight: "700",
-  color: "#0f172a",
-  margin: "0 0 4px 0",
-};
-
-const tableSubtitle = {
-  fontSize: "14px",
-  color: "#64748b",
-  margin: "0",
-};
-
-const tableWrapper = {
-  width: "100%",
-};
-
-const tableContainer = {
-  overflowX: "auto",
-  borderRadius: "12px",
-  border: "1px solid #e2e8f0",
-};
-
-const table = {
-  width: "100%",
-  minWidth: "900px",
-  borderCollapse: "collapse",
-  background: "#ffffff",
-  tableLayout: "fixed", // Fixed layout to prevent column shifting
-};
-
-const getTableRowStyle = (isLow) => ({
-  borderBottom: "1px solid #e2e8f0",
-  transition: "all 0.2s ease",
-  backgroundColor: isLow ? "rgba(239, 68, 68, 0.05)" : "transparent",
-});
-
-const standBadge = {
-  display: "inline-block",
-  padding: "6px 12px",
-  borderRadius: "8px",
-  background: "linear-gradient(135deg, #667eea15, #764ba225)",
-  color: "#667eea",
-  fontWeight: "600",
-  fontSize: "13px",
-};
-
-const glassTypeCell = {
-  fontWeight: "600",
-  color: "#0f172a",
-};
-
-const getQuantityBadgeStyle = (isLow) => ({
-  display: "inline-block",
-  padding: "6px 12px",
-  borderRadius: "8px",
-  fontWeight: "600",
-  fontSize: "14px",
-  background: isLow ? "rgba(239, 68, 68, 0.1)" : "rgba(34, 197, 94, 0.1)",
-  color: isLow ? "#dc2626" : "#16a34a",
-  minWidth: "40px",
-  textAlign: "center",
-  boxSizing: "border-box",
-});
-
-const tableHeaderCell = {
-  padding: "10px 12px",
-  textAlign: "left",
-  fontSize: "13px",
-  fontWeight: "600",
-  color: "#475569",
-  backgroundColor: "#f8fafc",
-  borderBottom: "2px solid #e2e8f0",
-  whiteSpace: "nowrap",
-  overflow: "hidden",
-  textOverflow: "ellipsis",
-};
-
-const tableCell = {
-  padding: "10px 12px",
-  textAlign: "left",
-  verticalAlign: "middle",
-  whiteSpace: "nowrap",
-  overflow: "hidden",
-  textOverflow: "ellipsis",
-  boxSizing: "border-box",
-};
-
-const getStatusBadgeStyle = (isLow) => ({
-  display: "inline-block",
-  padding: "6px 12px",
-  borderRadius: "8px",
-  fontWeight: "600",
-  fontSize: "12px",
-  background: isLow ? "rgba(239, 68, 68, 0.1)" : "rgba(34, 197, 94, 0.1)",
-  color: isLow ? "#dc2626" : "#16a34a",
-  width: "85px", // Fixed width to accommodate both "🔴 LOW" and "✅ OK"
-  textAlign: "center",
-  boxSizing: "border-box",
-});
-
-const actionCell = {
-  padding: "8px 10px",
-  textAlign: "center",
-  verticalAlign: "middle",
-  width: "116px",
-  whiteSpace: "nowrap",
-};
-
-const iconActionRow = {
-  display: "flex",
-  gap: "6px",
-  justifyContent: "center",
-  alignItems: "center",
-};
-
-const iconBtnStyle = (variant) => {
-  const variants = {
-    primary: {
-      background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-      color: "#fff",
-      border: "none",
-      boxShadow: "0 2px 6px rgba(102,126,234,0.4)",
-    },
-    outline: {
-      background: "transparent",
-      color: "#667eea",
-      border: "1.5px solid #667eea",
-      boxShadow: "none",
-    },
-    secondary: {
-      background: "#f1f5f9",
-      color: "#475569",
-      border: "1px solid #e2e8f0",
-      boxShadow: "none",
-    },
-  };
-  return {
-    width: "34px",
-    height: "34px",
-    borderRadius: "8px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    cursor: "pointer",
-    fontSize: "15px",
-    fontWeight: "700",
-    lineHeight: 1,
-    transition: "all 0.15s ease",
-    padding: 0,
-    flexShrink: 0,
-    ...variants[variant],
-  };
-};
-
-const emptyState = {
-  textAlign: "center",
-  padding: "60px 20px",
-};
-
-const emptyIcon = {
-  fontSize: "64px",
-  marginBottom: "16px",
-  opacity: 0.3,
-};
-
-const emptyText = {
-  color: "#475569",
-  fontSize: "18px",
-  fontWeight: "600",
-  margin: "0 0 8px 0",
-};
-
-const emptySubtext = {
-  color: "#94a3b8",
-  fontSize: "14px",
-  margin: "0",
-};
-
-const loadingState = {
-  display: "flex",
-  flexDirection: "column",
-  gap: "12px",
-  padding: "20px",
-};
-
-const skeletonRow = {
-  height: "60px",
-  borderRadius: "8px",
-  background: "linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%)",
-  backgroundSize: "200% 100%",
-  animation: "shimmer 1.5s infinite",
-};
-
-const getModalOverlayStyle = (isMobile) => ({
-  position: "fixed",
-  top: 0, left: 0,
-  width: "100vw", height: "100vh",
-  background: "rgba(0,0,0,0.55)",
-  display: "flex",
-  justifyContent: isMobile ? "stretch" : "center",
-  alignItems: isMobile ? "flex-end" : "center",
-  zIndex: 10000,
-  backdropFilter: "blur(4px)",
-  padding: isMobile ? "0" : "20px",
-});
-
-const getModalCardStyle = (isMobile) => ({
-  width: "100%",
-  maxWidth: isMobile ? "100%" : "390px",
-  maxHeight: isMobile ? "82vh" : "88vh",
-  overflowY: "auto",
-  padding: isMobile ? "0 16px 28px" : "18px",
-  animation: isMobile ? "slideUp 0.25s cubic-bezier(0.32,0.72,0,1)" : "fadeIn 0.2s ease-out",
-  display: "flex",
-  flexDirection: "column",
-  borderRadius: isMobile ? "20px 20px 0 0" : "14px",
-  boxShadow: isMobile
-    ? "0 -4px 32px rgba(15,23,42,0.14)"
-    : "0 8px 32px rgba(15,23,42,0.12)",
-  border: "none",
-});
-
-const getModalHeaderStyle = (isMobile) => ({
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  marginBottom: isMobile ? "10px" : "14px",
-  paddingBottom: isMobile ? "8px" : "10px",
-  borderBottom: isMobile ? "none" : "1px solid #e2e8f0",
-});
-
-const getModalTitleStyle = (isMobile) => ({
-  fontSize: isMobile ? "15px" : "18px",
-  fontWeight: "700",
-  color: "#0f172a",
-  margin: "0",
-  letterSpacing: "-0.02em",
-});
-
-const getModalSubtitleStyle = (isMobile) => ({
-  fontSize: "11px",
-  color: "#94a3b8",
-  margin: "0",
-  display: isMobile ? "none" : "block",
-});
-
-const getCloseModalBtnStyle = (isMobile) => ({
-  background: isMobile ? "#f1f5f9" : "transparent",
-  border: "none",
-  fontSize: "14px",
-  color: "#64748b",
-  cursor: "pointer",
-  width: "28px", height: "28px",
-  borderRadius: "50%",
-  display: "flex", alignItems: "center", justifyContent: "center",
-  flexShrink: 0,
-});
-
-const getModalContentStyle = (isMobile) => ({
-  display: "flex",
-  flexDirection: "column",
-  gap: isMobile ? "10px" : "12px",
-  flex: 1,
-  minHeight: 0,
-  overflowY: "auto",
-});
-
-const getStockInfoCardStyle = (isMobile) => ({
-  background: "#f8fafc",
-  padding: isMobile ? "10px 12px" : "14px",
-  border: "1px solid #e8edf2",
-  borderRadius: "8px",
-});
-
-const getInfoTitleStyle = (isMobile) => ({
-  fontSize: "13px",
-  fontWeight: "700",
-  color: "#0f172a",
-  margin: "0 0 8px 0",
-});
-
-const getInfoGridStyle = (isMobile) => ({
-  display: "grid",
-  gridTemplateColumns: "1fr",
-  gap: isMobile ? "5px" : "7px",
-});
-
-const getInfoItemStyle = (isMobile) => ({
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  padding: isMobile ? "3px 0" : "5px 0",
-  borderBottom: isMobile ? "none" : "1px solid #f1f5f9",
-});
-
-const getInfoLabelStyle = (isMobile) => ({
-  fontSize: "12px",
-  fontWeight: "600",
-  color: "#94a3b8",
-  textTransform: "uppercase",
-  letterSpacing: "0.4px",
-});
-
-const getInfoValueStyle = (isMobile) => ({
-  fontSize: "13px",
-  fontWeight: "500",
-  color: "#1e293b",
-});
-
-const getButtonGroupStyle = (isMobile) => ({
-  display: "flex",
-  gap: "8px",
-  flexWrap: isMobile ? "nowrap" : "wrap",
-});
-
-const getMessageStyle = (isSuccess) => ({
-  padding: "16px",
-  borderRadius: "12px",
-  background: isSuccess 
-    ? "rgba(34, 197, 94, 0.1)" 
-    : "rgba(239, 68, 68, 0.1)",
-  border: `1.5px solid ${isSuccess ? "rgba(34, 197, 94, 0.2)" : "rgba(239, 68, 68, 0.2)"}`,
-  color: isSuccess ? "#16a34a" : "#dc2626",
-  fontSize: "14px",
-  fontWeight: "500",
-  display: "flex",
-  alignItems: "center",
-  gap: "12px",
-});
-
-const messageIcon = {
-  fontSize: "20px",
-  flexShrink: 0,
-};
-
-/* ── Mobile card styles (ultra-compact) ── */
-
-const mobileCardList = {
-  display: "flex",
-  flexDirection: "column",
-  gap: "5px",
-  width: "100%",
-  boxSizing: "border-box",
-};
-
-const mobileCard = {
-  background: "#fff",
-  borderRadius: "8px",
-  padding: "8px 10px",
-  boxShadow: "0 1px 3px rgba(0,0,0,0.07)",
-  border: "1px solid #e2e8f0",
-  width: "100%",
-  boxSizing: "border-box",
-  overflow: "hidden",
-};
-
-const mobileSummaryRow = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  gap: "6px",
-  marginBottom: "5px",
-};
-
-const mobileSummaryText = {
-  fontSize: "12px",
-  color: "#1e293b",
-  fontWeight: "500",
-  flex: 1,
-  lineHeight: 1.4,
-  wordBreak: "break-word",
-};
-
-const getMobileStatusChip = (isLow) => ({
-  fontSize: "10px",
-  fontWeight: "700",
-  padding: "2px 7px",
-  borderRadius: "99px",
-  flexShrink: 0,
-  background: isLow ? "rgba(239,68,68,0.12)" : "rgba(34,197,94,0.12)",
-  color: isLow ? "#dc2626" : "#16a34a",
-});
-
-const mobilePendingTag = {
-  fontSize: "10px",
-  color: "#f59e0b",
-  fontWeight: "600",
-};
-
-const mobileRevTag = {
-  fontSize: "10px",
-  color: "#f59e0b",
-  fontWeight: "600",
-};
-
-const mobileCardActions = {
-  display: "flex",
-  gap: "6px",
-  marginTop: "6px",
-  paddingTop: "6px",
-  borderTop: "1px solid #f1f5f9",
-};
-
-const mobileIconBtn = (variant) => {
-  const variants = {
-    primary: {
-      background: "linear-gradient(135deg,#667eea,#764ba2)",
-      color: "#fff",
-      border: "none",
-      boxShadow: "0 1px 4px rgba(102,126,234,0.35)",
-    },
-    outline: {
-      background: "transparent",
-      color: "#667eea",
-      border: "1.5px solid #667eea",
-    },
-    secondary: {
-      background: "#f1f5f9",
-      color: "#475569",
-      border: "1px solid #e2e8f0",
-    },
-  };
-  return {
-    flex: 1,
-    height: "32px",
-    borderRadius: "7px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    cursor: "pointer",
-    fontSize: "16px",
-    fontWeight: "700",
-    padding: 0,
-    lineHeight: 1,
-    ...variants[variant],
-  };
-};
-
-/* keep unused refs from previous version from breaking */
-const mobileCardTop = {};
-const mobileRow = {};
-const mobileLabel = {};
-const mobileValue = {};
-
-
-/* ── Bottom-sheet drag handle ── */
-const dragHandle = {
-  width: "36px", height: "4px",
-  borderRadius: "2px",
-  background: "#e2e8f0",
-  margin: "8px auto 12px",
-  flexShrink: 0,
-};
-
-/* ── Compact stock summary (mobile modals) ── */
-const compactStockSummary = {
-  background: "#f8fafc",
-  border: "1px solid #e8edf2",
-  borderRadius: "9px",
-  padding: "10px 12px",
-  display: "flex",
-  flexDirection: "column",
-  gap: "3px",
-};
-
-const compactSummaryRow = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  gap: "8px",
-};
-
-const compactSummaryMain = {
-  fontSize: "13px",
-  fontWeight: "600",
-  color: "#0f172a",
-  letterSpacing: "-0.01em",
-};
-
-const compactSummaryDetail = {
-  fontSize: "12px",
-  color: "#64748b",
-  fontWeight: "400",
-};
-
-const getCompactStatusPill = (isPending) => ({
-  fontSize: "10px",
-  fontWeight: "700",
-  padding: "2px 8px",
-  borderRadius: "99px",
-  flexShrink: 0,
-  background: isPending ? "rgba(245,158,11,0.12)" : "rgba(34,197,94,0.12)",
-  color: isPending ? "#d97706" : "#16a34a",
-});
-
-const editLabelStyle = {
-  display: "block",
-  fontSize: "13px",
-  fontWeight: "600",
-  color: "#475569",
-  marginBottom: "6px",
-};
-
-const editInputStyle = {
-  width: "100%",
-  padding: "10px 12px",
-  border: "1.5px solid #e2e8f0",
-  borderRadius: "8px",
-  fontSize: "14px",
-  color: "#0f172a",
-  outline: "none",
-  boxSizing: "border-box",
-  background: "#fff",
-};
-
-const editSelectStyle = {
-  width: "100%",
-  padding: "10px 12px",
-  border: "1.5px solid #e2e8f0",
-  borderRadius: "8px",
-  fontSize: "14px",
-  color: "#0f172a",
-  outline: "none",
-  boxSizing: "border-box",
-  background: "#fff",
-  cursor: "pointer",
-};

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import PageWrapper from "../components/PageWrapper";
 import dashboardBg from "../assets/dashboard-bg.jpg";
@@ -1413,25 +1413,27 @@ function StaffQuotationManagement() {
         {showForm && (
           <div
             style={{
-              backgroundColor: "white",
+              backgroundColor: "rgba(17,27,53,0.9)",
+              border: "1px solid rgba(255,255,255,0.08)",
               padding: isMobile ? "12px" : "30px",
               borderRadius: "12px",
               marginBottom: isMobile ? "16px" : "20px",
-              boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+              boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
               width: "100%",
               maxWidth: "100%",
               boxSizing: "border-box",
-              overflowX: "hidden", // Prevent horizontal overflow
+              overflowX: "hidden",
+              colorScheme: "dark",
             }}
           >
             <div style={{ 
               marginBottom: isMobile ? "16px" : "25px", 
-              borderBottom: "2px solid #e5e7eb", 
+              borderBottom: "2px solid rgba(255,255,255,0.08)", 
               paddingBottom: isMobile ? "12px" : "15px" 
             }}>
               <h2 style={{ 
                 margin: 0, 
-                color: "#1f2937", 
+                color: "#ffffff", 
                 fontSize: isMobile ? "20px" : "24px", 
                 fontWeight: "600" 
               }}>
@@ -1439,7 +1441,7 @@ function StaffQuotationManagement() {
               </h2>
               <p style={{ 
                 margin: "5px 0 0 0", 
-                color: "#6b7280", 
+                color: "#7180A6", 
                 fontSize: isMobile ? "13px" : "14px" 
               }}>
                 Fill in the details below to create a quotation for your customer
@@ -1457,7 +1459,7 @@ function StaffQuotationManagement() {
                 boxSizing: "border-box",
               }}>
                 <h3 style={{ 
-                  color: "#374151", 
+                  color: "#A9B3D1", 
                   fontSize: isMobile ? "16px" : "18px", 
                   fontWeight: "600", 
                   marginBottom: isMobile ? "12px" : "15px" 
@@ -1472,12 +1474,12 @@ function StaffQuotationManagement() {
                   boxSizing: "border-box",
                 }}>
                   <div>
-                    <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                    <label style={{ display: "block", marginBottom: "8px", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                       Customer Details * <span style={{ color: "#ef4444" }}>●</span>
                     </label>
                     <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "15px" }}>
                       <div>
-                        <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                        <label style={{ display: "block", marginBottom: "8px", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                           Name * <span style={{ color: "#ef4444" }}>●</span>
                         </label>
                         <input
@@ -1490,18 +1492,18 @@ function StaffQuotationManagement() {
                             width: "100%",
                             padding: isMobile ? "14px 12px" : "12px", // Larger touch target
                             borderRadius: "8px",
-                            border: "1px solid #d1d5db",
+                            border: "1px solid rgba(255,255,255,0.1)",
                             fontSize: "16px", // Prevent iOS zoom
                             transition: "all 0.2s",
                             minHeight: "44px", // Touch target
                             boxSizing: "border-box",
                           }}
-                          onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
-                          onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
+                          onFocus={(e) => (e.target.style.borderColor = "#4F5DFF")}
+                          onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
                         />
                       </div>
                       <div>
-                        <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                        <label style={{ display: "block", marginBottom: "8px", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                           Mobile * <span style={{ color: "#ef4444" }}>●</span>
                         </label>
                         <input
@@ -1514,18 +1516,18 @@ function StaffQuotationManagement() {
                             width: "100%",
                             padding: isMobile ? "14px 12px" : "12px", // Larger touch target
                             borderRadius: "8px",
-                            border: "1px solid #d1d5db",
+                            border: "1px solid rgba(255,255,255,0.1)",
                             fontSize: "16px", // Prevent iOS zoom
                             transition: "all 0.2s",
                             minHeight: "44px", // Touch target
                             boxSizing: "border-box",
                           }}
-                          onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
-                          onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
+                          onFocus={(e) => (e.target.style.borderColor = "#4F5DFF")}
+                          onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
                         />
                       </div>
                       <div>
-                        <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                        <label style={{ display: "block", marginBottom: "8px", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                           Email (Optional)
                         </label>
                         <input
@@ -1537,18 +1539,18 @@ function StaffQuotationManagement() {
                             width: "100%",
                             padding: isMobile ? "14px 12px" : "12px", // Larger touch target
                             borderRadius: "8px",
-                            border: "1px solid #d1d5db",
+                            border: "1px solid rgba(255,255,255,0.1)",
                             fontSize: "16px", // Prevent iOS zoom
                             transition: "all 0.2s",
                             minHeight: "44px", // Touch target
                             boxSizing: "border-box",
                           }}
-                          onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
-                          onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
+                          onFocus={(e) => (e.target.style.borderColor = "#4F5DFF")}
+                          onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
                         />
                       </div>
                       <div>
-                        <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                        <label style={{ display: "block", marginBottom: "8px", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                           Address (Optional)
                         </label>
                         <input
@@ -1560,20 +1562,20 @@ function StaffQuotationManagement() {
                             width: "100%",
                             padding: isMobile ? "14px 12px" : "12px", // Larger touch target
                             borderRadius: "8px",
-                            border: "1px solid #d1d5db",
+                            border: "1px solid rgba(255,255,255,0.1)",
                             fontSize: "16px", // Prevent iOS zoom
                             transition: "all 0.2s",
                             minHeight: "44px", // Touch target
                             boxSizing: "border-box",
                           }}
-                          onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
-                          onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
+                          onFocus={(e) => (e.target.style.borderColor = "#4F5DFF")}
+                          onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
                         />
                       </div>
                     </div>
                   </div>
                   <div>
-                    <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                    <label style={{ display: "block", marginBottom: "8px", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                       Billing Type * <span style={{ color: "#ef4444" }}>●</span>
                     </label>
                     <div
@@ -1582,8 +1584,8 @@ function StaffQuotationManagement() {
                         gap: isMobile ? "10px" : "15px", // Smaller gap on mobile
                         padding: isMobile ? "10px" : "12px",
                         borderRadius: "8px",
-                        border: "1px solid #d1d5db",
-                        backgroundColor: "#f9fafb",
+                        border: "1px solid rgba(255,255,255,0.1)",
+                        backgroundColor: "rgba(255,255,255,0.04)",
                         flexWrap: isMobile ? "wrap" : "nowrap", // Wrap on mobile
                       }}
                     >
@@ -1595,7 +1597,7 @@ function StaffQuotationManagement() {
                           cursor: "pointer",
                           padding: isMobile ? "12px 16px" : "8px 12px", // Larger touch target
                           borderRadius: "6px",
-                          backgroundColor: formData.billingType === "GST" ? "#eef2ff" : "transparent",
+                          backgroundColor: formData.billingType === "GST" ? "rgba(79,93,255,0.15)" : "transparent",
                           border: formData.billingType === "GST" ? "2px solid #6366f1" : "2px solid transparent",
                           transition: "all 0.2s",
                           flex: isMobile ? "1 1 100%" : "1", // Full width on mobile
@@ -1612,7 +1614,7 @@ function StaffQuotationManagement() {
                         />
                         <span style={{ 
                           fontWeight: formData.billingType === "GST" ? "600" : "400",
-                          color: "#1f2937",
+                          color: "#ffffff",
                           fontSize: "14px"
                         }}>💰 GST</span>
                       </label>
@@ -1624,7 +1626,7 @@ function StaffQuotationManagement() {
                           cursor: "pointer",
                           padding: isMobile ? "12px 16px" : "8px 12px", // Larger touch target
                           borderRadius: "6px",
-                          backgroundColor: formData.billingType === "NON_GST" ? "#eef2ff" : "transparent",
+                          backgroundColor: formData.billingType === "NON_GST" ? "rgba(79,93,255,0.15)" : "transparent",
                           border: formData.billingType === "NON_GST" ? "2px solid #6366f1" : "2px solid transparent",
                           transition: "all 0.2s",
                           flex: isMobile ? "1 1 100%" : "1", // Full width on mobile
@@ -1641,12 +1643,12 @@ function StaffQuotationManagement() {
                         />
                         <span style={{ 
                           fontWeight: formData.billingType === "NON_GST" ? "600" : "400",
-                          color: "#1f2937",
+                          color: "#ffffff",
                           fontSize: "14px"
                         }}>💵 Non-GST</span>
                       </label>
                     </div>
-                    <p style={{ marginTop: "5px", color: "#6b7280", fontSize: "12px" }}>
+                    <p style={{ marginTop: "5px", color: "#7180A6", fontSize: "12px" }}>
                       {formData.billingType === "GST"
                         ? "ℹ️ GST billing includes tax calculations (CGST/SGST or IGST)"
                         : "ℹ️ Non-GST billing - no tax calculations"}
@@ -1662,7 +1664,7 @@ function StaffQuotationManagement() {
                 boxSizing: "border-box",
               }}>
                 <h3 style={{ 
-                  color: "#374151", 
+                  color: "#A9B3D1", 
                   fontSize: isMobile ? "16px" : "18px", 
                   fontWeight: "600", 
                   marginBottom: isMobile ? "12px" : "15px" 
@@ -1680,7 +1682,7 @@ function StaffQuotationManagement() {
                       width: "100%",
                       boxSizing: "border-box",
                     }}>
-                      <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                      <label style={{ display: "block", marginBottom: "8px", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                         Quotation Date * <span style={{ color: "#ef4444" }}>●</span>
                       </label>
                     <input
@@ -1700,22 +1702,22 @@ function StaffQuotationManagement() {
                         maxWidth: "100%",
                         padding: isMobile ? "14px 12px" : "12px",
                         borderRadius: "8px",
-                        border: "1px solid #d1d5db",
+                        border: "1px solid rgba(255,255,255,0.1)",
                         fontSize: "16px", // Prevent iOS zoom
                         transition: "all 0.2s",
                         boxSizing: "border-box",
                         minHeight: "44px", // Touch target
                       }}
-                      onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
-                      onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
+                      onFocus={(e) => (e.target.style.borderColor = "#4F5DFF")}
+                      onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
                     />
-                    <p style={{ marginTop: "5px", color: "#6b7280", fontSize: "12px" }}>📌 Date when quotation is created</p>
+                    <p style={{ marginTop: "5px", color: "#7180A6", fontSize: "12px" }}>📌 Date when quotation is created</p>
                   </div>
                   <div style={{
                     width: "100%",
                     boxSizing: "border-box",
                   }}>
-                    <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                    <label style={{ display: "block", marginBottom: "8px", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                       Valid Until (Optional)
                     </label>
                     <input
@@ -1728,24 +1730,24 @@ function StaffQuotationManagement() {
                         maxWidth: "100%",
                         padding: isMobile ? "14px 12px" : "12px",
                         borderRadius: "8px",
-                        border: "1px solid #d1d5db",
+                        border: "1px solid rgba(255,255,255,0.1)",
                         fontSize: "16px", // Prevent iOS zoom
                         transition: "all 0.2s",
                         boxSizing: "border-box",
                         minHeight: "44px", // Touch target
                       }}
-                      onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
-                      onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
+                      onFocus={(e) => (e.target.style.borderColor = "#4F5DFF")}
+                      onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
                     />
-                    <p style={{ marginTop: "5px", color: "#6b7280", fontSize: "12px" }}>📌 Quotation expiry date (optional)</p>
+                    <p style={{ marginTop: "5px", color: "#7180A6", fontSize: "12px" }}>📌 Quotation expiry date (optional)</p>
                   </div>
                 </div>
               </div>
 
               {/* GST Fields (Conditional) */}
               {formData.billingType === "GST" && (
-                <div style={{ marginBottom: "30px", padding: "20px", backgroundColor: "#f0f9ff", borderRadius: "8px", border: "1px solid #bae6fd" }}>
-                  <h3 style={{ color: "#374151", fontSize: "18px", fontWeight: "600", marginBottom: "15px" }}>
+                <div style={{ marginBottom: "30px", padding: "20px", backgroundColor: "rgba(79,93,255,0.08)", borderRadius: "8px", border: "1px solid rgba(79,93,255,0.3)" }}>
+                  <h3 style={{ color: "#A9B3D1", fontSize: "18px", fontWeight: "600", marginBottom: "15px" }}>
                     🧾 GST Information
                   </h3>
                   <div style={{ 
@@ -1755,7 +1757,7 @@ function StaffQuotationManagement() {
                     width: "100%",
                   }}>
                     <div>
-                      <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                      <label style={{ display: "block", marginBottom: "8px", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                         GST Percentage (%) * <span style={{ color: "#ef4444" }}>●</span>
                       </label>
                       <input
@@ -1771,19 +1773,19 @@ function StaffQuotationManagement() {
                           width: "100%",
                           padding: isMobile ? "14px 12px" : "12px",
                           borderRadius: "8px",
-                          border: "1px solid #d1d5db",
+                          border: "1px solid rgba(255,255,255,0.1)",
                           fontSize: "16px", // Prevent iOS zoom
                           transition: "all 0.2s",
                           minHeight: "44px", // Touch target
                           boxSizing: "border-box",
                         }}
-                        onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
-                        onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
+                        onFocus={(e) => (e.target.style.borderColor = "#4F5DFF")}
+                        onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
                       />
-                      <p style={{ marginTop: "5px", color: "#6b7280", fontSize: "12px" }}>💡 Common: 5%, 12%, 18%, 28%</p>
+                      <p style={{ marginTop: "5px", color: "#7180A6", fontSize: "12px" }}>💡 Common: 5%, 12%, 18%, 28%</p>
                     </div>
                     <div>
-                      <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                      <label style={{ display: "block", marginBottom: "8px", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                         Customer State (Optional)
                       </label>
                       <input
@@ -1795,16 +1797,16 @@ function StaffQuotationManagement() {
                           width: "100%",
                           padding: isMobile ? "14px 12px" : "12px",
                           borderRadius: "8px",
-                          border: "1px solid #d1d5db",
+                          border: "1px solid rgba(255,255,255,0.1)",
                           fontSize: "16px", // Prevent iOS zoom
                           transition: "all 0.2s",
                           minHeight: "44px", // Touch target
                           boxSizing: "border-box",
                         }}
-                        onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
-                        onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
+                        onFocus={(e) => (e.target.style.borderColor = "#4F5DFF")}
+                        onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
                       />
-                      <p style={{ marginTop: "5px", color: "#6b7280", fontSize: "12px" }}>📍 For inter-state vs intra-state calculation</p>
+                      <p style={{ marginTop: "5px", color: "#7180A6", fontSize: "12px" }}>📍 For inter-state vs intra-state calculation</p>
                     </div>
                   </div>
                 </div>
@@ -1812,11 +1814,11 @@ function StaffQuotationManagement() {
 
               {/* Additional Charges */}
               <div style={{ marginBottom: "30px" }}>
-                <h3 style={{ color: "#374151", fontSize: "18px", fontWeight: "600", marginBottom: "15px" }}>
+                <h3 style={{ color: "#A9B3D1", fontSize: "18px", fontWeight: "600", marginBottom: "15px" }}>
                   💰 Additional Charges (Optional)
                 </h3>
-                <div style={{ marginBottom: "20px", padding: "15px", backgroundColor: "#f0f9ff", borderRadius: "8px", border: "1px solid #bae6fd" }}>
-                  <label style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                <div style={{ marginBottom: "20px", padding: "15px", backgroundColor: "rgba(79,93,255,0.08)", borderRadius: "8px", border: "1px solid rgba(79,93,255,0.3)" }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                     <input
                       type="checkbox"
                       checked={formData.transportationRequired}
@@ -1825,7 +1827,7 @@ function StaffQuotationManagement() {
                     />
                     <span>🚚 Customer Requires Transportation</span>
                   </label>
-                  <p style={{ margin: "5px 0 0 28px", color: "#6b7280", fontSize: "12px" }}>
+                  <p style={{ margin: "5px 0 0 28px", color: "#7180A6", fontSize: "12px" }}>
                     Check if customer needs transportation/delivery service
                   </p>
                 </div>
@@ -1836,7 +1838,7 @@ function StaffQuotationManagement() {
                   width: "100%",
                 }}>
                   <div>
-                    <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                    <label style={{ display: "block", marginBottom: "8px", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                       Installation Charge (₹)
                     </label>
                     <input
@@ -1846,13 +1848,13 @@ function StaffQuotationManagement() {
                       value={formData.installationCharge === 0 ? "" : formData.installationCharge}
                       onChange={(e) => setFormData({ ...formData, installationCharge: parseFloat(e.target.value) || 0 })}
                       onFocus={(e) => {
-                        e.target.style.borderColor = "#6366f1";
+                        e.target.style.borderColor = "#4F5DFF";
                         if (e.target.value === "0" || e.target.value === "") {
                           e.target.value = "";
                         }
                       }}
                       onBlur={(e) => {
-                        e.target.style.borderColor = "#d1d5db";
+                        e.target.style.borderColor = "rgba(255,255,255,0.1)";
                         if (e.target.value === "" || e.target.value === "0") {
                           setFormData({ ...formData, installationCharge: 0 });
                         }
@@ -1862,17 +1864,17 @@ function StaffQuotationManagement() {
                         width: "100%",
                         padding: isMobile ? "14px 12px" : "12px",
                         borderRadius: "8px",
-                        border: "1px solid #d1d5db",
+                        border: "1px solid rgba(255,255,255,0.1)",
                         fontSize: "16px", // Prevent iOS zoom
                         transition: "all 0.2s",
                         boxSizing: "border-box",
                         minHeight: "44px", // Touch target
                       }}
                     />
-                    <p style={{ marginTop: "5px", color: "#6b7280", fontSize: "12px" }}>💰 Installation service charge</p>
+                    <p style={{ marginTop: "5px", color: "#7180A6", fontSize: "12px" }}>💰 Installation service charge</p>
                   </div>
                   <div>
-                    <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                    <label style={{ display: "block", marginBottom: "8px", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                       Transport Charge (₹)
                     </label>
                     <input
@@ -1882,13 +1884,13 @@ function StaffQuotationManagement() {
                       value={formData.transportCharge === 0 ? "" : formData.transportCharge}
                       onChange={(e) => setFormData({ ...formData, transportCharge: parseFloat(e.target.value) || 0 })}
                       onFocus={(e) => {
-                        e.target.style.borderColor = "#6366f1";
+                        e.target.style.borderColor = "#4F5DFF";
                         if (e.target.value === "0" || e.target.value === "") {
                           e.target.value = "";
                         }
                       }}
                       onBlur={(e) => {
-                        e.target.style.borderColor = "#d1d5db";
+                        e.target.style.borderColor = "rgba(255,255,255,0.1)";
                         if (e.target.value === "" || e.target.value === "0") {
                           setFormData({ ...formData, transportCharge: 0 });
                         }
@@ -1898,16 +1900,16 @@ function StaffQuotationManagement() {
                         width: "100%",
                         padding: "12px",
                         borderRadius: "8px",
-                        border: "1px solid #d1d5db",
+                        border: "1px solid rgba(255,255,255,0.1)",
                         fontSize: "14px",
                         transition: "all 0.2s",
                         boxSizing: "border-box",
                       }}
                     />
-                    <p style={{ marginTop: "5px", color: "#6b7280", fontSize: "12px" }}>🚚 Transportation/delivery charge</p>
+                    <p style={{ marginTop: "5px", color: "#7180A6", fontSize: "12px" }}>🚚 Transportation/delivery charge</p>
                   </div>
                   <div>
-                    <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                    <label style={{ display: "block", marginBottom: "8px", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                       Discount
                     </label>
                     <div style={{ 
@@ -1924,7 +1926,7 @@ function StaffQuotationManagement() {
                         style={{
                           flex: 1,
                           padding: isMobile ? "12px 16px" : "10px",
-                          backgroundColor: formData.discountType === "AMOUNT" ? "#6366f1" : "#e5e7eb",
+                          backgroundColor: formData.discountType === "AMOUNT" ? "#4F5DFF" : "rgba(255,255,255,0.08)",
                           color: formData.discountType === "AMOUNT" ? "white" : "#374151",
                           border: "none",
                           borderRadius: "8px",
@@ -1937,12 +1939,12 @@ function StaffQuotationManagement() {
                         }}
                         onMouseOver={(e) => {
                           if (formData.discountType !== "AMOUNT") {
-                            e.target.style.backgroundColor = "#d1d5db";
+                            e.target.style.backgroundColor = "rgba(255,255,255,0.1)";
                           }
                         }}
                         onMouseOut={(e) => {
                           if (formData.discountType !== "AMOUNT") {
-                            e.target.style.backgroundColor = "#e5e7eb";
+                            e.target.style.backgroundColor = "rgba(255,255,255,0.08)";
                           }
                         }}
                       >
@@ -1956,7 +1958,7 @@ function StaffQuotationManagement() {
                         style={{
                           flex: 1,
                           padding: isMobile ? "12px 16px" : "10px",
-                          backgroundColor: formData.discountType === "PERCENTAGE" ? "#6366f1" : "#e5e7eb",
+                          backgroundColor: formData.discountType === "PERCENTAGE" ? "#4F5DFF" : "rgba(255,255,255,0.08)",
                           color: formData.discountType === "PERCENTAGE" ? "white" : "#374151",
                           border: "none",
                           borderRadius: "8px",
@@ -1969,12 +1971,12 @@ function StaffQuotationManagement() {
                         }}
                         onMouseOver={(e) => {
                           if (formData.discountType !== "PERCENTAGE") {
-                            e.target.style.backgroundColor = "#d1d5db";
+                            e.target.style.backgroundColor = "rgba(255,255,255,0.1)";
                           }
                         }}
                         onMouseOut={(e) => {
                           if (formData.discountType !== "PERCENTAGE") {
-                            e.target.style.backgroundColor = "#e5e7eb";
+                            e.target.style.backgroundColor = "rgba(255,255,255,0.08)";
                           }
                         }}
                       >
@@ -1992,13 +1994,13 @@ function StaffQuotationManagement() {
                         setFormData({ ...formData, discountValue: value });
                       }}
                       onFocus={(e) => {
-                        e.target.style.borderColor = "#6366f1";
+                        e.target.style.borderColor = "#4F5DFF";
                         if (e.target.value === "0" || e.target.value === "") {
                           e.target.value = "";
                         }
                       }}
                       onBlur={(e) => {
-                        e.target.style.borderColor = "#d1d5db";
+                        e.target.style.borderColor = "rgba(255,255,255,0.1)";
                         if (e.target.value === "" || e.target.value === "0") {
                           setFormData({ ...formData, discountValue: 0, discount: 0 });
                         }
@@ -2008,14 +2010,14 @@ function StaffQuotationManagement() {
                         width: "100%",
                         padding: isMobile ? "14px 12px" : "12px",
                         borderRadius: "8px",
-                        border: "1px solid #d1d5db",
+                        border: "1px solid rgba(255,255,255,0.1)",
                         fontSize: "16px", // Prevent iOS zoom
                         transition: "all 0.2s",
                         boxSizing: "border-box",
                         minHeight: "44px", // Touch target
                       }}
                     />
-                    <p style={{ marginTop: "5px", color: "#6b7280", fontSize: "12px" }}>
+                    <p style={{ marginTop: "5px", color: "#7180A6", fontSize: "12px" }}>
                       🎁 {formData.discountType === "PERCENTAGE" 
                         ? "Discount percentage (0-100%)" 
                         : "Discount amount in ₹"}
@@ -2026,7 +2028,7 @@ function StaffQuotationManagement() {
 
               {/* Shipping Address Section */}
               <div style={{ marginBottom: "30px" }}>
-                <h3 style={{ color: "#374151", fontSize: "18px", fontWeight: "600", marginBottom: "15px" }}>
+                <h3 style={{ color: "#A9B3D1", fontSize: "18px", fontWeight: "600", marginBottom: "15px" }}>
                   📦 Shipping Address (Optional)
                 </h3>
                 <div style={{ 
@@ -2036,7 +2038,7 @@ function StaffQuotationManagement() {
                   <label style={{ 
                     display: "block", 
                     marginBottom: "8px", 
-                    color: "#374151", 
+                    color: "#A9B3D1", 
                     fontWeight: "500", 
                     fontSize: "14px" 
                   }}>
@@ -2051,7 +2053,7 @@ function StaffQuotationManagement() {
                       maxWidth: "100%",
                       padding: isMobile ? "14px 12px" : "12px",
                       borderRadius: "8px",
-                      border: "1px solid #d1d5db",
+                      border: "1px solid rgba(255,255,255,0.1)",
                       fontSize: "16px", // Prevent iOS zoom
                       minHeight: isMobile ? "100px" : "80px",
                       resize: "vertical",
@@ -2059,10 +2061,10 @@ function StaffQuotationManagement() {
                       transition: "all 0.2s",
                       boxSizing: "border-box",
                     }}
-                    onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
-                    onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
+                    onFocus={(e) => (e.target.style.borderColor = "#4F5DFF")}
+                    onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
                   />
-                  <p style={{ marginTop: "5px", color: "#6b7280", fontSize: "12px" }}>
+                  <p style={{ marginTop: "5px", color: "#7180A6", fontSize: "12px" }}>
                     📦 This address will be displayed in quotation, invoice, estimate, and delivery challan PDFs
                   </p>
                 </div>
@@ -2071,10 +2073,10 @@ function StaffQuotationManagement() {
               {/* Items Section */}
               <div style={{ marginBottom: "30px" }}>
                 <div style={{ marginBottom: "20px" }}>
-                  <h3 style={{ color: "#374151", fontSize: "18px", fontWeight: "600", margin: 0, marginBottom: "10px" }}>
+                  <h3 style={{ color: "#A9B3D1", fontSize: "18px", fontWeight: "600", margin: 0, marginBottom: "10px" }}>
                     📦 Quotation Items
                   </h3>
-                  <p style={{ color: "#6b7280", fontSize: "14px", margin: 0 }}>
+                  <p style={{ color: "#7180A6", fontSize: "14px", margin: 0 }}>
                     Add glass items to your quotation. Area and subtotal are calculated automatically.
                   </p>
                 </div>
@@ -2083,11 +2085,11 @@ function StaffQuotationManagement() {
                   <div
                     key={index}
                     style={{
-                      border: "2px solid #e5e7eb",
+                      border: "2px solid rgba(255,255,255,0.08)",
                       padding: isMobile ? "16px" : "25px",
                       marginBottom: isMobile ? "16px" : "20px",
                       borderRadius: "12px",
-                      backgroundColor: "#fafafa",
+                      backgroundColor: "rgba(17,27,53,0.95)",
                       transition: "all 0.2s",
                       width: "100%",
                       maxWidth: "100%",
@@ -2095,11 +2097,11 @@ function StaffQuotationManagement() {
                       overflow: "hidden", // Prevent content from overflowing
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = "#6366f1";
+                      e.currentTarget.style.borderColor = "#4F5DFF";
                       e.currentTarget.style.boxShadow = "0 4px 6px -1px rgba(0, 0, 0, 0.1)";
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = "#e5e7eb";
+                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
                       e.currentTarget.style.boxShadow = "none";
                     }}
                   >
@@ -2110,7 +2112,7 @@ function StaffQuotationManagement() {
                             width: "32px",
                             height: "32px",
                             borderRadius: "50%",
-                            backgroundColor: "#6366f1",
+                            backgroundcolor: "#818CF8",
                             color: "white",
                             display: "flex",
                             alignItems: "center",
@@ -2121,7 +2123,7 @@ function StaffQuotationManagement() {
                         >
                           {index + 1}
                         </div>
-                        <strong style={{ color: "#1f2937", fontSize: "16px" }}>Item {index + 1}</strong>
+                        <strong style={{ color: "#ffffff", fontSize: "16px" }}>Item {index + 1}</strong>
                       </div>
                       {formData.items.length > 1 && (
                         <button
@@ -2155,7 +2157,7 @@ function StaffQuotationManagement() {
                     }}>
                       {/* Glass Type Dropdown */}
                       <div style={{ marginBottom: "16px" }}>
-                        <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                        <label style={{ display: "block", marginBottom: "8px", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                           Glass Type * <span style={{ color: "#ef4444" }}>●</span>
                         </label>
                         <select
@@ -2166,7 +2168,7 @@ function StaffQuotationManagement() {
                             width: "100%",
                             padding: isMobile ? "14px 12px" : "12px",
                             borderRadius: "8px",
-                            border: "1px solid #d1d5db",
+                            border: "1px solid rgba(255,255,255,0.1)",
                             fontSize: "16px",
                             minHeight: "44px",
                             boxSizing: "border-box",
@@ -2181,7 +2183,7 @@ function StaffQuotationManagement() {
 
                       {/* Thickness Input */}
                       <div style={{ position: "relative" }}>
-                        <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                        <label style={{ display: "block", marginBottom: "8px", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                           Thickness * <span style={{ color: "#ef4444" }}>●</span>
                         </label>
                         <div style={{ position: "relative" }}>
@@ -2221,20 +2223,20 @@ function StaffQuotationManagement() {
                               width: "100%",
                               padding: isMobile ? "14px 40px 14px 12px" : "12px 40px 12px 12px",
                               borderRadius: "8px",
-                              border: "1px solid #d1d5db",
+                              border: "1px solid rgba(255,255,255,0.1)",
                               fontSize: "16px", // Prevent iOS zoom
                               transition: "all 0.2s",
                               boxSizing: "border-box",
                               minHeight: "44px", // Touch target
                             }}
                             onFocus={(e) => {
-                              e.target.style.borderColor = "#6366f1";
+                              e.target.style.borderColor = "#4F5DFF";
                               setShowStockDropdown({ ...showStockDropdown, [index]: true });
                               setStockDropdownType({ ...stockDropdownType, [index]: "thickness" });
                             }}
                             onBlur={(e) => {
                               setTimeout(() => {
-                                e.target.style.borderColor = "#d1d5db";
+                                e.target.style.borderColor = "rgba(255,255,255,0.1)";
                                 setShowStockDropdown({ ...showStockDropdown, [index]: false });
                               }, 200);
                             }}
@@ -2267,20 +2269,20 @@ function StaffQuotationManagement() {
                               left: 0,
                               right: 0,
                               zIndex: 1000,
-                              backgroundColor: "white",
-                              border: "2px solid #6366f1",
+                              backgroundColor: "rgba(17,27,53,0.98)",
+                              border: "1px solid rgba(79,93,255,0.5)",
                               borderRadius: "8px",
                               marginTop: "4px",
                               maxHeight: "400px",
                               overflowY: "auto",
-                              boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+                              boxShadow: "0 10px 25px rgba(0,0,0,0.5)",
                             }}
                           >
-                            <div style={{ padding: "8px 12px", backgroundColor: "#f3f4f6", borderBottom: "1px solid #e5e7eb", fontWeight: "600", fontSize: "12px", color: "#6b7280" }}>
+                            <div style={{ padding: "8px 12px", backgroundColor: "rgba(255,255,255,0.04)", borderBottom: "1px solid rgba(255,255,255,0.08)", fontWeight: "600", fontSize: "12px", color: "#7180A6" }}>
                               Available Stock ({allStock.filter(s => s.quantity > 0).length} items)
                             </div>
                             {allStock.filter(s => s.quantity > 0).length === 0 ? (
-                              <div style={{ padding: "16px", textAlign: "center", color: "#9ca3af", fontSize: "14px" }}>
+                              <div style={{ padding: "16px", textAlign: "center", color: "#7180A6", fontSize: "14px" }}>
                                 No stock available
                               </div>
                             ) : (
@@ -2299,12 +2301,12 @@ function StaffQuotationManagement() {
                                       key={`${stockItem.id}-${stockIndex}`}
                                       style={{
                                         padding: "12px",
-                                        borderBottom: "1px solid #e5e7eb",
+                                        borderBottom: "1px solid rgba(255,255,255,0.07)",
                                         cursor: "pointer",
                                         transition: "background-color 0.2s",
                                       }}
-                                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f3f4f6")}
-                                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "white")}
+                                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.08)")}
+                                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.08)")}
                                       onClick={(e) => {
                                         e.preventDefault();
                                         e.stopPropagation();
@@ -2326,16 +2328,16 @@ function StaffQuotationManagement() {
                                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                                         <div style={{ flex: 1 }}>
                                           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
-                                            <div style={{ fontWeight: "600", color: "#1f2937", fontSize: "14px" }}>
+                                            <div style={{ fontWeight: "600", color: "#ffffff", fontSize: "14px" }}>
                                               {glassType}
                                             </div>
                                             {thicknessDisplay && (
-                                              <span style={{ fontSize: "12px", color: "#6b7280", backgroundColor: "#e5e7eb", padding: "2px 6px", borderRadius: "4px" }}>
+                                              <span style={{ fontSize: "12px", color: "#7180A6", backgroundColor: "rgba(255,255,255,0.08)", padding: "2px 6px", borderRadius: "4px" }}>
                                                 {thicknessDisplay}
                                               </span>
                                             )}
                                           </div>
-                                          <div style={{ fontSize: "12px", color: "#6b7280", display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "4px" }}>
+                                          <div style={{ fontSize: "12px", color: "#7180A6", display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "4px" }}>
                                             <span>📏 Size: {size}</span>
                                             <span>📍 Stand: {stockItem.standNo}</span>
                                             <span>📦 Qty: {stockItem.quantity}</span>
@@ -2351,7 +2353,7 @@ function StaffQuotationManagement() {
                             )}
                           </div>
                         )}
-                        <p style={{ marginTop: "5px", color: "#6b7280", fontSize: "12px" }}>📦 Click to select from available stock</p>
+                        <p style={{ marginTop: "5px", color: "#7180A6", fontSize: "12px" }}>📦 Click to select from available stock</p>
                       </div>
                       {/* Size Input with MM/INCH Toggle */}
                       <div style={{ gridColumn: isMobile ? "1" : "1 / -1", marginBottom: "10px" }}>
@@ -2362,7 +2364,7 @@ function StaffQuotationManagement() {
                             onChange={(e) => handleItemChange(index, "sizeInMM", e.target.checked)}
                             style={{ cursor: "pointer", width: "18px", height: "18px" }}
                           />
-                          <span style={{ color: "#374151", fontWeight: "500", fontSize: "14px" }}>Size in mm</span>
+                          <span style={{ color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>Size in mm</span>
                         </label>
                       </div>
                       
@@ -2370,7 +2372,7 @@ function StaffQuotationManagement() {
                         width: "100%",
                         boxSizing: "border-box",
                       }}>
-                        <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                        <label style={{ display: "block", marginBottom: "8px", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                           Height * <span style={{ color: "#ef4444" }}>●</span>
                         </label>
                         <div style={{ 
@@ -2389,23 +2391,23 @@ function StaffQuotationManagement() {
                               flex: "1 1 auto",
                               padding: isMobile ? "14px 12px" : "12px",
                               borderRadius: "8px",
-                              border: "1px solid #d1d5db",
+                              border: "1px solid rgba(255,255,255,0.1)",
                               fontSize: "16px", // Prevent iOS zoom
                               transition: "all 0.2s",
                               boxSizing: "border-box",
                               minHeight: "44px", // Touch target
                               minWidth: 0, // Allow flex shrinking
                             }}
-                            onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
-                            onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
+                            onFocus={(e) => (e.target.style.borderColor = "#4F5DFF")}
+                            onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
                           />
                           <div style={{
                               padding: isMobile ? "14px 8px" : "12px",
                               borderRadius: "8px",
-                              border: "1px solid #d1d5db",
+                              border: "1px solid rgba(255,255,255,0.1)",
                               fontSize: isMobile ? "13px" : "14px",
-                              backgroundColor: "#f3f4f6",
-                              color: "#6b7280",
+                              backgroundColor: "rgba(17,27,53,0.7)",
+                              color: "#7180A6",
                               width: isMobile ? "65px" : "100px",
                               minWidth: isMobile ? "65px" : "100px",
                               maxWidth: isMobile ? "65px" : "100px",
@@ -2419,11 +2421,11 @@ function StaffQuotationManagement() {
                             INCH
                           </div>
                         </div>
-                        <p style={{ marginTop: "5px", color: "#6b7280", fontSize: "11px" }}>
+                        <p style={{ marginTop: "5px", color: "#7180A6", fontSize: "11px" }}>
                           {item.sizeInMM ? "📏 Input in millimeters (converted to inches automatically)" : "📏 Height in inches (supports fractions: 9 1/2, 9-1/2)"}
                         </p>
                         {item.sizeInMM && item.height && (
-                          <p style={{ marginTop: "3px", color: "#6366f1", fontSize: "11px", fontWeight: "500" }}>
+                          <p style={{ marginTop: "3px", color: "#818CF8", fontSize: "11px", fontWeight: "500" }}>
                             ✓ Converted: {item.heightMM} mm = {parseFloat(item.height).toFixed(2)} inches
                           </p>
                         )}
@@ -2432,7 +2434,7 @@ function StaffQuotationManagement() {
                         width: "100%",
                         boxSizing: "border-box",
                       }}>
-                        <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                        <label style={{ display: "block", marginBottom: "8px", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                           Width * <span style={{ color: "#ef4444" }}>●</span>
                         </label>
                         <div style={{ 
@@ -2451,23 +2453,23 @@ function StaffQuotationManagement() {
                               flex: "1 1 auto",
                               padding: isMobile ? "14px 12px" : "12px",
                               borderRadius: "8px",
-                              border: "1px solid #d1d5db",
+                              border: "1px solid rgba(255,255,255,0.1)",
                               fontSize: "16px", // Prevent iOS zoom
                               transition: "all 0.2s",
                               boxSizing: "border-box",
                               minHeight: "44px", // Touch target
                               minWidth: 0, // Allow flex shrinking
                             }}
-                            onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
-                            onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
+                            onFocus={(e) => (e.target.style.borderColor = "#4F5DFF")}
+                            onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
                           />
                           <div style={{
                               padding: isMobile ? "14px 8px" : "12px",
                               borderRadius: "8px",
-                              border: "1px solid #d1d5db",
+                              border: "1px solid rgba(255,255,255,0.1)",
                               fontSize: isMobile ? "13px" : "14px",
-                              backgroundColor: "#f3f4f6",
-                              color: "#6b7280",
+                              backgroundColor: "rgba(17,27,53,0.7)",
+                              color: "#7180A6",
                               width: isMobile ? "65px" : "100px",
                               minWidth: isMobile ? "65px" : "100px",
                               maxWidth: isMobile ? "65px" : "100px",
@@ -2481,33 +2483,33 @@ function StaffQuotationManagement() {
                             INCH
                           </div>
                         </div>
-                        <p style={{ marginTop: "5px", color: "#6b7280", fontSize: "11px" }}>
+                        <p style={{ marginTop: "5px", color: "#7180A6", fontSize: "11px" }}>
                           {item.sizeInMM ? "📏 Input in millimeters (converted to inches automatically)" : "📏 Width in inches (supports fractions: 6 1/2, 6-1/2)"}
                         </p>
                         {item.sizeInMM && item.width && (
-                          <p style={{ marginTop: "3px", color: "#6366f1", fontSize: "11px", fontWeight: "500" }}>
+                          <p style={{ marginTop: "3px", color: "#818CF8", fontSize: "11px", fontWeight: "500" }}>
                             ✓ Converted: {item.widthMM} mm = {parseFloat(item.width).toFixed(2)} inches
                           </p>
                         )}
                       </div>
                       {/* Table Selection Section */}
                       <div style={{ gridColumn: isMobile ? "1" : "1 / -1", marginTop: "20px", marginBottom: "20px" }}>
-                        <h4 style={{ color: "#374151", fontSize: "16px", fontWeight: "600", marginBottom: "15px" }}>
+                        <h4 style={{ color: "#A9B3D1", fontSize: "16px", fontWeight: "600", marginBottom: "15px" }}>
                           📊 Table Selection
                         </h4>
                         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "20px" }}>
                           {/* Height Table */}
                           <div style={{
-                            border: "2px solid #e5e7eb",
+                            border: "2px solid rgba(255,255,255,0.08)",
                             borderRadius: "8px",
                             padding: "15px",
-                            backgroundColor: "#fafafa",
+                            backgroundColor: "rgba(17,27,53,0.95)",
                           }}>
-                            <label style={{ display: "block", marginBottom: "10px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                            <label style={{ display: "block", marginBottom: "10px", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                               Height Table
                             </label>
                             <div style={{ display: "flex", gap: "10px", marginBottom: "15px", alignItems: "center" }}>
-                              <label style={{ fontSize: "13px", color: "#6b7280" }}>Table:</label>
+                              <label style={{ fontSize: "13px", color: "#7180A6" }}>Table:</label>
                               <input
                                 type="text"
                                 value={item.heightTableNumber !== undefined && item.heightTableNumber !== null ? String(item.heightTableNumber) : "6"}
@@ -2555,15 +2557,15 @@ function StaffQuotationManagement() {
                                   width: isMobile ? "70px" : "60px",
                                   padding: "8px",
                                   borderRadius: "6px",
-                                  border: "1px solid #d1d5db",
+                                  border: "1px solid rgba(255,255,255,0.1)",
                                   fontSize: "14px",
                                   textAlign: "center",
                                 }}
                               />
                             </div>
                             {item.selectedHeightTableValue && (
-                              <div style={{ marginTop: "10px", padding: "10px", backgroundColor: "#eef2ff", borderRadius: "6px", border: "1px solid #6366f1" }}>
-                                <p style={{ fontSize: "14px", color: "#6366f1", fontWeight: "600", margin: 0 }}>
+                              <div style={{ marginTop: "10px", padding: "10px", backgroundColor: "rgba(79,93,255,0.15)", borderRadius: "6px", border: "1px solid rgba(79,93,255,0.5)" }}>
+                                <p style={{ fontSize: "14px", color: "#818CF8", fontWeight: "600", margin: 0 }}>
                                   Selected: {item.selectedHeightTableValue}
                                 </p>
                               </div>
@@ -2572,18 +2574,18 @@ function StaffQuotationManagement() {
 
                           {/* Width Table */}
                           <div style={{
-                            border: "2px solid #e5e7eb",
+                            border: "2px solid rgba(255,255,255,0.08)",
                             borderRadius: "8px",
                             padding: isMobile ? "12px" : "15px",
-                            backgroundColor: "#fafafa",
+                            backgroundColor: "rgba(17,27,53,0.95)",
                             width: "100%",
                             boxSizing: "border-box",
                           }}>
-                            <label style={{ display: "block", marginBottom: "10px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                            <label style={{ display: "block", marginBottom: "10px", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                               Width Table
                             </label>
                             <div style={{ display: "flex", gap: "10px", marginBottom: "15px", alignItems: "center" }}>
-                              <label style={{ fontSize: "13px", color: "#6b7280" }}>Table:</label>
+                              <label style={{ fontSize: "13px", color: "#7180A6" }}>Table:</label>
                               <input
                                 type="text"
                                 value={item.widthTableNumber !== undefined && item.widthTableNumber !== null ? String(item.widthTableNumber) : "6"}
@@ -2631,15 +2633,15 @@ function StaffQuotationManagement() {
                                   width: isMobile ? "70px" : "60px",
                                   padding: "8px",
                                   borderRadius: "6px",
-                                  border: "1px solid #d1d5db",
+                                  border: "1px solid rgba(255,255,255,0.1)",
                                   fontSize: "14px",
                                   textAlign: "center",
                                 }}
                               />
                             </div>
                             {item.selectedWidthTableValue && (
-                              <div style={{ marginTop: "10px", padding: "10px", backgroundColor: "#eef2ff", borderRadius: "6px", border: "1px solid #6366f1" }}>
-                                <p style={{ fontSize: "14px", color: "#6366f1", fontWeight: "600", margin: 0 }}>
+                              <div style={{ marginTop: "10px", padding: "10px", backgroundColor: "rgba(79,93,255,0.15)", borderRadius: "6px", border: "1px solid rgba(79,93,255,0.5)" }}>
+                                <p style={{ fontSize: "14px", color: "#818CF8", fontWeight: "600", margin: 0 }}>
                                   Selected: {item.selectedWidthTableValue}
                                 </p>
                               </div>
@@ -2651,7 +2653,7 @@ function StaffQuotationManagement() {
 
                       {/* Polish Type Section */}
                       <div style={{ gridColumn: isMobile ? "1" : "1 / -1", marginTop: "20px", marginBottom: "15px" }}>
-                        <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                        <label style={{ display: "block", marginBottom: "8px", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                           Polish Type (Optional)
                         </label>
                         <div style={{
@@ -2659,8 +2661,8 @@ function StaffQuotationManagement() {
                           gap: "20px",
                           padding: "12px",
                           borderRadius: "8px",
-                          border: "1px solid #d1d5db",
-                          backgroundColor: "#f9fafb",
+                          border: "1px solid rgba(255,255,255,0.1)",
+                          backgroundColor: "rgba(255,255,255,0.04)",
                         }}>
                           <label style={{
                             display: "flex",
@@ -2669,7 +2671,7 @@ function StaffQuotationManagement() {
                             cursor: "pointer",
                             padding: "8px 12px",
                             borderRadius: "6px",
-                            backgroundColor: item.polish === "Hand-Polish" ? "#eef2ff" : "transparent",
+                            backgroundColor: item.polish === "Hand-Polish" ? "rgba(79,93,255,0.15)" : "transparent",
                             border: item.polish === "Hand-Polish" ? "2px solid #6366f1" : "2px solid transparent",
                             transition: "all 0.2s",
                             flex: 1,
@@ -2682,7 +2684,7 @@ function StaffQuotationManagement() {
                               onChange={(e) => handleItemChange(index, "polish", e.target.value)}
                               style={{ cursor: "pointer" }}
                             />
-                            <span style={{ fontWeight: item.polish === "Hand-Polish" ? "600" : "400", color: "#374151" }}>Hand-Polish</span>
+                            <span style={{ fontWeight: item.polish === "Hand-Polish" ? "600" : "400", color: "#A9B3D1" }}>Hand-Polish</span>
                           </label>
                           <label style={{
                             display: "flex",
@@ -2691,7 +2693,7 @@ function StaffQuotationManagement() {
                             cursor: "pointer",
                             padding: "8px 12px",
                             borderRadius: "6px",
-                            backgroundColor: item.polish === "CNC Polish" ? "#eef2ff" : "transparent",
+                            backgroundColor: item.polish === "CNC Polish" ? "rgba(79,93,255,0.15)" : "transparent",
                             border: item.polish === "CNC Polish" ? "2px solid #6366f1" : "2px solid transparent",
                             transition: "all 0.2s",
                             flex: 1,
@@ -2704,32 +2706,32 @@ function StaffQuotationManagement() {
                               onChange={(e) => handleItemChange(index, "polish", e.target.value)}
                               style={{ cursor: "pointer" }}
                             />
-                            <span style={{ fontWeight: item.polish === "CNC Polish" ? "600" : "400", color: "#374151" }}>CNC Polish</span>
+                            <span style={{ fontWeight: item.polish === "CNC Polish" ? "600" : "400", color: "#A9B3D1" }}>CNC Polish</span>
                           </label>
                         </div>
-                        <p style={{ marginTop: "5px", color: "#6b7280", fontSize: "11px" }}>✨ Select the type of polish for this item</p>
+                        <p style={{ marginTop: "5px", color: "#7180A6", fontSize: "11px" }}>✨ Select the type of polish for this item</p>
                       </div>
 
                       {/* Polish Selection Section */}
                       <div style={{ gridColumn: isMobile ? "1" : "1 / -1", marginTop: "20px", marginBottom: "20px" }}>
-                        <h4 style={{ color: "#374151", fontSize: "16px", fontWeight: "600", marginBottom: "15px" }}>
+                        <h4 style={{ color: "#A9B3D1", fontSize: "16px", fontWeight: "600", marginBottom: "15px" }}>
                           ✨ Polish Selection
                         </h4>
                         
                         {/* Rate Configuration */}
                         <div style={{
-                          border: "2px solid #e5e7eb",
+                          border: "2px solid rgba(255,255,255,0.08)",
                           borderRadius: "8px",
                           padding: "15px",
                           marginBottom: "15px",
-                          backgroundColor: "#fafafa",
+                          backgroundColor: "rgba(17,27,53,0.95)",
                         }}>
-                          <label style={{ display: "block", marginBottom: "10px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                          <label style={{ display: "block", marginBottom: "10px", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                             Rate/Rft Configuration
                           </label>
                           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: "15px" }}>
                             <div>
-                              <label style={{ display: "block", marginBottom: "5px", fontSize: "13px", color: "#6b7280" }}>P (Polish)</label>
+                              <label style={{ display: "block", marginBottom: "5px", fontSize: "13px", color: "#7180A6" }}>P (Polish)</label>
                               <input
                                 type="text"
                                 value={item.polishRates?.P !== undefined && item.polishRates?.P !== null ? String(item.polishRates.P) : "15"}
@@ -2772,13 +2774,13 @@ function StaffQuotationManagement() {
                                   width: "100%",
                                   padding: "8px",
                                   borderRadius: "6px",
-                                  border: "1px solid #d1d5db",
+                                  border: "1px solid rgba(255,255,255,0.1)",
                                   fontSize: "14px",
                                 }}
                               />
                             </div>
                             <div>
-                              <label style={{ display: "block", marginBottom: "5px", fontSize: "13px", color: "#6b7280" }}>H (Half-round)</label>
+                              <label style={{ display: "block", marginBottom: "5px", fontSize: "13px", color: "#7180A6" }}>H (Half-round)</label>
                               <input
                                 type="text"
                                 value={item.polishRates?.H !== undefined && item.polishRates?.H !== null ? String(item.polishRates.H) : "75"}
@@ -2821,13 +2823,13 @@ function StaffQuotationManagement() {
                                   width: "100%",
                                   padding: "8px",
                                   borderRadius: "6px",
-                                  border: "1px solid #d1d5db",
+                                  border: "1px solid rgba(255,255,255,0.1)",
                                   fontSize: "14px",
                                 }}
                               />
                             </div>
                             <div>
-                              <label style={{ display: "block", marginBottom: "5px", fontSize: "13px", color: "#6b7280" }}>B (Beveling)</label>
+                              <label style={{ display: "block", marginBottom: "5px", fontSize: "13px", color: "#7180A6" }}>B (Beveling)</label>
                               <input
                                 type="text"
                                 value={item.polishRates?.B !== undefined && item.polishRates?.B !== null ? String(item.polishRates.B) : "75"}
@@ -2870,7 +2872,7 @@ function StaffQuotationManagement() {
                                   width: "100%",
                                   padding: "8px",
                                   borderRadius: "6px",
-                                  border: "1px solid #d1d5db",
+                                  border: "1px solid rgba(255,255,255,0.1)",
                                   fontSize: "14px",
                                 }}
                               />
@@ -2880,16 +2882,16 @@ function StaffQuotationManagement() {
 
                         {/* Polish Selection Table */}
                         <div style={{
-                          border: "2px solid #e5e7eb",
+                          border: "2px solid rgba(255,255,255,0.08)",
                           borderRadius: "8px",
                           padding: "15px",
-                          backgroundColor: "#fafafa",
+                          backgroundColor: "rgba(17,27,53,0.95)",
                         }}>
                           <div style={{ overflowX: "auto" }}>
                             <table style={{ width: "100%", borderCollapse: "collapse" }}>
                               <thead>
-                                <tr style={{ borderBottom: "2px solid #e5e7eb" }}>
-                                  <th style={{ padding: "10px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#374151" }}>
+                                <tr style={{ borderBottom: "2px solid rgba(255,255,255,0.08)" }}>
+                                  <th style={{ padding: "10px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#A9B3D1" }}>
                                     <label style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "4px", cursor: "pointer" }}>
                                       <span>Side</span>
                                       <input
@@ -2919,7 +2921,7 @@ function StaffQuotationManagement() {
                                       />
                                     </label>
                                   </th>
-                                  <th style={{ padding: "10px", textAlign: "center", fontSize: "13px", fontWeight: "600", color: "#374151" }}>
+                                  <th style={{ padding: "10px", textAlign: "center", fontSize: "13px", fontWeight: "600", color: "#A9B3D1" }}>
                                     <label style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", cursor: "pointer" }}>
                                       <span>P</span>
                                       <input
@@ -2930,7 +2932,7 @@ function StaffQuotationManagement() {
                                       />
                                     </label>
                                   </th>
-                                  <th style={{ padding: "10px", textAlign: "center", fontSize: "13px", fontWeight: "600", color: "#374151" }}>
+                                  <th style={{ padding: "10px", textAlign: "center", fontSize: "13px", fontWeight: "600", color: "#A9B3D1" }}>
                                     <label style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", cursor: "pointer" }}>
                                       <span>H</span>
                                       <input
@@ -2941,7 +2943,7 @@ function StaffQuotationManagement() {
                                       />
                                     </label>
                                   </th>
-                                  <th style={{ padding: "10px", textAlign: "center", fontSize: "13px", fontWeight: "600", color: "#374151" }}>
+                                  <th style={{ padding: "10px", textAlign: "center", fontSize: "13px", fontWeight: "600", color: "#A9B3D1" }}>
                                     <label style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", cursor: "pointer" }}>
                                       <span>B</span>
                                       <input
@@ -2952,7 +2954,7 @@ function StaffQuotationManagement() {
                                       />
                                     </label>
                                   </th>
-                                  <th style={{ padding: "10px", textAlign: "right", fontSize: "13px", fontWeight: "600", color: "#374151" }}>Rate</th>
+                                  <th style={{ padding: "10px", textAlign: "right", fontSize: "13px", fontWeight: "600", color: "#A9B3D1" }}>Rate</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -2962,7 +2964,7 @@ function StaffQuotationManagement() {
                                   { side: "Height 2", checked: false, type: null, rate: 0 },
                                   { side: "Width 2", checked: false, type: null, rate: 0 },
                                 ]).map((row, rowIndex) => (
-                                  <tr key={rowIndex} style={{ borderBottom: "1px solid #e5e7eb" }}>
+                                  <tr key={rowIndex} style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
                                     <td style={{ padding: "10px" }}>
                                       <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
                                         <input
@@ -2971,7 +2973,7 @@ function StaffQuotationManagement() {
                                           onChange={(e) => handlePolishCheckboxChange(index, rowIndex, e.target.checked)}
                                           style={{ cursor: "pointer", width: "18px", height: "18px" }}
                                         />
-                                        <span style={{ fontSize: "13px", color: "#374151" }}>{row.side}</span>
+                                        <span style={{ fontSize: "13px", color: "#A9B3D1" }}>{row.side}</span>
                                       </label>
                                     </td>
                                     <td style={{ padding: "10px", textAlign: "center" }}>
@@ -3004,7 +3006,7 @@ function StaffQuotationManagement() {
                                         style={{ cursor: row.checked ? "pointer" : "not-allowed", width: "18px", height: "18px" }}
                                       />
                                     </td>
-                                    <td style={{ padding: "10px", textAlign: "right", fontSize: "13px", color: "#6b7280" }}>
+                                    <td style={{ padding: "10px", textAlign: "right", fontSize: "13px", color: "#7180A6" }}>
                                       {row.checked && row.type ? `₹${row.rate || 0}` : "-"}
                                     </td>
                                   </tr>
@@ -3017,7 +3019,7 @@ function StaffQuotationManagement() {
 
                       {/* Quantity and Rate per SqFt - Below Polish Section */}
                       <div style={{ gridColumn: isMobile ? "1" : "1 / 2", marginTop: "20px" }}>
-                        <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                        <label style={{ display: "block", marginBottom: "8px", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                           Quantity * <span style={{ color: "#ef4444" }}>●</span>
                         </label>
                         <input
@@ -3031,19 +3033,19 @@ function StaffQuotationManagement() {
                             width: "100%",
                             padding: isMobile ? "14px 12px" : "12px",
                             borderRadius: "8px",
-                            border: "1px solid #d1d5db",
+                            border: "1px solid rgba(255,255,255,0.1)",
                             fontSize: "16px", // Prevent iOS zoom
                             transition: "all 0.2s",
                             minHeight: "44px", // Touch target
                             boxSizing: "border-box",
                           }}
-                          onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
-                          onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
+                          onFocus={(e) => (e.target.style.borderColor = "#4F5DFF")}
+                          onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
                         />
-                        <p style={{ marginTop: "5px", color: "#6b7280", fontSize: "11px" }}>🔢 Number of pieces</p>
+                        <p style={{ marginTop: "5px", color: "#7180A6", fontSize: "11px" }}>🔢 Number of pieces</p>
                       </div>
                       <div style={{ gridColumn: isMobile ? "1" : "2 / 3", marginTop: "20px" }}>
-                        <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                        <label style={{ display: "block", marginBottom: "8px", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                           Selling Price (₹) * <span style={{ color: "#ef4444" }}>●</span>
                         </label>
                         <input
@@ -3063,16 +3065,16 @@ function StaffQuotationManagement() {
                             width: "100%",
                             padding: isMobile ? "14px 12px" : "12px",
                             borderRadius: "8px",
-                            border: "1px solid #d1d5db",
+                            border: "1px solid rgba(255,255,255,0.1)",
                             fontSize: "16px", // Prevent iOS zoom
                             transition: "all 0.2s",
                             boxSizing: "border-box",
                             minHeight: "44px", // Touch target
                           }}
-                          onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
-                          onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
+                          onFocus={(e) => (e.target.style.borderColor = "#4F5DFF")}
+                          onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
                         />
-                        <p style={{ marginTop: "5px", color: "#6b7280", fontSize: "11px" }}>
+                        <p style={{ marginTop: "5px", color: "#7180A6", fontSize: "11px" }}>
                           💰 Selling price per square foot (modifiable)
                           {(() => {
                             // Show calculated default price as helper text
@@ -3098,7 +3100,7 @@ function StaffQuotationManagement() {
                         <label style={{ 
                           display: "block", 
                           marginBottom: "8px", 
-                          color: "#374151", 
+                          color: "#A9B3D1", 
                           fontWeight: "500", 
                           fontSize: isMobile ? "13px" : "14px" 
                         }}>
@@ -3120,16 +3122,16 @@ function StaffQuotationManagement() {
                             maxWidth: "100%",
                             padding: isMobile ? "14px 12px" : "12px",
                             borderRadius: "8px",
-                            border: "1px solid #d1d5db",
+                            border: "1px solid rgba(255,255,255,0.1)",
                             fontSize: "16px", // Prevent iOS zoom
-                            backgroundColor: "#f3f4f6",
-                            color: "#6b7280",
+                            backgroundColor: "rgba(17,27,53,0.7)",
+                            color: "#7180A6",
                             cursor: "not-allowed",
                             boxSizing: "border-box",
                             minHeight: "44px", // Touch target
                           }}
                         />
-                        <p style={{ marginTop: "5px", color: "#6b7280", fontSize: isMobile ? "11px" : "11px" }}>
+                        <p style={{ marginTop: "5px", color: "#7180A6", fontSize: isMobile ? "11px" : "11px" }}>
                           ✨ Auto-calculated in {getAreaUnitLabel(item.heightUnit, item.widthUnit)} (rate calculation uses SqFt)
                         </p>
                       </div>
@@ -3140,7 +3142,7 @@ function StaffQuotationManagement() {
                         <label style={{ 
                           display: "block", 
                           marginBottom: "8px", 
-                          color: "#374151", 
+                          color: "#A9B3D1", 
                           fontWeight: "500", 
                           fontSize: isMobile ? "13px" : "14px" 
                         }}>
@@ -3172,17 +3174,17 @@ function StaffQuotationManagement() {
                             maxWidth: "100%",
                             padding: isMobile ? "14px 12px" : "12px",
                             borderRadius: "8px",
-                            border: "1px solid #d1d5db",
+                            border: "1px solid rgba(255,255,255,0.1)",
                             fontSize: "16px", // Prevent iOS zoom
-                            backgroundColor: "#fef3c7",
-                            color: "#92400e",
+                            backgroundColor: "rgba(255,185,94,0.1)",
+                            color: "#FFB95E",
                             fontWeight: "600",
                             cursor: "not-allowed",
                             boxSizing: "border-box",
                             minHeight: "44px", // Touch target
                           }}
                         />
-                        <p style={{ marginTop: "5px", color: "#6b7280", fontSize: isMobile ? "11px" : "11px" }}>✨ Auto-calculated: (Table height × Table width in ft) × Rate per SqFt × Quantity</p>
+                        <p style={{ marginTop: "5px", color: "#7180A6", fontSize: isMobile ? "11px" : "11px" }}>✨ Auto-calculated: (Table height × Table width in ft) × Rate per SqFt × Quantity</p>
                       </div>
                       <div style={{
                         width: "100%",
@@ -3191,7 +3193,7 @@ function StaffQuotationManagement() {
                         <label style={{ 
                           display: "block", 
                           marginBottom: "8px", 
-                          color: "#374151", 
+                          color: "#A9B3D1", 
                           fontWeight: "500", 
                           fontSize: isMobile ? "13px" : "14px" 
                         }}>
@@ -3276,9 +3278,9 @@ function StaffQuotationManagement() {
                             maxWidth: "100%",
                             padding: isMobile ? "14px 12px" : "12px",
                             borderRadius: "8px",
-                            border: "1px solid #d1d5db",
+                            border: "1px solid rgba(255,255,255,0.1)",
                             fontSize: "16px", // Prevent iOS zoom
-                            backgroundColor: "#e0f2fe",
+                            backgroundColor: "rgba(79,93,255,0.1)",
                             color: "#0c4a6e",
                             fontWeight: "600",
                             cursor: "not-allowed",
@@ -3286,7 +3288,7 @@ function StaffQuotationManagement() {
                             minHeight: "44px", // Touch target
                           }}
                         />
-                        <p style={{ marginTop: "5px", color: "#6b7280", fontSize: "11px" }}>✨ Auto-calculated: Group by polish type, sum sides, convert to ft, × polish rate, sum all, × Quantity</p>
+                        <p style={{ marginTop: "5px", color: "#7180A6", fontSize: "11px" }}>✨ Auto-calculated: Group by polish type, sum sides, convert to ft, × polish rate, sum all, × Quantity</p>
                       </div>
                     </div>
 
@@ -3299,7 +3301,7 @@ function StaffQuotationManagement() {
                         <label style={{ 
                           display: "block", 
                           marginBottom: "8px", 
-                          color: "#374151", 
+                          color: "#A9B3D1", 
                           fontWeight: "500", 
                           fontSize: isMobile ? "13px" : "14px" 
                         }}>
@@ -3315,16 +3317,16 @@ function StaffQuotationManagement() {
                             maxWidth: "100%",
                             padding: isMobile ? "14px 12px" : "12px",
                             borderRadius: "8px",
-                            border: "1px solid #d1d5db",
+                            border: "1px solid rgba(255,255,255,0.1)",
                             fontSize: "16px", // Prevent iOS zoom
                             transition: "all 0.2s",
                             boxSizing: "border-box",
                             minHeight: "44px", // Touch target
                           }}
-                          onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
-                          onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
+                          onFocus={(e) => (e.target.style.borderColor = "#4F5DFF")}
+                          onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
                         />
-                        <p style={{ marginTop: "5px", color: "#6b7280", fontSize: isMobile ? "11px" : "11px" }}>📋 HSN code for GST (optional)</p>
+                        <p style={{ marginTop: "5px", color: "#7180A6", fontSize: isMobile ? "11px" : "11px" }}>📋 HSN code for GST (optional)</p>
                       </div>
                     )}
 
@@ -3335,7 +3337,7 @@ function StaffQuotationManagement() {
                       <label style={{ 
                         display: "block", 
                         marginBottom: "8px", 
-                        color: "#374151", 
+                        color: "#A9B3D1", 
                         fontWeight: "500", 
                         fontSize: isMobile ? "13px" : "14px" 
                       }}>
@@ -3350,7 +3352,7 @@ function StaffQuotationManagement() {
                           maxWidth: "100%",
                           padding: isMobile ? "14px 12px" : "12px",
                           borderRadius: "8px",
-                          border: "1px solid #d1d5db",
+                          border: "1px solid rgba(255,255,255,0.1)",
                           fontSize: "16px", // Prevent iOS zoom
                           minHeight: isMobile ? "100px" : "80px",
                           resize: "vertical",
@@ -3358,8 +3360,8 @@ function StaffQuotationManagement() {
                           transition: "all 0.2s",
                           boxSizing: "border-box",
                         }}
-                        onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
-                        onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
+                        onFocus={(e) => (e.target.style.borderColor = "#4F5DFF")}
+                        onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
                       />
                     </div>
                   </div>
@@ -3371,14 +3373,14 @@ function StaffQuotationManagement() {
                   justifyContent: "center", 
                   marginTop: "20px",
                   paddingTop: "20px",
-                  borderTop: "1px solid #e5e7eb"
+                  borderTop: "1px solid rgba(255,255,255,0.07)"
                 }}>
                   <button
                     type="button"
                     onClick={handleAddItem}
                     style={{
                       padding: "12px 24px",
-                      backgroundColor: "#6366f1",
+                      backgroundcolor: "#818CF8",
                       color: "white",
                       border: "none",
                       borderRadius: "8px",
@@ -3392,11 +3394,11 @@ function StaffQuotationManagement() {
                       boxShadow: "0 4px 6px -1px rgba(99, 102, 241, 0.3)",
                     }}
                     onMouseOver={(e) => {
-                      e.target.style.backgroundColor = "#4f46e5";
+                      e.target.style.backgroundColor = "#3D4DE8";
                       e.target.style.boxShadow = "0 6px 8px -1px rgba(99, 102, 241, 0.4)";
                     }}
                     onMouseOut={(e) => {
-                      e.target.style.backgroundColor = "#6366f1";
+                      e.target.style.backgroundColor = "#4F5DFF";
                       e.target.style.boxShadow = "0 4px 6px -1px rgba(99, 102, 241, 0.3)";
                     }}
                   >
@@ -3412,7 +3414,7 @@ function StaffQuotationManagement() {
                   flexDirection: isMobile ? "column" : "row",
                   gap: "15px",
                   paddingTop: "20px",
-                  borderTop: "2px solid #e5e7eb",
+                  borderTop: "2px solid rgba(255,255,255,0.08)",
                   justifyContent: "flex-end",
                 }}
               >
@@ -3424,7 +3426,7 @@ function StaffQuotationManagement() {
                   }}
                   style={{
                     padding: "12px 24px",
-                    backgroundColor: "#6b7280",
+                    backgroundcolor: "#7180A6",
                     color: "white",
                     border: "none",
                     borderRadius: "8px",
@@ -3433,8 +3435,8 @@ function StaffQuotationManagement() {
                     fontWeight: "500",
                     transition: "all 0.2s",
                   }}
-                  onMouseOver={(e) => (e.target.style.backgroundColor = "#4b5563")}
-                  onMouseOut={(e) => (e.target.style.backgroundColor = "#6b7280")}
+                  onMouseOver={(e) => (e.target.style.backgroundColor = "rgba(255,255,255,0.14)")}
+                  onMouseOut={(e) => (e.target.style.backgroundColor = "rgba(255,255,255,0.08)")}
                 >
                   ❌ Cancel
                 </button>
@@ -3476,19 +3478,20 @@ function StaffQuotationManagement() {
         ) : (
           <div
             style={{
-              backgroundColor: "white",
+              backgroundColor: "rgba(17,27,53,0.9)",
+              border: "1px solid rgba(255,255,255,0.08)",
               borderRadius: "8px",
               overflow: "hidden",
             }}
           >
             <div style={{ overflowX: "auto" }}>
-              <table style={{ 
-                width: "100%", 
-                borderCollapse: "collapse", 
-                minWidth: isMobile ? "auto" : "800px", // Remove fixed minWidth on mobile
+              <table style={{
+                width: "100%",
+                borderCollapse: "collapse",
+                minWidth: isMobile ? "auto" : "800px",
               }}>
                 <thead>
-                  <tr style={{ backgroundColor: "#f5f5f5" }}>
+                  <tr style={{ backgroundColor: "rgba(255,255,255,0.04)" }}>
                     <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600" }}>Quotation #</th>
                     <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600" }}>Customer</th>
                     {!isMobile && (
@@ -3508,11 +3511,11 @@ function StaffQuotationManagement() {
                     key={quotation.id}
                     style={{
                       borderTop: "1px solid #ddd",
-                      backgroundColor: idx % 2 === 0 ? "#ffffff" : "#f9fafb",
+                      backgroundColor: idx % 2 === 0 ? "rgba(17,27,53,0.5)" : "rgba(17,27,53,0.8)",
                       transition: "background-color 0.2s",
                     }}
-                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f3f4f6")}
-                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = idx % 2 === 0 ? "#ffffff" : "#f9fafb")}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.08)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = idx % 2 === 0 ? "rgba(17,27,53,0.5)" : "rgba(17,27,53,0.8)")}
                   >
                     <td style={{ padding: "12px", fontWeight: "500" }}>{quotation.quotationNumber}</td>
                     <td style={{ padding: "12px" }}>{quotation.customerName}</td>
@@ -3550,10 +3553,10 @@ function StaffQuotationManagement() {
 
             {/* Empty State */}
             {quotations.length === 0 && (
-              <div style={{ padding: "60px 20px", textAlign: "center", color: "#6b7280" }}>
+              <div style={{ padding: "60px 20px", textAlign: "center", color: "#7180A6" }}>
                 <div style={{ fontSize: "48px", marginBottom: "16px", opacity: 0.5 }}>📄</div>
                 <p style={{ fontSize: "16px", fontWeight: "500", marginBottom: "8px" }}>No quotations found</p>
-                <p style={{ fontSize: "14px", color: "#9ca3af" }}>Click 'Create New Quotation' to get started</p>
+                <p style={{ fontSize: "14px", color: "#7180A6" }}>Click 'Create New Quotation' to get started</p>
               </div>
             )}
           </div>
@@ -3581,26 +3584,27 @@ function StaffQuotationManagement() {
           >
             <div
               style={{
-                backgroundColor: "white",
+                backgroundColor: "rgba(17,27,53,0.98)",
+                border: "1px solid rgba(255,255,255,0.1)",
                 padding: isMobile ? "20px" : "35px",
                 borderRadius: "16px",
                 maxWidth: "900px",
                 width: "100%",
                 maxHeight: "calc(100vh - 100px)",
                 overflow: "auto",
-                boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+                boxShadow: "0 24px 64px rgba(0,0,0,0.6)",
                 position: "relative",
                 zIndex: 10003,
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div style={{ marginBottom: "25px", borderBottom: "3px solid #e5e7eb", paddingBottom: "20px" }}>
+              <div style={{ marginBottom: "25px", borderBottom: "1px solid rgba(255,255,255,0.08)", paddingBottom: "20px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" }}>
                   <div>
-                    <h2 style={{ margin: 0, color: "#1f2937", fontSize: isMobile ? "22px" : "28px", fontWeight: "700" }}>
+                    <h2 style={{ margin: 0, color: "#ffffff", fontSize: isMobile ? "22px" : "28px", fontWeight: "700" }}>
                       📄 Quotation Details
                     </h2>
-                    <p style={{ margin: "8px 0 0 0", color: "#6b7280", fontSize: "14px" }}>
+                    <p style={{ margin: "8px 0 0 0", color: "#7180A6", fontSize: "14px" }}>
                       Complete quotation information and item breakdown
                     </p>
                   </div>
@@ -3738,33 +3742,33 @@ function StaffQuotationManagement() {
 
               {/* Quotation Header Info */}
               <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "20px", marginBottom: "25px" }}>
-                <div style={{ padding: "15px", backgroundColor: "#f9fafb", borderRadius: "10px", border: "1px solid #e5e7eb" }}>
-                  <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "5px", fontWeight: "500" }}>Quotation Number</div>
-                  <div style={{ fontSize: "18px", color: "#1f2937", fontWeight: "700" }}>{selectedQuotation.quotationNumber}</div>
+                <div style={{ padding: "15px", backgroundColor: "rgba(255,255,255,0.04)", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.08)" }}>
+                  <div style={{ fontSize: "12px", color: "#7180A6", marginBottom: "5px", fontWeight: "500" }}>Quotation Number</div>
+                  <div style={{ fontSize: "18px", color: "#ffffff", fontWeight: "700" }}>{selectedQuotation.quotationNumber}</div>
                 </div>
-                <div style={{ padding: "15px", backgroundColor: "#f9fafb", borderRadius: "10px", border: "1px solid #e5e7eb" }}>
-                  <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "5px", fontWeight: "500" }}>Status</div>
+                <div style={{ padding: "15px", backgroundColor: "rgba(255,255,255,0.04)", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.08)" }}>
+                  <div style={{ fontSize: "12px", color: "#7180A6", marginBottom: "5px", fontWeight: "500" }}>Status</div>
                   <div>{getStatusBadge(selectedQuotation.status)}</div>
                 </div>
-                <div style={{ padding: "15px", backgroundColor: "#f9fafb", borderRadius: "10px", border: "1px solid #e5e7eb" }}>
-                  <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "5px", fontWeight: "500" }}>Customer</div>
-                  <div style={{ fontSize: "16px", color: "#1f2937", fontWeight: "600" }}>{selectedQuotation.customerName}</div>
+                <div style={{ padding: "15px", backgroundColor: "rgba(255,255,255,0.04)", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.08)" }}>
+                  <div style={{ fontSize: "12px", color: "#7180A6", marginBottom: "5px", fontWeight: "500" }}>Customer</div>
+                  <div style={{ fontSize: "16px", color: "#ffffff", fontWeight: "600" }}>{selectedQuotation.customerName}</div>
                   {selectedQuotation.customerMobile && (
-                    <div style={{ fontSize: "13px", color: "#6b7280", marginTop: "4px" }}>📱 {selectedQuotation.customerMobile}</div>
+                    <div style={{ fontSize: "13px", color: "#7180A6", marginTop: "4px" }}>📱 {selectedQuotation.customerMobile}</div>
                   )}
                 </div>
-                <div style={{ padding: "15px", backgroundColor: "#f9fafb", borderRadius: "10px", border: "1px solid #e5e7eb" }}>
-                  <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "5px", fontWeight: "500" }}>Billing Type</div>
-                  <div style={{ fontSize: "16px", color: "#1f2937", fontWeight: "600" }}>{selectedQuotation.billingType}</div>
+                <div style={{ padding: "15px", backgroundColor: "rgba(255,255,255,0.04)", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.08)" }}>
+                  <div style={{ fontSize: "12px", color: "#7180A6", marginBottom: "5px", fontWeight: "500" }}>Billing Type</div>
+                  <div style={{ fontSize: "16px", color: "#ffffff", fontWeight: "600" }}>{selectedQuotation.billingType}</div>
                 </div>
               </div>
 
               {/* Financial Summary */}
-              <div style={{ marginBottom: "25px", padding: "20px", backgroundColor: "#fef3c7", borderRadius: "12px", border: "2px solid #fbbf24" }}>
-                <h3 style={{ margin: "0 0 15px 0", color: "#92400e", fontSize: "18px", fontWeight: "600" }}>💰 Financial Summary</h3>
+              <div style={{ marginBottom: "25px", padding: "20px", backgroundColor: "rgba(255,185,94,0.1)", borderRadius: "12px", border: "2px solid rgba(255,185,94,0.4)" }}>
+                <h3 style={{ margin: "0 0 15px 0", color: "#FFB95E", fontSize: "18px", fontWeight: "600" }}>💰 Financial Summary</h3>
                 <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "15px" }}>
                   <div>
-                    <div style={{ fontSize: "13px", color: "#92400e", marginBottom: "5px" }}>Subtotal</div>
+                    <div style={{ fontSize: "13px", color: "#FFB95E", marginBottom: "5px" }}>Subtotal</div>
                     <div style={{ fontSize: "20px", color: "#78350f", fontWeight: "700" }}>₹{(parseFloat(selectedQuotation.subtotal) || 0).toFixed(2)}</div>
                   </div>
                   {(() => {
@@ -3772,12 +3776,12 @@ function StaffQuotationManagement() {
                     if (!runningSummary || runningSummary.total <= 0) return null;
                     return (
                       <div>
-                        <div style={{ fontSize: "13px", color: "#92400e", marginBottom: "5px" }}>Running Ft</div>
+                        <div style={{ fontSize: "13px", color: "#FFB95E", marginBottom: "5px" }}>Running Ft</div>
                         <div style={{ fontSize: "20px", color: "#78350f", fontWeight: "700" }}>₹{runningSummary.total.toFixed(2)}</div>
                         {(runningSummary.polish > 0 ||
                           runningSummary.halfRound > 0 ||
                           runningSummary.beveling > 0) && (
-                          <div style={{ marginTop: "6px", fontSize: "12px", color: "#92400e" }}>
+                          <div style={{ marginTop: "6px", fontSize: "12px", color: "#FFB95E" }}>
                             {runningSummary.polish > 0 && (
                               <div>Polish: ₹{runningSummary.polish.toFixed(2)}</div>
                             )}
@@ -3794,13 +3798,13 @@ function StaffQuotationManagement() {
                   })()}
                   {selectedQuotation.installationCharge > 0 && (
                     <div>
-                      <div style={{ fontSize: "13px", color: "#92400e", marginBottom: "5px" }}>Installation Charge</div>
+                      <div style={{ fontSize: "13px", color: "#FFB95E", marginBottom: "5px" }}>Installation Charge</div>
                       <div style={{ fontSize: "16px", color: "#78350f", fontWeight: "600" }}>₹{(parseFloat(selectedQuotation.installationCharge) || 0).toFixed(2)}</div>
                     </div>
                   )}
                   {selectedQuotation.transportCharge > 0 && (
                     <div>
-                      <div style={{ fontSize: "13px", color: "#92400e", marginBottom: "5px" }}>
+                      <div style={{ fontSize: "13px", color: "#FFB95E", marginBottom: "5px" }}>
                         Transport Charge {selectedQuotation.transportationRequired && "🚚"}
                       </div>
                       <div style={{ fontSize: "16px", color: "#78350f", fontWeight: "600" }}>₹{(parseFloat(selectedQuotation.transportCharge) || 0).toFixed(2)}</div>
@@ -3808,7 +3812,7 @@ function StaffQuotationManagement() {
                   )}
                   {selectedQuotation.discount > 0 && (
                     <div>
-                      <div style={{ fontSize: "13px", color: "#92400e", marginBottom: "5px" }}>
+                      <div style={{ fontSize: "13px", color: "#FFB95E", marginBottom: "5px" }}>
                         Discount {selectedQuotation.discountType === "PERCENTAGE" && selectedQuotation.discountValue 
                           ? `(${selectedQuotation.discountValue}%)` 
                           : ""}
@@ -3819,12 +3823,12 @@ function StaffQuotationManagement() {
                   {selectedQuotation.billingType === "GST" && selectedQuotation.gstAmount > 0 && (
                     <>
                       <div>
-                        <div style={{ fontSize: "13px", color: "#92400e", marginBottom: "5px" }}>GST ({selectedQuotation.gstPercentage}%)</div>
+                        <div style={{ fontSize: "13px", color: "#FFB95E", marginBottom: "5px" }}>GST ({selectedQuotation.gstPercentage}%)</div>
                         <div style={{ fontSize: "16px", color: "#78350f", fontWeight: "600" }}>₹{(parseFloat(selectedQuotation.gstAmount) || 0).toFixed(2)}</div>
                       </div>
                       {selectedQuotation.cgst > 0 && (
                         <div>
-                          <div style={{ fontSize: "13px", color: "#92400e", marginBottom: "5px" }}>CGST / SGST</div>
+                          <div style={{ fontSize: "13px", color: "#FFB95E", marginBottom: "5px" }}>CGST / SGST</div>
                           <div style={{ fontSize: "14px", color: "#78350f" }}>
                             ₹{(parseFloat(selectedQuotation.cgst) || 0).toFixed(2)} / ₹{(parseFloat(selectedQuotation.sgst) || 0).toFixed(2)}
                           </div>
@@ -3832,14 +3836,14 @@ function StaffQuotationManagement() {
                       )}
                       {selectedQuotation.igst > 0 && (
                         <div>
-                          <div style={{ fontSize: "13px", color: "#92400e", marginBottom: "5px" }}>IGST</div>
+                          <div style={{ fontSize: "13px", color: "#FFB95E", marginBottom: "5px" }}>IGST</div>
                           <div style={{ fontSize: "16px", color: "#78350f", fontWeight: "600" }}>₹{(parseFloat(selectedQuotation.igst) || 0).toFixed(2)}</div>
                         </div>
                       )}
                     </>
                   )}
                   <div style={{ gridColumn: isMobile ? "1" : "1 / -1", paddingTop: "15px", borderTop: "2px solid #fbbf24" }}>
-                    <div style={{ fontSize: "14px", color: "#92400e", marginBottom: "8px", fontWeight: "500" }}>Grand Total</div>
+                    <div style={{ fontSize: "14px", color: "#FFB95E", marginBottom: "8px", fontWeight: "500" }}>Grand Total</div>
                     <div style={{ fontSize: "28px", color: "#78350f", fontWeight: "800" }}>₹{(parseFloat(selectedQuotation.grandTotal) || 0).toFixed(2)}</div>
                   </div>
                 </div>
@@ -3847,20 +3851,20 @@ function StaffQuotationManagement() {
 
               {/* Items Table */}
               <div style={{ marginBottom: "25px" }}>
-                <h3 style={{ margin: "0 0 15px 0", color: "#374151", fontSize: "18px", fontWeight: "600" }}>📦 Quotation Items</h3>
+                <h3 style={{ margin: "0 0 15px 0", color: "#A9B3D1", fontSize: "18px", fontWeight: "600" }}>📦 Quotation Items</h3>
                 <div style={{ overflowX: "auto" }}>
                   <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "600px" }}>
                     <thead>
-                      <tr style={{ backgroundColor: "#f3f4f6" }}>
-                        <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#374151" }}>#</th>
-                        <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#374151" }}>Glass Type</th>
-                        <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#374151" }}>Thickness</th>
-                        <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#374151" }}>Size</th>
-                        <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#374151" }}>Design</th>
-                        <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#374151" }}>Qty</th>
-                        <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#374151" }}>Selling Price</th>
-                        <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#374151" }}>Subtotal</th>
-                        <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#374151" }}>Running Ft</th>
+                      <tr style={{ backgroundColor: "rgba(17,27,53,0.7)" }}>
+                        <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#A9B3D1" }}>#</th>
+                        <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#A9B3D1" }}>Glass Type</th>
+                        <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#A9B3D1" }}>Thickness</th>
+                        <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#A9B3D1" }}>Size</th>
+                        <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#A9B3D1" }}>Design</th>
+                        <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#A9B3D1" }}>Qty</th>
+                        <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#A9B3D1" }}>Selling Price</th>
+                        <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#A9B3D1" }}>Subtotal</th>
+                        <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#A9B3D1" }}>Running Ft</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -3868,20 +3872,20 @@ function StaffQuotationManagement() {
                         <tr
                           key={idx}
                           style={{
-                            borderTop: "1px solid #e5e7eb",
-                            backgroundColor: idx % 2 === 0 ? "#ffffff" : "#f9fafb",
+                            borderTop: "1px solid rgba(255,255,255,0.07)",
+                            backgroundColor: idx % 2 === 0 ? "rgba(17,27,53,0.5)" : "rgba(17,27,53,0.8)",
                             transition: "background-color 0.2s",
                           }}
-                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f3f4f6")}
-                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = idx % 2 === 0 ? "#ffffff" : "#f9fafb")}
+                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.08)")}
+                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = idx % 2 === 0 ? "rgba(17,27,53,0.5)" : "rgba(17,27,53,0.8)")}
                         >
-                          <td style={{ padding: "12px", fontWeight: "600", color: "#6366f1" }}>{idx + 1}</td>
+                          <td style={{ padding: "12px", fontWeight: "600", color: "#818CF8" }}>{idx + 1}</td>
                           <td style={{ padding: "12px", fontWeight: "500" }}>{item.glassType || "N/A"}</td>
                           <td style={{ padding: "12px" }}>{item.thickness || "N/A"}</td>
                           <td style={{ padding: "12px" }}>
                             {item.height} {item.heightUnit || "FEET"} × {item.width} {item.widthUnit || "FEET"}
                           </td>
-                          <td style={{ padding: "12px", color: "#6b7280" }}>
+                          <td style={{ padding: "12px", color: "#7180A6" }}>
                             {item.design
                               ? item.design === "POLISH"
                                 ? "Polish"
@@ -3894,8 +3898,8 @@ function StaffQuotationManagement() {
                           </td>
                           <td style={{ padding: "12px" }}>{item.quantity}</td>
                           <td style={{ padding: "12px" }}>₹{(parseFloat(item.sellingPrice || item.ratePerSqft) || 0).toFixed(2)}</td>
-                          <td style={{ padding: "12px", fontWeight: "600", color: "#1f2937" }}>₹{(parseFloat(item.subtotal) || 0).toFixed(2)}</td>
-                          <td style={{ padding: "12px", fontWeight: "600", color: "#6366f1" }}>
+                          <td style={{ padding: "12px", fontWeight: "600", color: "#ffffff" }}>₹{(parseFloat(item.subtotal) || 0).toFixed(2)}</td>
+                          <td style={{ padding: "12px", fontWeight: "600", color: "#818CF8" }}>
                             {(() => {
                               const running = getRunningFtForItem(item);
                               return running > 0 ? `₹${running.toFixed(2)}` : "-";
@@ -3919,4 +3923,8 @@ function StaffQuotationManagement() {
 }
 
 export default StaffQuotationManagement;
+
+
+
+
 

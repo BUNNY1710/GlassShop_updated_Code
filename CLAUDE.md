@@ -149,6 +149,10 @@ StockHistory (tracks changes by glassId + shopId + standNo, no direct stockId FK
 Site → Installations → Invoice
 ```
 
+`Installation` and `Site` models are defined in the ORM but have **no API routes** — they are schema-ready but not yet wired to any endpoint.
+
+`AuditLog` has **no `userId` FK** (the column was removed; the comment in `models/index.js` confirms this). Audit records identify actions by `shopId` and action metadata only, not by user.
+
 ### Sequelize Model Pattern
 
 All models use a factory function: `module.exports = (sequelize) => { return sequelize.define(...) }`. Associations are wired in `glassshop-backend/models/index.js`, which is the single import point for the entire ORM layer.
@@ -177,9 +181,25 @@ Every stock mutation (ADD, REMOVE, EDIT, TRANSFER) also creates an `AuditLog` ro
 
 `glass-ai-agent-frontend/src/utils/printCuttingPlan.js` formats optimization output for PDF/print. The optimization UI lives at `/optimization` (admin-only).
 
+### State Management
+
+No Redux or Context API. Every page component manages its own state with `useState`. There is no global auth context — the token and role are read directly from `sessionStorage` wherever needed. The axios interceptor in `api.js` handles the redirect-on-401 side-effect globally, so individual components don't need to handle expired-session cases.
+
+### Notification System
+
+`react-toastify` is installed and configured in `glass-ai-agent-frontend/src/index.js` (position: top-right, autoClose: 3500ms). Usage is inconsistent across the codebase: some pages call `toast.success()` / `toast.error()` from react-toastify; others use browser `alert()` for quick errors; a few set local state to show inline status messages. New code should use react-toastify consistently.
+
+### Backend Error Pattern
+
+Route handlers follow try-catch throughout. On error: `res.status(4xx|5xx).json({ error: message })`. `NODE_ENV=development` responses include the full `error.stack`; production omits it. Sequelize constraint errors (e.g., `SequelizeUniqueConstraintError`) are caught explicitly in some routes and converted to 409 responses rather than generic 500s.
+
+The per-request shop context pattern: every route handler that needs shopId calls `User.findOne({ where: { username: req.user.username } })` and uses `user.shopId` to scope all subsequent queries. There is no shopId in the JWT — it is always resolved from the DB.
+
 ### Frontend Stack Notes
 
 The frontend uses **React Router v7** (`react-router-dom ^7`). This version has different APIs from v6 — consult v7 docs for loader/action patterns if extending routing.
+
+Dashboard charts use **recharts** (`BarChart`, `LineChart`, `PieChart`). No other charting library is present.
 
 ### Frontend API Layer
 
@@ -219,6 +239,8 @@ Reusable UI primitives live in `glass-ai-agent-frontend/src/components/ui/` (`Bu
 
 `PageWrapper` wraps every page's content area with a centered max-width-1400 container. Its `background`/`backgroundImage` props are accepted but **silently ignored** — all pages share the `#f8fafc` background set by `Layout.js`. Passing a background image prop to `PageWrapper` has no visual effect.
 
+**Global CSS layers**: `index.css` sets `body` to a dark gradient (`#07122D → #040A18`) — visible in the sidebar/nav chrome and on unauthenticated pages. `App.css` applies a dark theme to **all `<table>` elements globally** (background `#111B35`, text `#A9B3D1`). Any new page with a `<table>` will inherit this styling without additional CSS.
+
 All page components use **inline styles** rather than CSS modules or utility classes. New pages should follow the same pattern to stay consistent.
 
 For responsive layouts, import `useResponsive` from `src/hooks/useResponsive.js`. It returns `{ isMobile, isTablet, isDesktop, isSmallMobile, isLargeMobile, isMobileOrTablet, width, height }`. Breakpoints: mobile < 768px, tablet 768–1023px, desktop ≥ 1024px.
@@ -243,5 +265,8 @@ The `deploy/` directory contains all production deployment artifacts:
 - `ecosystem.config.js` — PM2 process config for running the Node backend
 - `glassshop-backend.service` — systemd unit file alternative to PM2
 - `aws-quick-deploy.sh` / `deploy.sh` / `deploy-from-github.sh` — shell scripts for EC2 deployments
+- `update-application.sh` — update backend/frontend/both after a code push
+- `backup-database.sh` — timestamped gzip backup; auto-purges backups older than 7 days
+- `restore-database.sh` — interactive restore from a backup file (stops/starts backend automatically)
 
 To upload the frontend build to S3 run `glass-ai-agent-frontend/s3-upload.sh` after `npm run build`.

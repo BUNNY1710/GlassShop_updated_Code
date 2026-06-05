@@ -207,17 +207,19 @@ const label = {
 const input = {
   padding: "12px 16px",
   borderRadius: "8px",
-  border: "1px solid rgba(226, 232, 240, 0.8)",
-  background: "#ffffff",
-  color: "#0f172a",
+  border: "1.5px solid rgba(255,255,255,0.1)",
+  background: "rgba(255,255,255,0.06)",
+  color: "#E2E8F0",
   outline: "none",
   fontSize: "14px",
   transition: "all 0.2s ease",
+  width: "100%",
+  boxSizing: "border-box",
 };
 
 const inputFocus = {
-  borderColor: "#6366f1",
-  boxShadow: "0 0 0 3px rgba(99, 102, 241, 0.1)",
+  borderColor: "rgba(79,93,255,0.6)",
+  boxShadow: "0 0 0 3px rgba(79,93,255,0.15)",
 };
 
 const button = {

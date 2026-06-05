@@ -8,12 +8,12 @@ const initials = (name) => name ? name.charAt(0).toUpperCase() : "?";
 
 const ROLE_LABEL = { ROLE_ADMIN: "Admin", ROLE_STAFF: "Staff" };
 const ROLE_COLOR = {
-  ROLE_ADMIN: { bg: "#eef2ff", color: "#4f46e5", border: "#c7d2fe" },
-  ROLE_STAFF: { bg: "#f0fdf4", color: "#16a34a", border: "#bbf7d0" },
+  ROLE_ADMIN: { bg: "rgba(79,93,255,0.2)", color: "#818CF8", border: "rgba(79,93,255,0.3)" },
+  ROLE_STAFF: { bg: "rgba(55,227,165,0.15)", color: "#37E3A5", border: "rgba(55,227,165,0.3)" },
 };
 
 function RoleBadge({ role }) {
-  const c = ROLE_COLOR[role] || { bg: "#f1f5f9", color: "#64748b", border: "#e2e8f0" };
+  const c = ROLE_COLOR[role] || { bg: "rgba(255,255,255,0.08)", color: "#A9B3D1", border: "rgba(255,255,255,0.12)" };
   return (
     <span style={{
       display: "inline-flex", alignItems: "center",
@@ -28,7 +28,7 @@ function RoleBadge({ role }) {
   );
 }
 
-function IconBtn({ title, onClick, icon, hoverBg = "#f1f5f9", hoverColor = "#374151" }) {
+function IconBtn({ title, onClick, icon, hoverBg = "rgba(255,255,255,0.08)", hoverColor = "#fff" }) {
   const [hov, setHov] = useState(false);
   return (
     <button
@@ -36,9 +36,9 @@ function IconBtn({ title, onClick, icon, hoverBg = "#f1f5f9", hoverColor = "#374
       onClick={onClick}
       style={{
         width: 30, height: 30, borderRadius: 6,
-        border: "1px solid #e5e7eb",
+        border: "1px solid rgba(255,255,255,0.1)",
         background: hov ? hoverBg : "transparent",
-        color: hov ? hoverColor : "#6b7280",
+        color: hov ? hoverColor : "#7180A6",
         cursor: "pointer", fontSize: 14, padding: 0,
         display: "inline-flex", alignItems: "center", justifyContent: "center",
         transition: "all 120ms ease", flexShrink: 0,
@@ -55,7 +55,7 @@ function Modal({ title, subtitle, onClose, children }) {
   return (
     <div
       style={{
-        position: "fixed", inset: 0, background: "rgba(15,23,42,0.55)",
+        position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)",
         display: "flex", alignItems: "center", justifyContent: "center",
         zIndex: 10050, padding: "16px",
       }}
@@ -63,14 +63,15 @@ function Modal({ title, subtitle, onClose, children }) {
     >
       <div
         style={{
-          background: "#fff", borderRadius: 14, width: "100%", maxWidth: 420,
-          boxShadow: "0 20px 40px rgba(15,23,42,0.18)",
+          background: "rgba(17,27,53,0.98)", borderRadius: 14, width: "100%", maxWidth: 420,
+          boxShadow: "0 20px 60px rgba(0,0,0,0.6)",
+          border: "1px solid rgba(255,255,255,0.1)",
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div style={{ padding: "18px 20px 14px", borderBottom: "1px solid #f1f5f9" }}>
-          <div style={{ fontSize: 16, fontWeight: 700, color: "#0f172a" }}>{title}</div>
-          {subtitle && <div style={{ fontSize: 12.5, color: "#94a3b8", marginTop: 2 }}>{subtitle}</div>}
+        <div style={{ padding: "18px 20px 14px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+          <div style={{ fontSize: 16, fontWeight: 700, color: "#fff" }}>{title}</div>
+          {subtitle && <div style={{ fontSize: 12.5, color: "#7180A6", marginTop: 2 }}>{subtitle}</div>}
         </div>
         <div style={{ padding: "18px 20px 20px" }}>{children}</div>
       </div>
@@ -82,8 +83,8 @@ function Field({ label, type = "text", value, onChange, placeholder, required, a
   const [focused, setFocused] = useState(false);
   return (
     <div style={{ marginBottom: 13 }}>
-      <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#475569", marginBottom: 5 }}>
-        {label}{required && <span style={{ color: "#ef4444", marginLeft: 2 }}>*</span>}
+      <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#7180A6", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 5 }}>
+        {label}{required && <span style={{ color: "#FF6B81", marginLeft: 2 }}>*</span>}
       </label>
       <input
         type={type}
@@ -94,9 +95,9 @@ function Field({ label, type = "text", value, onChange, placeholder, required, a
         autoComplete={autoComplete}
         style={{
           width: "100%", padding: "9px 12px", borderRadius: 8, boxSizing: "border-box",
-          border: `1.5px solid ${focused ? "#6366f1" : "#e2e8f0"}`,
-          fontSize: 14, color: "#0f172a", outline: "none",
-          background: "#fff", transition: "border-color 140ms ease",
+          border: `1.5px solid ${focused ? "rgba(79,93,255,0.6)" : "rgba(255,255,255,0.1)"}`,
+          fontSize: 14, color: "#fff", outline: "none",
+          background: "rgba(255,255,255,0.06)", transition: "border-color 140ms ease",
         }}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
@@ -111,9 +112,9 @@ function Banner({ msg }) {
   return (
     <div style={{
       padding: "9px 12px", borderRadius: 8, marginBottom: 12, fontSize: 13,
-      background: ok ? "#f0fdf4" : "#fef2f2",
-      color: ok ? "#15803d" : "#dc2626",
-      border: `1px solid ${ok ? "#bbf7d0" : "#fecaca"}`,
+      background: ok ? "rgba(55,227,165,0.1)" : "rgba(255,107,129,0.1)",
+      color: ok ? "#37E3A5" : "#FF6B81",
+      border: `1px solid ${ok ? "rgba(55,227,165,0.3)" : "rgba(255,107,129,0.3)"}`,
     }}>
       {msg}
     </div>
@@ -235,28 +236,30 @@ export default function StaffManagement() {
   };
 
   const card = {
-    background: "#fff", borderRadius: 12,
-    border: "1px solid #e2e8f0",
-    boxShadow: "0 1px 3px rgba(0,0,0,0.07)",
+    background: "#111B35", borderRadius: 12,
+    border: "1px solid rgba(255,255,255,0.08)",
+    boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
   };
 
   const primaryBtn = (busy) => ({
     padding: "9px 18px", borderRadius: 8, border: "none",
-    background: busy ? "#a5b4fc" : "#4f46e5", color: "#fff",
+    background: busy ? "rgba(79,93,255,0.4)" : "#4F5DFF", color: "#fff",
     fontSize: 13, fontWeight: 600, cursor: busy ? "not-allowed" : "pointer",
     transition: "all 140ms ease",
   });
 
   const dangerBtn = (busy) => ({
-    padding: "9px 18px", borderRadius: 8, border: "none",
-    background: busy ? "#fca5a5" : "#ef4444", color: "#fff",
+    padding: "9px 18px", borderRadius: 8,
+    background: busy ? "rgba(255,107,129,0.1)" : "rgba(255,107,129,0.15)",
+    color: "#FF6B81",
+    border: "1px solid rgba(255,107,129,0.3)",
     fontSize: 13, fontWeight: 600, cursor: busy ? "not-allowed" : "pointer",
   });
 
   const ghostBtn = {
     padding: "9px 18px", borderRadius: 8,
-    border: "1.5px solid #e2e8f0", background: "#fff",
-    color: "#374151", fontSize: 13, fontWeight: 500, cursor: "pointer",
+    border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.08)",
+    color: "#A9B3D1", fontSize: 13, fontWeight: 500, cursor: "pointer",
   };
 
   return (
@@ -266,9 +269,9 @@ export default function StaffManagement() {
         {flash.text && (
           <div style={{
             padding: "10px 14px", borderRadius: 8, marginBottom: 14, fontSize: 13,
-            background: flash.ok ? "#f0fdf4" : "#fef2f2",
-            color: flash.ok ? "#15803d" : "#dc2626",
-            border: `1px solid ${flash.ok ? "#bbf7d0" : "#fecaca"}`,
+            background: flash.ok ? "rgba(55,227,165,0.1)" : "rgba(255,107,129,0.1)",
+            color: flash.ok ? "#37E3A5" : "#FF6B81",
+            border: `1px solid ${flash.ok ? "rgba(55,227,165,0.3)" : "rgba(255,107,129,0.3)"}`,
           }}>
             {flash.text}
           </div>
@@ -277,15 +280,15 @@ export default function StaffManagement() {
         {/* ── Staff List Card ── */}
         <div style={{ ...card, marginBottom: 20 }}>
           <div style={{
-            padding: "16px 20px", borderBottom: "1px solid #f1f5f9",
+            padding: "16px 20px", borderBottom: "1px solid rgba(255,255,255,0.08)",
             display: "flex", justifyContent: "space-between", alignItems: "center",
             flexWrap: "wrap", gap: 10,
           }}>
             <div>
-              <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: "#0f172a" }}>
+              <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: "#fff" }}>
                 👥 Staff Management
               </h2>
-              <p style={{ margin: "2px 0 0", fontSize: 12.5, color: "#94a3b8" }}>
+              <p style={{ margin: "2px 0 0", fontSize: 12.5, color: "#7180A6" }}>
                 {loading ? "Loading…" : `${staff.length} staff account${staff.length !== 1 ? "s" : ""}`}
               </p>
             </div>
@@ -299,72 +302,75 @@ export default function StaffManagement() {
 
           <div style={{ padding: isMobile ? "12px" : "16px" }}>
             {loading ? (
-              <div style={{ textAlign: "center", padding: "40px 0", color: "#94a3b8", fontSize: 14 }}>Loading staff…</div>
+              <div style={{ textAlign: "center", padding: "40px 0", color: "#7180A6", fontSize: 14 }}>Loading staff…</div>
             ) : staff.length === 0 ? (
               <div style={{ textAlign: "center", padding: "48px 0" }}>
                 <div style={{ fontSize: 42, marginBottom: 10, opacity: 0.3 }}>👤</div>
-                <p style={{ fontSize: 15, color: "#64748b", fontWeight: 600, margin: "0 0 4px" }}>No staff accounts yet</p>
-                <p style={{ fontSize: 13, color: "#94a3b8", margin: 0 }}>Create your first staff account above</p>
+                <p style={{ fontSize: 15, color: "#A9B3D1", fontWeight: 600, margin: "0 0 4px" }}>No staff accounts yet</p>
+                <p style={{ fontSize: 13, color: "#7180A6", margin: 0 }}>Create your first staff account above</p>
               </div>
             ) : isMobile ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {staff.map((s) => (
-                  <div key={s.id} style={{ padding: "12px 14px", borderRadius: 10, border: "1px solid #e2e8f0", background: "#fafbfc" }}>
+                  <div key={s.id} style={{ padding: "12px 14px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 9 }}>
                       <div style={{
                         width: 36, height: 36, borderRadius: 9, flexShrink: 0,
-                        background: "#eef2ff", display: "flex", alignItems: "center",
-                        justifyContent: "center", fontSize: 15, fontWeight: 700, color: "#4f46e5",
+                        background: "rgba(79,93,255,0.2)", display: "flex", alignItems: "center",
+                        justifyContent: "center", fontSize: 15, fontWeight: 700, color: "#818CF8",
                       }}>
                         {initials(s.userName)}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 13.5, fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        <div style={{ fontSize: 13.5, fontWeight: 600, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {s.userName}
                         </div>
                         <div style={{ marginTop: 3 }}><RoleBadge role={s.role} /></div>
                       </div>
                     </div>
-                    <div style={{ display: "flex", gap: 7, borderTop: "1px solid #f1f5f9", paddingTop: 9 }}>
-                      <IconBtn title="Reset Password" icon="🔑" hoverBg="#fffbeb" hoverColor="#d97706"
+                    <div style={{ display: "flex", gap: 7, borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 9 }}>
+                      <IconBtn title="Reset Password" icon="🔑" hoverBg="rgba(255,185,94,0.15)" hoverColor="#FFB95E"
                         onClick={() => { setResetTarget(s); setRfErr(""); setRf({ password: "", confirm: "" }); }} />
-                      <IconBtn title="Delete Staff" icon="🗑" hoverBg="#fef2f2" hoverColor="#dc2626"
+                      <IconBtn title="Delete Staff" icon="🗑" hoverBg="rgba(255,107,129,0.15)" hoverColor="#FF6B81"
                         onClick={() => setDelTarget(s)} />
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5 }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5, background: "transparent" }}>
                 <thead>
-                  <tr style={{ borderBottom: "1.5px solid #e2e8f0" }}>
-                    {["Avatar", "Username", "Role", "Actions"].map((h) => (
+                  <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+                    {["Avatar", "Name", "Role", "Actions"].map((h) => (
                       <th key={h} style={{
-                        padding: "9px 12px", textAlign: "left", fontSize: 11.5,
-                        fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em",
+                        padding: "9px 12px", textAlign: "left", fontSize: 10.5,
+                        fontWeight: 700, color: "#7180A6", textTransform: "uppercase", letterSpacing: "0.08em",
+                        background: "rgba(255,255,255,0.04)", borderBottom: "1px solid rgba(255,255,255,0.07)",
                       }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {staff.map((s, i) => (
-                    <tr key={s.id} style={{ borderBottom: "1px solid #f8fafc", background: i % 2 === 0 ? "#fff" : "#fafbfc" }}>
+                  {staff.map((s) => (
+                    <tr key={s.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", background: "#111B35" }}
+                      onMouseEnter={e => e.currentTarget.style.background = "#0A0F1E"}
+                      onMouseLeave={e => e.currentTarget.style.background = "#111B35"}>
                       <td style={{ padding: "11px 12px" }}>
                         <div style={{
                           width: 32, height: 32, borderRadius: 8,
-                          background: "#eef2ff", display: "inline-flex", alignItems: "center",
-                          justifyContent: "center", fontSize: 14, fontWeight: 700, color: "#4f46e5",
+                          background: "rgba(79,93,255,0.2)", display: "inline-flex", alignItems: "center",
+                          justifyContent: "center", fontSize: 14, fontWeight: 700, color: "#818CF8",
                         }}>
                           {initials(s.userName)}
                         </div>
                       </td>
-                      <td style={{ padding: "11px 12px", fontWeight: 600, color: "#0f172a" }}>{s.userName}</td>
+                      <td style={{ padding: "11px 12px", fontWeight: 700, color: "#E2E8F0" }}>{s.userName || <span style={{ color: "#7180A6", fontStyle: "italic" }}>—</span>}</td>
                       <td style={{ padding: "11px 12px" }}><RoleBadge role={s.role} /></td>
                       <td style={{ padding: "11px 12px" }}>
                         <div style={{ display: "flex", gap: 6 }}>
-                          <IconBtn title="Reset Password" icon="🔑" hoverBg="#fffbeb" hoverColor="#d97706"
+                          <IconBtn title="Reset Password" icon="🔑" hoverBg="rgba(255,185,94,0.15)" hoverColor="#FFB95E"
                             onClick={() => { setResetTarget(s); setRfErr(""); setRf({ password: "", confirm: "" }); }} />
-                          <IconBtn title="Delete Staff" icon="🗑" hoverBg="#fef2f2" hoverColor="#dc2626"
+                          <IconBtn title="Delete Staff" icon="🗑" hoverBg="rgba(255,107,129,0.15)" hoverColor="#FF6B81"
                             onClick={() => setDelTarget(s)} />
                         </div>
                       </td>
@@ -378,7 +384,7 @@ export default function StaffManagement() {
 
         {/* ── Change My Password Card ── */}
         <div style={{ ...card, padding: "18px 20px" }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "#374151", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 14 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#7180A6", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 14 }}>
             🔒 Change My Password
           </div>
           <Banner msg={cpMsg} />
@@ -440,12 +446,12 @@ export default function StaffManagement() {
           <div style={{ textAlign: "center", padding: "8px 0 18px" }}>
             <div style={{
               width: 52, height: 52, borderRadius: 12, margin: "0 auto 14px",
-              background: "#fef2f2", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26,
+              background: "rgba(255,107,129,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26,
             }}>🗑</div>
-            <p style={{ fontSize: 14.5, color: "#0f172a", margin: "0 0 6px", fontWeight: 600 }}>
-              Delete <span style={{ color: "#ef4444" }}>{delTarget.userName}</span>?
+            <p style={{ fontSize: 14.5, color: "#fff", margin: "0 0 6px", fontWeight: 600 }}>
+              Delete <span style={{ color: "#FF6B81" }}>{delTarget.userName}</span>?
             </p>
-            <p style={{ fontSize: 13, color: "#94a3b8", margin: 0 }}>
+            <p style={{ fontSize: 13, color: "#7180A6", margin: 0 }}>
               This account will be permanently removed and cannot be restored.
             </p>
           </div>

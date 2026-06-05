@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import PageWrapper from "../components/PageWrapper";
-import dashboardBg from "../assets/dashboard-bg.jpg";
 import api from "../api/api";
 
 function StockTransfer() {
@@ -31,15 +30,15 @@ function StockTransfer() {
       setMessage("");
       const response = await api.get("/api/stock/all");
       const allStock = response.data;
-      
+
       // Filter by stand number and quantity > 0 (exclude items with 0 or null quantity)
       const standStock = allStock.filter(
-        (stock) => 
-          stock.standNo === parseInt(standNo) && 
-          stock.quantity != null && 
+        (stock) =>
+          stock.standNo === parseInt(standNo) &&
+          stock.quantity != null &&
           stock.quantity > 0
       );
-      
+
       if (standStock.length === 0) {
         setMessage("⚠️ No stock available in stand " + standNo);
         setAvailableStock([]);
@@ -173,17 +172,17 @@ function StockTransfer() {
     try {
       setLoading(true);
       setMessage("");
-      
+
       // Transfer each selected item
       const transferPromises = Array.from(selectedStockIds).map(async (stockId) => {
         const stock = selectedStockItems.find(s => s.id === stockId);
         if (!stock) return null;
-        
+
         const glassType = stock.glass?.type || "";
         const thickness = stock.glass?.thickness || "";
         const unit = stock.glass?.unit || "MM";
         const quantity = parseInt(transferQuantities[stockId]);
-        
+
         const transferData = {
           glassType: glassType,
           thickness: thickness,
@@ -202,7 +201,7 @@ function StockTransfer() {
       const successCount = results.filter(r => r !== null).length;
       setMessage(`✅ Successfully transferred ${successCount} item(s)`);
       setShowConfirm(false);
-      
+
       // Reset form after 2 seconds
       setTimeout(() => {
         setStep(1);
@@ -235,13 +234,13 @@ function StockTransfer() {
   };
 
   return (
-    <PageWrapper backgroundImage={dashboardBg}>
+    <PageWrapper>
       <div style={{ padding: isMobile ? "15px" : "20px", maxWidth: "1200px", margin: "0 auto" }}>
-        <div style={{ marginBottom: "25px", padding: "20px", backgroundColor: "rgba(0,0,0,0.5)", borderRadius: "12px", backdropFilter: "blur(10px)" }}>
-          <h1 style={{ color: "#fff", marginBottom: "8px", fontSize: isMobile ? "26px" : "32px", fontWeight: "800", textShadow: "2px 2px 4px rgba(0,0,0,0.5)" }}>
+        <div style={{ marginBottom: "25px", padding: "20px", background: "rgba(17,27,53,0.9)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "16px", boxShadow: "0 4px 24px rgba(0,0,0,0.4)" }}>
+          <h1 style={{ color: "#fff", marginBottom: "8px", fontSize: isMobile ? "26px" : "32px", fontWeight: "800" }}>
             🔁 Transfer Stock
           </h1>
-          <p style={{ color: "#fff", fontSize: "15px", margin: 0, fontWeight: "500", textShadow: "1px 1px 2px rgba(0,0,0,0.5)" }}>
+          <p style={{ color: "#A9B3D1", fontSize: "15px", margin: 0, fontWeight: "500" }}>
             Move stock between stands safely
           </p>
         </div>
@@ -285,109 +284,52 @@ function StockTransfer() {
 
         <div
           style={{
-            backgroundColor: "white",
+            background: "rgba(17,27,53,0.9)",
+            border: "1px solid rgba(255,255,255,0.08)",
             padding: isMobile ? "20px" : "30px",
             borderRadius: "16px",
-            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+            boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
           }}
         >
           {/* Progress Steps */}
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "30px", position: "relative" }}>
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", position: "relative" }}>
-              <div
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "50%",
-                  backgroundColor: step >= 1 ? "#6366f1" : "#e5e7eb",
-                  color: step >= 1 ? "white" : "#9ca3af",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontWeight: "600",
-                  fontSize: "16px",
-                  marginBottom: "8px",
-                }}
-              >
-                {step > 1 ? "✓" : "1"}
+            {[
+              { num: 1, label: "Source Stand" },
+              { num: 2, label: "Select Stock" },
+              { num: 3, label: "Destination" },
+              { num: 4, label: "Confirm" },
+            ].map(({ num, label }) => (
+              <div key={num} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", position: "relative" }}>
+                <div
+                  style={{
+                    width: "40px",
+                    height: "40px",
+                    borderRadius: "50%",
+                    backgroundColor: step >= num ? "#4F5DFF" : "rgba(255,255,255,0.08)",
+                    color: step >= num ? "white" : "#7180A6",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontWeight: "600",
+                    fontSize: "16px",
+                    marginBottom: "8px",
+                    border: step >= num ? "none" : "1px solid rgba(255,255,255,0.1)",
+                  }}
+                >
+                  {step > num ? "✓" : num}
+                </div>
+                <div style={{ fontSize: "12px", color: step >= num ? "#4F5DFF" : "#7180A6", fontWeight: "500", textAlign: "center" }}>
+                  {label}
+                </div>
               </div>
-              <div style={{ fontSize: "12px", color: step >= 1 ? "#6366f1" : "#9ca3af", fontWeight: "500", textAlign: "center" }}>
-                Source Stand
-              </div>
-            </div>
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", position: "relative" }}>
-              <div
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "50%",
-                  backgroundColor: step >= 2 ? "#6366f1" : "#e5e7eb",
-                  color: step >= 2 ? "white" : "#9ca3af",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontWeight: "600",
-                  fontSize: "16px",
-                  marginBottom: "8px",
-                }}
-              >
-                {step > 2 ? "✓" : "2"}
-              </div>
-              <div style={{ fontSize: "12px", color: step >= 2 ? "#6366f1" : "#9ca3af", fontWeight: "500", textAlign: "center" }}>
-                Select Stock
-              </div>
-            </div>
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", position: "relative" }}>
-              <div
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "50%",
-                  backgroundColor: step >= 3 ? "#6366f1" : "#e5e7eb",
-                  color: step >= 3 ? "white" : "#9ca3af",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontWeight: "600",
-                  fontSize: "16px",
-                  marginBottom: "8px",
-                }}
-              >
-                {step > 3 ? "✓" : "3"}
-              </div>
-              <div style={{ fontSize: "12px", color: step >= 3 ? "#6366f1" : "#9ca3af", fontWeight: "500", textAlign: "center" }}>
-                Destination
-              </div>
-            </div>
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", position: "relative" }}>
-              <div
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "50%",
-                  backgroundColor: step >= 4 ? "#6366f1" : "#e5e7eb",
-                  color: step >= 4 ? "white" : "#9ca3af",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontWeight: "600",
-                  fontSize: "16px",
-                  marginBottom: "8px",
-                }}
-              >
-                4
-              </div>
-              <div style={{ fontSize: "12px", color: step >= 4 ? "#6366f1" : "#9ca3af", fontWeight: "500", textAlign: "center" }}>
-                Confirm
-              </div>
-            </div>
+            ))}
           </div>
 
           {/* Step 1: Enter Source Stand */}
           {step === 1 && (
             <form onSubmit={handleSourceStandSubmit}>
               <div style={{ marginBottom: "25px" }}>
-                <label style={{ display: "block", marginBottom: "10px", color: "#374151", fontWeight: "600", fontSize: "16px" }}>
+                <label style={{ display: "block", marginBottom: "10px", color: "#A9B3D1", fontWeight: "600", fontSize: "14px", textTransform: "uppercase", letterSpacing: "0.08em" }}>
                   📍 Enter Source Stand Number *
                 </label>
                 <input
@@ -401,16 +343,19 @@ function StockTransfer() {
                     width: "100%",
                     padding: "14px",
                     borderRadius: "10px",
-                    border: "2px solid #e5e7eb",
+                    border: "1.5px solid rgba(255,255,255,0.1)",
+                    background: "rgba(255,255,255,0.06)",
+                    color: "#fff",
                     fontSize: "16px",
                     transition: "all 0.2s",
                     boxSizing: "border-box",
+                    outline: "none",
                   }}
-                  onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
-                  onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")}
+                  onFocus={(e) => (e.target.style.borderColor = "rgba(79,93,255,0.6)")}
+                  onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
                   autoFocus
                 />
-                <p style={{ marginTop: "8px", color: "#6b7280", fontSize: "13px" }}>
+                <p style={{ marginTop: "8px", color: "#7180A6", fontSize: "13px" }}>
                   Enter the stand number from which you want to transfer stock
                 </p>
               </div>
@@ -420,7 +365,7 @@ function StockTransfer() {
                 style={{
                   width: "100%",
                   padding: "14px",
-                  backgroundColor: "#6366f1",
+                  background: "#4F5DFF",
                   color: "white",
                   border: "none",
                   borderRadius: "10px",
@@ -430,8 +375,8 @@ function StockTransfer() {
                   opacity: loading ? 0.6 : 1,
                   transition: "all 0.2s",
                 }}
-                onMouseOver={(e) => !loading && (e.target.style.backgroundColor = "#4f46e5")}
-                onMouseOut={(e) => !loading && (e.target.style.backgroundColor = "#6366f1")}
+                onMouseOver={(e) => !loading && (e.target.style.background = "#3D4DE8")}
+                onMouseOut={(e) => !loading && (e.target.style.background = "#4F5DFF")}
               >
                 {loading ? "⏳ Loading..." : "➡️ Next: View Stock"}
               </button>
@@ -442,7 +387,7 @@ function StockTransfer() {
           {step === 2 && (
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "12px" }}>
-                <h3 style={{ margin: 0, color: "#1f2937", fontSize: "20px", fontWeight: "600" }}>
+                <h3 style={{ margin: 0, color: "#fff", fontSize: "20px", fontWeight: "600" }}>
                   📦 Available Stock in Stand {sourceStand}
                 </h3>
                 <div style={{ display: "flex", gap: "8px" }}>
@@ -451,9 +396,9 @@ function StockTransfer() {
                       onClick={handleSelectAll}
                       style={{
                         padding: "8px 16px",
-                        backgroundColor: selectedStockIds.size === availableStock.length ? "#6366f1" : "#e5e7eb",
-                        color: selectedStockIds.size === availableStock.length ? "white" : "#374151",
-                        border: "none",
+                        background: selectedStockIds.size === availableStock.length ? "#4F5DFF" : "rgba(255,255,255,0.08)",
+                        color: selectedStockIds.size === availableStock.length ? "white" : "#A9B3D1",
+                        border: "1px solid rgba(255,255,255,0.12)",
                         borderRadius: "8px",
                         fontSize: "14px",
                         cursor: "pointer",
@@ -474,9 +419,9 @@ function StockTransfer() {
                     }}
                     style={{
                       padding: "8px 16px",
-                      backgroundColor: "#6b7280",
-                      color: "white",
-                      border: "none",
+                      background: "rgba(255,255,255,0.08)",
+                      color: "#A9B3D1",
+                      border: "1px solid rgba(255,255,255,0.12)",
                       borderRadius: "8px",
                       fontSize: "14px",
                       cursor: "pointer",
@@ -488,18 +433,18 @@ function StockTransfer() {
               </div>
 
               {selectedStockIds.size > 0 && (
-                <div style={{ 
-                  marginBottom: "20px", 
-                  padding: "12px 16px", 
-                  backgroundColor: "#f0f4ff", 
+                <div style={{
+                  marginBottom: "20px",
+                  padding: "12px 16px",
+                  background: "rgba(79,93,255,0.1)",
                   borderRadius: "8px",
-                  border: "2px solid #6366f1",
+                  border: "1px solid rgba(79,93,255,0.3)",
                   display: "flex",
                   alignItems: "center",
                   gap: "8px"
                 }}>
-                  <span style={{ fontSize: "16px" }}>✓</span>
-                  <span style={{ color: "#1f2937", fontWeight: "600", fontSize: "14px" }}>
+                  <span style={{ fontSize: "16px", color: "#4F5DFF" }}>✓</span>
+                  <span style={{ color: "#fff", fontWeight: "600", fontSize: "14px" }}>
                     {selectedStockIds.size} item(s) selected
                   </span>
                   <button
@@ -507,7 +452,7 @@ function StockTransfer() {
                     style={{
                       marginLeft: "auto",
                       padding: "8px 20px",
-                      backgroundColor: "#6366f1",
+                      background: "#4F5DFF",
                       color: "white",
                       border: "none",
                       borderRadius: "8px",
@@ -522,12 +467,12 @@ function StockTransfer() {
               )}
 
               {loading ? (
-                <div style={{ textAlign: "center", padding: "40px", color: "#6b7280" }}>Loading stock...</div>
+                <div style={{ textAlign: "center", padding: "40px", color: "#7180A6" }}>Loading stock...</div>
               ) : availableStock.length === 0 ? (
-                <div style={{ textAlign: "center", padding: "40px", color: "#6b7280" }}>
+                <div style={{ textAlign: "center", padding: "40px", color: "#7180A6" }}>
                   <div style={{ fontSize: "48px", marginBottom: "16px", opacity: 0.5 }}>📦</div>
-                  <p style={{ fontSize: "16px", fontWeight: "500", marginBottom: "8px" }}>No stock available</p>
-                  <p style={{ fontSize: "14px", color: "#9ca3af" }}>This stand has no stock items</p>
+                  <p style={{ fontSize: "16px", fontWeight: "500", marginBottom: "8px", color: "#A9B3D1" }}>No stock available</p>
+                  <p style={{ fontSize: "14px", color: "#7180A6" }}>This stand has no stock items</p>
                 </div>
               ) : (
                 <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill, minmax(300px, 1fr))", gap: "16px" }}>
@@ -539,22 +484,22 @@ function StockTransfer() {
                         style={{
                           padding: "20px",
                           borderRadius: "12px",
-                          border: isSelected ? "2px solid #6366f1" : "2px solid #e5e7eb",
+                          border: isSelected ? "2px solid #4F5DFF" : "1px solid rgba(255,255,255,0.08)",
                           transition: "all 0.2s",
-                          backgroundColor: isSelected ? "#f0f4ff" : "#fafafa",
+                          background: isSelected ? "rgba(79,93,255,0.12)" : "rgba(255,255,255,0.04)",
                           cursor: "pointer",
                         }}
                         onClick={() => handleCheckboxChange(stock.id, stock)}
                         onMouseEnter={(e) => {
                           if (!isSelected) {
-                            e.currentTarget.style.borderColor = "#6366f1";
-                            e.currentTarget.style.backgroundColor = "#f0f4ff";
+                            e.currentTarget.style.borderColor = "rgba(79,93,255,0.4)";
+                            e.currentTarget.style.background = "rgba(79,93,255,0.08)";
                           }
                         }}
                         onMouseLeave={(e) => {
                           if (!isSelected) {
-                            e.currentTarget.style.borderColor = "#e5e7eb";
-                            e.currentTarget.style.backgroundColor = "#fafafa";
+                            e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
+                            e.currentTarget.style.background = "rgba(255,255,255,0.04)";
                           }
                         }}
                       >
@@ -569,24 +514,25 @@ function StockTransfer() {
                               height: "20px",
                               cursor: "pointer",
                               marginTop: "2px",
-                              accentColor: "#6366f1",
+                              accentColor: "#4F5DFF",
                             }}
                           />
                           <div style={{ flex: 1 }}>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
                               <div>
-                                <div style={{ fontSize: "18px", fontWeight: "700", color: "#1f2937", marginBottom: "4px" }}>
+                                <div style={{ fontSize: "18px", fontWeight: "700", color: "#fff", marginBottom: "4px" }}>
                                   {stock.glass?.type || "N/A"}
                                 </div>
-                                <div style={{ fontSize: "13px", color: "#6b7280" }}>
+                                <div style={{ fontSize: "13px", color: "#7180A6" }}>
                                   Thickness: {stock.glass?.thickness}{stock.glass?.unit || "MM"}
                                 </div>
                               </div>
                               <div
                                 style={{
                                   padding: "6px 12px",
-                                  backgroundColor: "#22c55e",
-                                  color: "white",
+                                  background: "rgba(55,227,165,0.15)",
+                                  color: "#37E3A5",
+                                  border: "1px solid rgba(55,227,165,0.3)",
                                   borderRadius: "6px",
                                   fontSize: "14px",
                                   fontWeight: "600",
@@ -596,14 +542,14 @@ function StockTransfer() {
                               </div>
                             </div>
                             {(stock.height || stock.width) && (
-                              <div style={{ fontSize: "14px", color: "#475569", marginTop: "8px" }}>
+                              <div style={{ fontSize: "14px", color: "#A9B3D1", marginTop: "8px" }}>
                                 Size: {stock.height || "-"} × {stock.width || "-"}
                               </div>
                             )}
                           </div>
                         </div>
                         {isSelected && (
-                          <div style={{ marginTop: "12px", padding: "8px", backgroundColor: "#6366f1", borderRadius: "6px", fontSize: "12px", color: "white", fontWeight: "500", textAlign: "center" }}>
+                          <div style={{ marginTop: "12px", padding: "8px", background: "#4F5DFF", borderRadius: "6px", fontSize: "12px", color: "white", fontWeight: "500", textAlign: "center" }}>
                             ✓ Selected
                           </div>
                         )}
@@ -618,8 +564,8 @@ function StockTransfer() {
           {/* Step 3: Enter Destination Stand */}
           {step === 3 && selectedStockItems.length > 0 && (
             <form onSubmit={handleDestinationStandSubmit}>
-              <div style={{ marginBottom: "25px", padding: "20px", backgroundColor: "#f0f4ff", borderRadius: "12px", border: "2px solid #6366f1" }}>
-                <h3 style={{ margin: "0 0 15px 0", color: "#1f2937", fontSize: "18px", fontWeight: "600" }}>
+              <div style={{ marginBottom: "25px", padding: "20px", background: "rgba(79,93,255,0.1)", borderRadius: "12px", border: "1px solid rgba(79,93,255,0.3)" }}>
+                <h3 style={{ margin: "0 0 15px 0", color: "#fff", fontSize: "18px", fontWeight: "600" }}>
                   Selected Stock Items ({selectedStockItems.length})
                 </h3>
                 <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
@@ -628,29 +574,29 @@ function StockTransfer() {
                       key={stock.id}
                       style={{
                         padding: "16px",
-                        backgroundColor: "white",
+                        background: "rgba(255,255,255,0.04)",
                         borderRadius: "8px",
-                        border: "1px solid #e5e7eb",
+                        border: "1px solid rgba(255,255,255,0.08)",
                       }}
                     >
                       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "12px", fontSize: "14px", marginBottom: "12px" }}>
                         <div>
-                          <span style={{ color: "#6b7280" }}>Glass Type:</span>{" "}
-                          <span style={{ fontWeight: "600", color: "#1f2937" }}>{stock.glass?.type || "N/A"}</span>
+                          <span style={{ color: "#7180A6" }}>Glass Type:</span>{" "}
+                          <span style={{ fontWeight: "600", color: "#fff" }}>{stock.glass?.type || "N/A"}</span>
                         </div>
                         <div>
-                          <span style={{ color: "#6b7280" }}>Available:</span>{" "}
-                          <span style={{ fontWeight: "600", color: "#1f2937" }}>{stock.quantity} pieces</span>
+                          <span style={{ color: "#7180A6" }}>Available:</span>{" "}
+                          <span style={{ fontWeight: "600", color: "#fff" }}>{stock.quantity} pieces</span>
                         </div>
                         {stock.height && stock.width && (
                           <div>
-                            <span style={{ color: "#6b7280" }}>Size:</span>{" "}
-                            <span style={{ fontWeight: "600", color: "#1f2937" }}>{stock.height} × {stock.width}</span>
+                            <span style={{ color: "#7180A6" }}>Size:</span>{" "}
+                            <span style={{ fontWeight: "600", color: "#fff" }}>{stock.height} × {stock.width}</span>
                           </div>
                         )}
                       </div>
                       <div>
-                        <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "600", fontSize: "14px" }}>
+                        <label style={{ display: "block", marginBottom: "8px", color: "#A9B3D1", fontWeight: "600", fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.08em" }}>
                           Quantity to Transfer *
                         </label>
                         <input
@@ -665,13 +611,16 @@ function StockTransfer() {
                             width: "100%",
                             padding: "10px",
                             borderRadius: "8px",
-                            border: "2px solid #e5e7eb",
+                            border: "1.5px solid rgba(255,255,255,0.1)",
+                            background: "rgba(255,255,255,0.06)",
+                            color: "#fff",
                             fontSize: "14px",
                             transition: "all 0.2s",
                             boxSizing: "border-box",
+                            outline: "none",
                           }}
-                          onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
-                          onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")}
+                          onFocus={(e) => (e.target.style.borderColor = "rgba(79,93,255,0.6)")}
+                          onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
                         />
                       </div>
                     </div>
@@ -680,7 +629,7 @@ function StockTransfer() {
               </div>
 
               <div style={{ marginBottom: "20px" }}>
-                <label style={{ display: "block", marginBottom: "10px", color: "#374151", fontWeight: "600", fontSize: "16px" }}>
+                <label style={{ display: "block", marginBottom: "10px", color: "#A9B3D1", fontWeight: "600", fontSize: "14px", textTransform: "uppercase", letterSpacing: "0.08em" }}>
                   📍 Enter Destination Stand Number *
                 </label>
                 <input
@@ -694,16 +643,19 @@ function StockTransfer() {
                     width: "100%",
                     padding: "14px",
                     borderRadius: "10px",
-                    border: "2px solid #e5e7eb",
+                    border: "1.5px solid rgba(255,255,255,0.1)",
+                    background: "rgba(255,255,255,0.06)",
+                    color: "#fff",
                     fontSize: "16px",
                     transition: "all 0.2s",
                     boxSizing: "border-box",
+                    outline: "none",
                   }}
-                  onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
-                  onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")}
+                  onFocus={(e) => (e.target.style.borderColor = "rgba(79,93,255,0.6)")}
+                  onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
                   autoFocus
                 />
-                <p style={{ marginTop: "8px", color: "#6b7280", fontSize: "13px" }}>
+                <p style={{ marginTop: "8px", color: "#7180A6", fontSize: "13px" }}>
                   Enter the stand number where you want to transfer the stock
                 </p>
               </div>
@@ -719,9 +671,9 @@ function StockTransfer() {
                   style={{
                     flex: 1,
                     padding: "14px",
-                    backgroundColor: "#6b7280",
-                    color: "white",
-                    border: "none",
+                    background: "rgba(255,255,255,0.08)",
+                    color: "#A9B3D1",
+                    border: "1px solid rgba(255,255,255,0.12)",
                     borderRadius: "10px",
                     fontSize: "16px",
                     fontWeight: "600",
@@ -736,7 +688,7 @@ function StockTransfer() {
                   style={{
                     flex: 2,
                     padding: "14px",
-                    backgroundColor: "#6366f1",
+                    background: "#4F5DFF",
                     color: "white",
                     border: "none",
                     borderRadius: "10px",
@@ -746,8 +698,8 @@ function StockTransfer() {
                     opacity: loading ? 0.6 : 1,
                     transition: "all 0.2s",
                   }}
-                  onMouseOver={(e) => !loading && (e.target.style.backgroundColor = "#4f46e5")}
-                  onMouseOut={(e) => !loading && (e.target.style.backgroundColor = "#6366f1")}
+                  onMouseOver={(e) => !loading && (e.target.style.background = "#3D4DE8")}
+                  onMouseOut={(e) => !loading && (e.target.style.background = "#4F5DFF")}
                 >
                   {loading ? "⏳ Processing..." : "➡️ Review & Confirm"}
                 </button>
@@ -776,21 +728,22 @@ function StockTransfer() {
           >
             <div
               style={{
-                backgroundColor: "white",
+                background: "rgba(17,27,53,0.98)",
+                border: "1px solid rgba(255,255,255,0.1)",
                 padding: isMobile ? "25px" : "35px",
                 borderRadius: "16px",
                 maxWidth: "500px",
                 width: "100%",
-                boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+                boxShadow: "0 20px 60px rgba(0,0,0,0.6)",
               }}
               onClick={(e) => e.stopPropagation()}
             >
               <div style={{ marginBottom: "20px", textAlign: "center" }}>
-                <div style={{ fontSize: "48px", marginBottom: "15px", color: "#6366f1" }}>⚠️</div>
+                <div style={{ fontSize: "48px", marginBottom: "15px" }}>⚠️</div>
                 <h2
                   style={{
                     margin: 0,
-                    color: "#1f2937",
+                    color: "#fff",
                     fontSize: isMobile ? "20px" : "24px",
                     fontWeight: "700",
                     marginBottom: "10px",
@@ -798,7 +751,7 @@ function StockTransfer() {
                 >
                   Confirm Stock Transfer?
                 </h2>
-                <p style={{ margin: "8px 0 0 0", color: "#6b7280", fontSize: "14px", lineHeight: "1.6" }}>
+                <p style={{ margin: "8px 0 0 0", color: "#A9B3D1", fontSize: "14px", lineHeight: "1.6" }}>
                   Please review the transfer details before confirming
                 </p>
               </div>
@@ -807,41 +760,42 @@ function StockTransfer() {
                 style={{
                   marginTop: "20px",
                   padding: "20px",
-                  backgroundColor: "#f3f4f6",
+                  background: "rgba(255,255,255,0.04)",
                   borderRadius: "12px",
                   marginBottom: "20px",
                   maxHeight: "400px",
                   overflowY: "auto",
+                  border: "1px solid rgba(255,255,255,0.08)",
                 }}
               >
-                <div style={{ fontSize: "14px", color: "#374151", lineHeight: "1.8" }}>
+                <div style={{ fontSize: "14px", color: "#A9B3D1", lineHeight: "1.8" }}>
                   {selectedStockItems.map((stock, idx) => (
-                    <div key={stock.id} style={{ marginBottom: idx < selectedStockItems.length - 1 ? "16px" : "0", paddingBottom: idx < selectedStockItems.length - 1 ? "16px" : "0", borderBottom: idx < selectedStockItems.length - 1 ? "1px solid #d1d5db" : "none" }}>
-                      <div style={{ fontWeight: "600", color: "#1f2937", marginBottom: "8px" }}>
+                    <div key={stock.id} style={{ marginBottom: idx < selectedStockItems.length - 1 ? "16px" : "0", paddingBottom: idx < selectedStockItems.length - 1 ? "16px" : "0", borderBottom: idx < selectedStockItems.length - 1 ? "1px solid rgba(255,255,255,0.08)" : "none" }}>
+                      <div style={{ fontWeight: "600", color: "#fff", marginBottom: "8px" }}>
                         {stock.glass?.type || "N/A"}
                       </div>
                       {stock.height && stock.width && (
                         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                          <span style={{ color: "#6b7280" }}>Size:</span>
-                          <span style={{ fontWeight: "600", color: "#1f2937" }}>
+                          <span style={{ color: "#7180A6" }}>Size:</span>
+                          <span style={{ fontWeight: "600", color: "#fff" }}>
                             {stock.height} × {stock.width}
                           </span>
                         </div>
                       )}
                       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                        <span style={{ color: "#6b7280" }}>Quantity:</span>
-                        <span style={{ fontWeight: "600", color: "#1f2937" }}>{transferQuantities[stock.id] || 0} pieces</span>
+                        <span style={{ color: "#7180A6" }}>Quantity:</span>
+                        <span style={{ fontWeight: "600", color: "#fff" }}>{transferQuantities[stock.id] || 0} pieces</span>
                       </div>
                     </div>
                   ))}
-                  <hr style={{ border: "none", borderTop: "1px solid #d1d5db", margin: "12px 0" }} />
+                  <hr style={{ border: "none", borderTop: "1px solid rgba(255,255,255,0.08)", margin: "12px 0" }} />
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                    <span style={{ color: "#6b7280" }}>From Stand:</span>
-                    <span style={{ fontWeight: "600", color: "#1f2937" }}>#{sourceStand}</span>
+                    <span style={{ color: "#7180A6" }}>From Stand:</span>
+                    <span style={{ fontWeight: "600", color: "#fff" }}>#{sourceStand}</span>
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between" }}>
-                    <span style={{ color: "#6b7280" }}>To Stand:</span>
-                    <span style={{ fontWeight: "600", color: "#1f2937" }}>#{destinationStand}</span>
+                    <span style={{ color: "#7180A6" }}>To Stand:</span>
+                    <span style={{ fontWeight: "600", color: "#fff" }}>#{destinationStand}</span>
                   </div>
                 </div>
               </div>
@@ -852,17 +806,17 @@ function StockTransfer() {
                   style={{
                     flex: 1,
                     padding: "12px 24px",
-                    backgroundColor: "#6b7280",
-                    color: "white",
-                    border: "none",
+                    background: "rgba(255,255,255,0.08)",
+                    color: "#A9B3D1",
+                    border: "1px solid rgba(255,255,255,0.12)",
                     borderRadius: "8px",
                     cursor: "pointer",
                     fontSize: "14px",
                     fontWeight: "500",
                     transition: "all 0.2s",
                   }}
-                  onMouseOver={(e) => (e.target.style.backgroundColor = "#4b5563")}
-                  onMouseOut={(e) => (e.target.style.backgroundColor = "#6b7280")}
+                  onMouseOver={(e) => (e.target.style.background = "rgba(255,255,255,0.12)")}
+                  onMouseOut={(e) => (e.target.style.background = "rgba(255,255,255,0.08)")}
                 >
                   ❌ Cancel
                 </button>
@@ -872,17 +826,17 @@ function StockTransfer() {
                   style={{
                     flex: 1,
                     padding: "12px 24px",
-                    backgroundColor: loading ? "#9ca3af" : "#22c55e",
-                    color: "white",
-                    border: "none",
+                    background: loading ? "rgba(55,227,165,0.3)" : "rgba(55,227,165,0.2)",
+                    color: "#37E3A5",
+                    border: "1px solid rgba(55,227,165,0.3)",
                     borderRadius: "8px",
                     cursor: loading ? "not-allowed" : "pointer",
                     fontSize: "14px",
                     fontWeight: "600",
                     transition: "all 0.2s",
                   }}
-                  onMouseOver={(e) => !loading && (e.target.style.backgroundColor = "#16a34a")}
-                  onMouseOut={(e) => !loading && (e.target.style.backgroundColor = "#22c55e")}
+                  onMouseOver={(e) => !loading && (e.target.style.background = "rgba(55,227,165,0.3)")}
+                  onMouseOut={(e) => !loading && (e.target.style.background = "rgba(55,227,165,0.2)")}
                 >
                   {loading ? "⏳ Transferring..." : "✅ Confirm Transfer"}
                 </button>

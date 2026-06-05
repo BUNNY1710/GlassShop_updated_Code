@@ -3,51 +3,49 @@ import React from 'react';
 const Input = ({
   label,
   error,
+  hint,
   helperText,
   icon,
   iconPosition = 'left',
   fullWidth = true,
   size = 'md',
+  disabled,
   ...props
 }) => {
-  const paddingMap = {
-    sm: { v: '7px', h: '11px' },
-    md: { v: '9px', h: '13px' },
-    lg: { v: '11px', h: '15px' },
-  };
-  const p = paddingMap[size] || paddingMap.md;
+  // Support both `hint` and legacy `helperText` prop names
+  const hintText = hint || helperText;
 
   const inputStyle = {
-    width: fullWidth ? '100%' : 'auto',
+    width: '100%',
+    height: '40px',
+    padding: '0 12px',
+    paddingLeft: icon && iconPosition === 'left' ? '38px' : '12px',
+    paddingRight: icon && iconPosition === 'right' ? '38px' : '12px',
+    background: 'rgba(255,255,255,0.06)',
+    border: error
+      ? '1.5px solid #FF6B81'
+      : '1.5px solid rgba(255,255,255,0.1)',
+    borderRadius: '10px',
+    color: '#fff',
     fontSize: '14px',
-    fontFamily: "'Inter', -apple-system, sans-serif",
-    borderRadius: '8px',
-    border: error ? '1.5px solid #dc2626' : '1.5px solid #e2e8f0',
-    background: '#ffffff',
-    color: '#0f172a',
-    transition: 'border-color 160ms ease, box-shadow 160ms ease',
+    fontFamily: "'Inter',-apple-system,sans-serif",
+    transition: 'border-color 150ms ease, box-shadow 150ms ease, background 150ms ease',
     boxSizing: 'border-box',
-    lineHeight: '1.5',
     outline: 'none',
-    boxShadow: '0 1px 2px rgba(15,23,42,0.04)',
-    paddingTop: p.v,
-    paddingBottom: p.v,
-    paddingLeft: icon && iconPosition === 'left' ? '38px' : p.h,
-    paddingRight: icon && iconPosition === 'right' ? '38px' : p.h,
-    minHeight: size === 'lg' ? '44px' : size === 'sm' ? '32px' : '38px',
+    opacity: disabled ? 0.4 : 1,
+    cursor: disabled ? 'not-allowed' : 'text',
   };
 
   return (
-    <div style={{ width: fullWidth ? '100%' : 'auto', marginBottom: (helperText || error) ? '18px' : '0' }}>
+    <div style={{ width: fullWidth ? '100%' : 'auto', marginBottom: (hintText || error) ? '18px' : '0' }}>
       {label && (
         <label style={{
           display: 'block',
-          fontSize: '12.5px',
+          fontSize: '11.5px',
           fontWeight: '600',
-          color: '#374151',
-          marginBottom: '6px',
-          letterSpacing: '-0.01em',
-          fontFamily: "'Inter', -apple-system, sans-serif",
+          color: '#A9B3D1',
+          marginBottom: '5px',
+          fontFamily: "'Inter',-apple-system,sans-serif",
         }}>
           {label}
         </label>
@@ -56,9 +54,14 @@ const Input = ({
       <div style={{ position: 'relative' }}>
         {icon && iconPosition === 'left' && (
           <span style={{
-            position: 'absolute', top: '50%', left: '11px',
+            position: 'absolute',
+            top: '50%',
+            left: '11px',
             transform: 'translateY(-50%)',
-            fontSize: '16px', color: '#94a3b8', pointerEvents: 'none', lineHeight: 1,
+            fontSize: '16px',
+            color: 'rgba(113,128,166,0.7)',
+            pointerEvents: 'none',
+            lineHeight: 1,
           }}>
             {icon}
           </span>
@@ -66,44 +69,90 @@ const Input = ({
 
         <input
           style={inputStyle}
+          disabled={disabled}
           onFocus={(e) => {
-            e.currentTarget.style.borderColor = error ? '#dc2626' : '#6366f1';
+            if (disabled) return;
+            e.currentTarget.style.borderColor = error
+              ? '#FF6B81'
+              : 'rgba(79,93,255,0.6)';
             e.currentTarget.style.boxShadow = error
-              ? '0 0 0 3px rgba(220,38,38,0.10)'
-              : '0 0 0 3px rgba(99,102,241,0.12)';
+              ? '0 0 0 3px rgba(255,107,129,0.15)'
+              : '0 0 0 3px rgba(79,93,255,0.15)';
+            e.currentTarget.style.background = 'rgba(255,255,255,0.09)';
           }}
           onBlur={(e) => {
-            e.currentTarget.style.borderColor = error ? '#dc2626' : '#e2e8f0';
-            e.currentTarget.style.boxShadow = '0 1px 2px rgba(15,23,42,0.04)';
+            e.currentTarget.style.borderColor = error
+              ? '#FF6B81'
+              : 'rgba(255,255,255,0.1)';
+            e.currentTarget.style.boxShadow = 'none';
+            e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
+          }}
+          onMouseEnter={(e) => {
+            if (disabled || e.currentTarget === document.activeElement) return;
+            e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
+            e.currentTarget.style.borderColor = error
+              ? '#FF6B81'
+              : 'rgba(255,255,255,0.16)';
+          }}
+          onMouseLeave={(e) => {
+            if (disabled || e.currentTarget === document.activeElement) return;
+            e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
+            e.currentTarget.style.borderColor = error
+              ? '#FF6B81'
+              : 'rgba(255,255,255,0.1)';
           }}
           {...props}
         />
 
         {icon && iconPosition === 'right' && (
           <span style={{
-            position: 'absolute', top: '50%', right: '11px',
+            position: 'absolute',
+            top: '50%',
+            right: '11px',
             transform: 'translateY(-50%)',
-            fontSize: '16px', color: '#94a3b8', pointerEvents: 'none', lineHeight: 1,
+            fontSize: '16px',
+            color: 'rgba(113,128,166,0.7)',
+            pointerEvents: 'none',
+            lineHeight: 1,
           }}>
             {icon}
           </span>
         )}
       </div>
 
-      {(error || helperText) && (
+      {error && (
         <p style={{
-          fontSize: '12px',
-          marginTop: '5px',
+          fontSize: '11.5px',
+          marginTop: '4px',
           marginBottom: 0,
-          color: error ? '#dc2626' : '#64748b',
-          fontWeight: error ? '500' : '400',
-          fontFamily: "'Inter', -apple-system, sans-serif",
+          color: '#FF6B81',
+          fontFamily: "'Inter',-apple-system,sans-serif",
         }}>
-          {error || helperText}
+          {error}
+        </p>
+      )}
+
+      {!error && hintText && (
+        <p style={{
+          fontSize: '11.5px',
+          marginTop: '4px',
+          marginBottom: 0,
+          color: '#7180A6',
+          fontFamily: "'Inter',-apple-system,sans-serif",
+        }}>
+          {hintText}
         </p>
       )}
     </div>
   );
 };
+
+/* Inject placeholder color via a global style tag (only once) */
+if (typeof document !== 'undefined' && !document.getElementById('dark-input-placeholder')) {
+  const style = document.createElement('style');
+  style.id = 'dark-input-placeholder';
+  style.textContent = 'input::placeholder { color: rgba(113,128,166,0.7) !important; }';
+  document.head.appendChild(style);
+}
 
 export default Input;

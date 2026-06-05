@@ -1,8 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import PageWrapper from "../components/PageWrapper";
-import dashboardBg from "../assets/dashboard-bg.jpg";
 import {
   getCustomers,
   createCustomer,
@@ -23,10 +22,10 @@ import "../styles/design-system.css";
 
 /* ─── Compact icon-action button for table rows ─────────────────────────────── */
 const ICON_BTN_VARIANTS = {
-  view:    { idle: { bg: "transparent", color: "#6b7280", border: "1px solid #e5e7eb" }, hover: { bg: "#f9fafb", color: "#111827", border: "1px solid #d1d5db" } },
-  confirm: { idle: { bg: "transparent", color: "#6b7280", border: "1px solid #e5e7eb" }, hover: { bg: "#f0fdf4", color: "#16a34a", border: "1px solid #bbf7d0" } },
-  reject:  { idle: { bg: "transparent", color: "#6b7280", border: "1px solid #e5e7eb" }, hover: { bg: "#fff7ed", color: "#ea580c", border: "1px solid #fed7aa" } },
-  delete:  { idle: { bg: "transparent", color: "#6b7280", border: "1px solid #e5e7eb" }, hover: { bg: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca" } },
+  view:    { idle: { bg: "transparent", color: "#7180A6", border: "1px solid rgba(255,255,255,0.1)" }, hover: { bg: "rgba(79,93,255,0.15)", color: "#818CF8", border: "1px solid rgba(79,93,255,0.35)" } },
+  confirm: { idle: { bg: "transparent", color: "#7180A6", border: "1px solid rgba(255,255,255,0.1)" }, hover: { bg: "rgba(55,227,165,0.15)", color: "#37E3A5", border: "1px solid rgba(55,227,165,0.35)" } },
+  reject:  { idle: { bg: "transparent", color: "#7180A6", border: "1px solid rgba(255,255,255,0.1)" }, hover: { bg: "rgba(255,185,94,0.15)", color: "#FFB95E", border: "1px solid rgba(255,185,94,0.35)" } },
+  delete:  { idle: { bg: "transparent", color: "#7180A6", border: "1px solid rgba(255,255,255,0.1)" }, hover: { bg: "rgba(255,107,129,0.15)", color: "#FF6B81", border: "1px solid rgba(255,107,129,0.35)" } },
 };
 
 function QuotaActBtn({ variant = "view", title, onClick, children }) {
@@ -107,19 +106,19 @@ function DocDropdownBtn({ label, icon, items, iconOnly = false }) {
             display: 'inline-flex', alignItems: 'center', gap: iconOnly ? 0 : 5,
             padding: iconOnly ? '0' : '6px 11px',
             width: iconOnly ? 32 : 'auto', height: 32,
-            borderRadius: 8, border: '1px solid #e2e8f0',
-            background: open ? '#f1f5f9' : '#fff',
-            color: '#374151', fontSize: 13, fontWeight: 600,
+            borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)',
+            background: open ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.06)',
+            color: '#A9B3D1', fontSize: 13, fontWeight: 600,
             cursor: 'pointer', fontFamily: "'Inter',-apple-system,sans-serif",
             transition: 'all 140ms ease', whiteSpace: 'nowrap',
             justifyContent: 'center',
           }}
-          onMouseEnter={e => { if (!open) e.currentTarget.style.background = '#f8fafc'; }}
-          onMouseLeave={e => { if (!open) e.currentTarget.style.background = '#fff'; }}
+          onMouseEnter={e => { if (!open) e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
+          onMouseLeave={e => { if (!open) e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
         >
           {icon && <span style={{ fontSize: 14, lineHeight: 1 }}>{icon}</span>}
           {!iconOnly && <span>{label}</span>}
-          {!iconOnly && <span style={{ fontSize: 9, color: '#94a3b8', marginLeft: 1 }}>▾</span>}
+          {!iconOnly && <span style={{ fontSize: 9, color: '#7180A6', marginLeft: 1 }}>▾</span>}
         </button>
       </div>
       {open && createPortal(
@@ -127,8 +126,8 @@ function DocDropdownBtn({ label, icon, items, iconOnly = false }) {
           ref={menuRef}
           style={{
             position: 'fixed', top: pos.top, left: pos.left,
-            background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10,
-            boxShadow: '0 8px 24px rgba(15,23,42,.12)',
+            background: 'rgba(17,27,53,0.98)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
             minWidth: 168, maxWidth: '90vw',
             zIndex: 99999, overflow: 'hidden',
           }}
@@ -140,13 +139,13 @@ function DocDropdownBtn({ label, icon, items, iconOnly = false }) {
               style={{
                 width: '100%', padding: '9px 14px',
                 background: 'transparent', border: 'none', textAlign: 'left',
-                cursor: 'pointer', fontSize: 13, color: '#374151',
+                cursor: 'pointer', fontSize: 13, color: '#A9B3D1',
                 fontFamily: "'Inter',-apple-system,sans-serif", fontWeight: 500,
                 display: 'flex', alignItems: 'center', gap: 8,
-                borderBottom: i < items.length - 1 ? '1px solid #f8fafc' : 'none',
+                borderBottom: i < items.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
                 transition: 'background 120ms ease',
               }}
-              onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.07)'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
               {item.icon && <span style={{ fontSize: 14, width: 18, flexShrink: 0, textAlign: 'center' }}>{item.icon}</span>}
@@ -164,8 +163,8 @@ function DocDropdownBtn({ label, icon, items, iconOnly = false }) {
 function MetaField({ label, children }) {
   if (!children) return null;
   return (
-    <div style={{ padding: '10px 16px', borderRight: '1px solid #f1f5f9', minWidth: 0 }}>
-      <div style={{ fontSize: 10.5, color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3, fontFamily: "'Inter',-apple-system,sans-serif", whiteSpace: 'nowrap' }}>{label}</div>
+    <div style={{ padding: '10px 16px', borderRight: '1px solid rgba(255,255,255,0.08)', minWidth: 0 }}>
+      <div style={{ fontSize: 10.5, color: '#7180A6', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3, fontFamily: "'Inter',-apple-system,sans-serif", whiteSpace: 'nowrap' }}>{label}</div>
       <div>{children}</div>
     </div>
   );
@@ -176,11 +175,11 @@ function KpiCell({ label, value, highlight, negative, color }) {
   const v = parseFloat(value) || 0;
   return (
     <div style={{
-      padding: '12px 18px', borderRight: '1px solid #f1f5f9', minWidth: 0,
-      background: highlight ? '#f5f3ff' : 'transparent',
+      padding: '12px 18px', borderRight: '1px solid rgba(255,255,255,0.08)', minWidth: 0,
+      background: highlight ? 'rgba(79,93,255,0.15)' : 'transparent',
     }}>
-      <div style={{ fontSize: 10.5, color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4, whiteSpace: 'nowrap', fontFamily: "'Inter',-apple-system,sans-serif" }}>{label}</div>
-      <div style={{ fontSize: highlight ? 18 : 14, fontWeight: highlight ? 800 : 600, color: color || (highlight ? '#4f46e5' : '#1e293b'), letterSpacing: '-0.02em', fontFamily: "'Inter',-apple-system,sans-serif", whiteSpace: 'nowrap' }}>
+      <div style={{ fontSize: 10.5, color: '#7180A6', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4, whiteSpace: 'nowrap', fontFamily: "'Inter',-apple-system,sans-serif" }}>{label}</div>
+      <div style={{ fontSize: highlight ? 18 : 14, fontWeight: highlight ? 800 : 600, color: color || (highlight ? '#818CF8' : '#E2E8F0'), letterSpacing: '-0.02em', fontFamily: "'Inter',-apple-system,sans-serif", whiteSpace: 'nowrap' }}>
         {negative ? '−' : ''}₹{v.toFixed(2)}
       </div>
     </div>
@@ -1564,43 +1563,30 @@ function QuotationManagement() {
   ];
 
   return (
-    <PageWrapper backgroundImage={dashboardBg}>
-      <div style={{ 
-        padding: isMobile ? "8px" : "20px", 
-        maxWidth: isMobile ? "100%" : "1400px", 
+    <PageWrapper>
+      <div style={{
+        maxWidth: isMobile ? "100%" : "1400px",
         margin: "0 auto",
         width: "100%",
         boxSizing: "border-box",
-        overflowX: "hidden", // Prevent horizontal overflow
+        overflowX: "hidden",
       }}>
-        <div style={{ 
-          marginBottom: isMobile ? "16px" : "25px", 
-          padding: isMobile ? "12px" : "20px", 
-          backgroundColor: "rgba(0,0,0,0.5)", 
-          borderRadius: "12px", 
-          backdropFilter: "blur(10px)",
-          width: "100%",
-          maxWidth: "100%",
-          boxSizing: "border-box",
-        }}>
-          <h1 style={{ 
-            color: "#fff", 
-            marginBottom: "8px", 
-            fontSize: isMobile ? "22px" : "32px", 
-            fontWeight: "800", 
-            textShadow: "2px 2px 4px rgba(0,0,0,0.5)",
+        <div style={{ marginBottom: isMobile ? "16px" : "24px" }}>
+          <h1 style={{
+            color: "#ffffff",
+            margin: "0 0 4px",
+            fontSize: isMobile ? "24px" : "28px",
+            fontWeight: "800",
+            letterSpacing: "-0.02em",
             lineHeight: "1.2",
-            wordWrap: "break-word",
           }}>
-            📄 Quotation Management
+            Quotation Management
           </h1>
-          <p style={{ 
-            color: "#fff", 
-            fontSize: isMobile ? "13px" : "15px", 
-            margin: 0, 
-            fontWeight: "500", 
-            textShadow: "1px 1px 2px rgba(0,0,0,0.5)",
-            lineHeight: "1.4",
+          <p style={{
+            color: "#A9B3D1",
+            fontSize: "13px",
+            margin: 0,
+            fontWeight: "400",
           }}>
             Create and manage quotations for your customers
           </p>
@@ -1609,11 +1595,14 @@ function QuotationManagement() {
         {message && (
           <div
             style={{
-              padding: "10px",
-              marginBottom: "20px",
-              backgroundColor: message.includes("✅") ? "#4caf50" : "#f44336",
-              color: "white",
-              borderRadius: "4px",
+              padding: "10px 14px",
+              marginBottom: "16px",
+              backgroundColor: message.includes("✅") ? "rgba(55,227,165,0.15)" : "rgba(255,107,129,0.15)",
+              color: message.includes("✅") ? "#37E3A5" : "#FF6B81",
+              border: `1px solid ${message.includes("✅") ? "rgba(55,227,165,0.3)" : "rgba(255,107,129,0.3)"}`,
+              borderRadius: "10px",
+              fontSize: "13px",
+              fontWeight: 500,
             }}
           >
             {message}
@@ -1626,59 +1615,60 @@ function QuotationManagement() {
             resetForm();
           }}
           style={{
-            padding: isMobile ? "14px 20px" : "12px 24px",
-            backgroundColor: "#22c55e",
+            padding: isMobile ? "14px 20px" : "10px 20px",
+            backgroundColor: "#4F5DFF",
             color: "white",
             border: "none",
-            borderRadius: "8px",
+            borderRadius: "12px",
             cursor: "pointer",
             marginBottom: "20px",
-            fontSize: isMobile ? "16px" : "15px", // 16px prevents iOS zoom
+            fontSize: "14px",
             fontWeight: "600",
+            fontFamily: "inherit",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             gap: "8px",
-            boxShadow: "0 4px 6px -1px rgba(34, 197, 94, 0.3)",
+            boxShadow: "0 2px 12px rgba(79,93,255,0.35)",
             transition: "all 0.2s",
             width: isMobile ? "100%" : "auto",
-            minHeight: "44px", // Touch target
+            minHeight: "44px",
           }}
           onMouseOver={(e) => {
-            e.target.style.backgroundColor = "#16a34a";
-            e.target.style.boxShadow = "0 6px 8px -1px rgba(34, 197, 94, 0.4)";
+            e.target.style.backgroundColor = "#3D4DE8";
             e.target.style.transform = "translateY(-1px)";
           }}
           onMouseOut={(e) => {
-            e.target.style.backgroundColor = "#22c55e";
-            e.target.style.boxShadow = "0 4px 6px -1px rgba(34, 197, 94, 0.3)";
+            e.target.style.backgroundColor = "#4F5DFF";
             e.target.style.transform = "translateY(0)";
           }}
         >
-          ➕ Create New Quotation
+          + Create New Quotation
         </button>
 
         {showForm && (
           <div
             style={{
-              backgroundColor: "white",
+              backgroundColor: "rgba(17,27,53,0.9)",
+              border: "1px solid rgba(255,255,255,0.08)",
               padding: isMobile ? "12px" : "20px",
-              borderRadius: "12px",
+              borderRadius: "16px",
               marginBottom: isMobile ? "16px" : "20px",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05)",
+              boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
               width: "100%",
               maxWidth: "100%",
               boxSizing: "border-box",
               overflowX: "hidden",
+              colorScheme: "dark",
             }}
           >
             {/* ── Compact header ── */}
-            <div style={{ marginBottom: "14px", paddingBottom: "10px", borderBottom: "1.5px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+            <div style={{ marginBottom: "14px", paddingBottom: "10px", borderBottom: "1px solid rgba(255,255,255,0.07)", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
               <div>
-                <h2 style={{ margin: 0, color: "#0f172a", fontSize: isMobile ? "16px" : "18px", fontWeight: "700", letterSpacing: "-0.02em" }}>
+                <h2 style={{ margin: 0, color: "#ffffff", fontSize: isMobile ? "16px" : "18px", fontWeight: "700", letterSpacing: "-0.02em" }}>
                   Create Quotation
                 </h2>
-                <p style={{ margin: "2px 0 0 0", color: "#94a3b8", fontSize: "12px", fontWeight: 400 }}>
+                <p style={{ margin: "2px 0 0 0", color: "#7180A6", fontSize: "12px", fontWeight: 400 }}>
                   Customer · Glass Details · Pricing
                 </p>
               </div>
@@ -1693,7 +1683,7 @@ function QuotationManagement() {
                 width: "100%",
                 boxSizing: "border-box",
               }}>
-                <h3 style={{ color: "#374151", fontSize: "13px", fontWeight: "700", marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                <h3 style={{ color: "#A9B3D1", fontSize: "13px", fontWeight: "700", marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                   👤 Customer & Billing
                 </h3>
                 <div style={{
@@ -1704,7 +1694,7 @@ function QuotationManagement() {
                   boxSizing: "border-box",
                 }}>
                   <div>
-                    <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                    <label style={{ display: "block", marginBottom: "8px", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                       Customer Selection * <span style={{ color: "#ef4444" }}>●</span>
                     </label>
                     <select
@@ -1722,19 +1712,20 @@ function QuotationManagement() {
                       }
                         style={{
                           width: "100%",
-                          padding: isMobile ? "14px 12px" : "12px", // Larger touch target
+                          padding: isMobile ? "14px 12px" : "12px",
                           borderRadius: "8px",
-                          border: "1px solid #d1d5db",
-                          fontSize: "16px", // Prevent iOS zoom
-                          backgroundColor: "#fff",
+                          border: "1.5px solid rgba(255,255,255,0.1)",
+                          fontSize: "16px",
+                          backgroundColor: "rgba(255,255,255,0.06)",
+                          color: "#E2E8F0",
                           cursor: "pointer",
                           transition: "all 0.2s",
                           marginBottom: "15px",
-                          minHeight: "44px", // Touch target
+                          minHeight: "44px",
                           boxSizing: "border-box",
                         }}
-                      onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
-                      onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
+                      onFocus={(e) => (e.target.style.borderColor = "rgba(79,93,255,0.6)")}
+                      onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
                     >
                       <option value="SELECT_FROM_LIST">📋 Select from List</option>
                       <option value="MANUAL">✏️ Manual Entry</option>
@@ -1762,16 +1753,17 @@ function QuotationManagement() {
                             width: "100%",
                             padding: isMobile ? "14px 12px" : "12px",
                             borderRadius: "8px",
-                            border: "1px solid #d1d5db",
+                            border: "1.5px solid rgba(255,255,255,0.1)",
                             fontSize: "16px",
-                            backgroundColor: "#fff",
+                            backgroundColor: "rgba(255,255,255,0.06)",
+                            color: "#E2E8F0",
                             cursor: "pointer",
                             transition: "all 0.2s",
                             minHeight: "44px",
                             boxSizing: "border-box",
                           }}
-                          onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
-                          onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
+                          onFocus={(e) => (e.target.style.borderColor = "rgba(79,93,255,0.6)")}
+                          onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
                         >
                           <option value="">🔍 Select a customer...</option>
                           {customers.map((customer) => (
@@ -1781,7 +1773,7 @@ function QuotationManagement() {
                           ))}
                         </select>
                         {customers.length === 0 && (
-                          <p style={{ marginTop: "5px", color: "#f59e0b", fontSize: "12px" }}>
+                          <p style={{ marginTop: "5px", color: "#FFB95E", fontSize: "12px" }}>
                             ⚠️ No customers found. Switch to "Manual Entry" to add a new customer.
                           </p>
                         )}
@@ -1789,7 +1781,7 @@ function QuotationManagement() {
                     ) : (
                       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "15px" }}>
                         <div>
-                          <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                          <label style={{ display: "block", marginBottom: "8px", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                             Name * <span style={{ color: "#ef4444" }}>●</span>
                           </label>
                           <input
@@ -1802,18 +1794,18 @@ function QuotationManagement() {
                               width: "100%",
                               padding: isMobile ? "14px 12px" : "12px", // Larger touch target
                               borderRadius: "8px",
-                              border: "1px solid #d1d5db",
+                              border: "1px solid rgba(255,255,255,0.1)",
                               fontSize: "16px", // Prevent iOS zoom
                               transition: "all 0.2s",
                               minHeight: "44px", // Touch target
                               boxSizing: "border-box",
                             }}
-                            onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
-                            onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
+                            onFocus={(e) => (e.target.style.borderColor = "#4F5DFF")}
+                            onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
                           />
                         </div>
                         <div>
-                          <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                          <label style={{ display: "block", marginBottom: "8px", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                             Mobile * <span style={{ color: "#ef4444" }}>●</span>
                           </label>
                           <input
@@ -1826,18 +1818,18 @@ function QuotationManagement() {
                               width: "100%",
                               padding: isMobile ? "14px 12px" : "12px", // Larger touch target
                               borderRadius: "8px",
-                              border: "1px solid #d1d5db",
+                              border: "1px solid rgba(255,255,255,0.1)",
                               fontSize: "16px", // Prevent iOS zoom
                               transition: "all 0.2s",
                               minHeight: "44px", // Touch target
                               boxSizing: "border-box",
                             }}
-                            onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
-                            onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
+                            onFocus={(e) => (e.target.style.borderColor = "#4F5DFF")}
+                            onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
                           />
                         </div>
                         <div>
-                          <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                          <label style={{ display: "block", marginBottom: "8px", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                             Email (Optional)
                           </label>
                           <input
@@ -1849,18 +1841,18 @@ function QuotationManagement() {
                               width: "100%",
                               padding: isMobile ? "14px 12px" : "12px", // Larger touch target
                               borderRadius: "8px",
-                              border: "1px solid #d1d5db",
+                              border: "1px solid rgba(255,255,255,0.1)",
                               fontSize: "16px", // Prevent iOS zoom
                               transition: "all 0.2s",
                               minHeight: "44px", // Touch target
                               boxSizing: "border-box",
                             }}
-                            onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
-                            onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
+                            onFocus={(e) => (e.target.style.borderColor = "#4F5DFF")}
+                            onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
                           />
                         </div>
                         <div>
-                          <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                          <label style={{ display: "block", marginBottom: "8px", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                             Address (Optional)
                           </label>
                           <input
@@ -1872,14 +1864,14 @@ function QuotationManagement() {
                               width: "100%",
                               padding: isMobile ? "14px 12px" : "12px", // Larger touch target
                               borderRadius: "8px",
-                              border: "1px solid #d1d5db",
+                              border: "1px solid rgba(255,255,255,0.1)",
                               fontSize: "16px", // Prevent iOS zoom
                               transition: "all 0.2s",
                               minHeight: "44px", // Touch target
                               boxSizing: "border-box",
                             }}
-                            onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
-                            onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
+                            onFocus={(e) => (e.target.style.borderColor = "#4F5DFF")}
+                            onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
                           />
                         </div>
                       </div>
@@ -1887,7 +1879,7 @@ function QuotationManagement() {
                   </div>
                   {/* ── Reference By (Architect) ─────────────────────────── */}
                   <div style={{ position: "relative" }}>
-                    <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                    <label style={{ display: "block", marginBottom: "8px", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                       🏛️ Reference By (Architect)
                     </label>
                     <div style={{ position: "relative" }}>
@@ -1907,42 +1899,43 @@ function QuotationManagement() {
                         onBlur={() => setTimeout(() => setArchDropOpen(false), 180)}
                         style={{
                           width: "100%", padding: "12px 36px 12px 12px", borderRadius: "8px",
-                          border: "1px solid #d1d5db", fontSize: "14px", boxSizing: "border-box",
-                          backgroundColor: selectedArch ? "#f0fdf4" : "white",
+                          border: "1.5px solid rgba(255,255,255,0.1)", fontSize: "14px", boxSizing: "border-box",
+                          backgroundColor: selectedArch ? "rgba(55,227,165,0.1)" : "rgba(255,255,255,0.06)",
+                          color: "#E2E8F0", outline: "none",
                         }}
                       />
                       {selectedArch && (
                         <button type="button" onClick={() => { setSelectedArch(null); setArchSearch(""); setFormData(p => ({ ...p, referenceArchitectId: null })); }}
-                          style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#94a3b8", fontSize: 16 }}>✕</button>
+                          style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#7180A6", fontSize: 16 }}>✕</button>
                       )}
                     </div>
                     {archDropOpen && (
-                      <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 1000, background: "white", border: "1px solid #d1d5db", borderRadius: "8px", boxShadow: "0 8px 25px rgba(0,0,0,0.12)", maxHeight: 200, overflowY: "auto", marginTop: 2 }}>
+                      <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 1000, background: "rgba(17,27,53,0.98)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", boxShadow: "0 8px 25px rgba(0,0,0,0.5)", maxHeight: 200, overflowY: "auto", marginTop: 2 }}>
                         <div onMouseDown={() => { setSelectedArch(null); setArchSearch(""); setFormData(p => ({ ...p, referenceArchitectId: null })); setArchDropOpen(false); }}
-                          style={{ padding: "10px 14px", cursor: "pointer", fontSize: 13, color: "#94a3b8", borderBottom: "1px solid #f1f5f9" }}
-                          onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}
+                          style={{ padding: "10px 14px", cursor: "pointer", fontSize: 13, color: "#7180A6", borderBottom: "1px solid rgba(255,255,255,0.07)" }}
+                          onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}
                           onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
                           — None
                         </div>
                         {architects.filter(a => !archSearch.trim() || a.name.toLowerCase().includes(archSearch.toLowerCase()) || a.mobile.includes(archSearch)).map(a => (
                           <div key={a.id}
                             onMouseDown={() => { setSelectedArch(a); setArchSearch(a.name); setFormData(p => ({ ...p, referenceArchitectId: a.id })); setArchDropOpen(false); }}
-                            style={{ padding: "10px 14px", cursor: "pointer", borderBottom: "1px solid #f1f5f9", backgroundColor: selectedArch?.id === a.id ? "#f0fdf4" : "transparent" }}
-                            onMouseEnter={e => e.currentTarget.style.background = "#f5f3ff"}
-                            onMouseLeave={e => e.currentTarget.style.background = selectedArch?.id === a.id ? "#f0fdf4" : "transparent"}>
-                            <div style={{ fontWeight: 600, fontSize: 13, color: "#0f172a" }}>🏛️ {a.name}</div>
-                            <div style={{ fontSize: 12, color: "#64748b" }}>📱 {a.mobile}</div>
+                            style={{ padding: "10px 14px", cursor: "pointer", borderBottom: "1px solid rgba(255,255,255,0.05)", backgroundColor: selectedArch?.id === a.id ? "rgba(79,93,255,0.15)" : "transparent" }}
+                            onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
+                            onMouseLeave={e => e.currentTarget.style.background = selectedArch?.id === a.id ? "rgba(79,93,255,0.15)" : "transparent"}>
+                            <div style={{ fontWeight: 600, fontSize: 13, color: "#E2E8F0" }}>🏛️ {a.name}</div>
+                            <div style={{ fontSize: 12, color: "#7180A6" }}>📱 {a.mobile}</div>
                           </div>
                         ))}
                       </div>
                     )}
                     {selectedArch
-                      ? <p style={{ marginTop: 5, fontSize: 12, color: "#16a34a", fontWeight: 500 }}>✅ {selectedArch.name} · 📱 {selectedArch.mobile}</p>
-                      : <p style={{ marginTop: 5, color: "#6b7280", fontSize: 12 }}>🏛️ Architect who referred this quotation (optional)</p>}
+                      ? <p style={{ marginTop: 5, fontSize: 12, color: "#37E3A5", fontWeight: 500 }}>✅ {selectedArch.name} · 📱 {selectedArch.mobile}</p>
+                      : <p style={{ marginTop: 5, color: "#7180A6", fontSize: 12 }}>🏛️ Architect who referred this quotation (optional)</p>}
                   </div>
 
                   <div>
-                    <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                    <label style={{ display: "block", marginBottom: "8px", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                       Billing Type * <span style={{ color: "#ef4444" }}>●</span>
                     </label>
                     <div
@@ -1951,8 +1944,8 @@ function QuotationManagement() {
                         gap: isMobile ? "10px" : "15px", // Smaller gap on mobile
                         padding: isMobile ? "10px" : "12px",
                         borderRadius: "8px",
-                        border: "1px solid #d1d5db",
-                        backgroundColor: "#f9fafb",
+                        border: "1px solid rgba(255,255,255,0.1)",
+                        backgroundColor: "rgba(255,255,255,0.04)",
                         flexWrap: isMobile ? "wrap" : "nowrap", // Wrap on mobile
                       }}
                     >
@@ -1964,7 +1957,7 @@ function QuotationManagement() {
                           cursor: "pointer",
                           padding: isMobile ? "12px 16px" : "8px 12px", // Larger touch target
                           borderRadius: "6px",
-                          backgroundColor: formData.billingType === "GST" ? "#eef2ff" : "transparent",
+                          backgroundColor: formData.billingType === "GST" ? "rgba(79,93,255,0.15)" : "transparent",
                           border: formData.billingType === "GST" ? "2px solid #6366f1" : "2px solid transparent",
                           transition: "all 0.2s",
                           flex: isMobile ? "1 1 100%" : "1", // Full width on mobile
@@ -1981,7 +1974,7 @@ function QuotationManagement() {
                         />
                         <span style={{ 
                           fontWeight: formData.billingType === "GST" ? "600" : "400",
-                          color: "#1f2937",
+                          color: "#ffffff",
                           fontSize: "14px"
                         }}>💰 GST</span>
                       </label>
@@ -1993,7 +1986,7 @@ function QuotationManagement() {
                           cursor: "pointer",
                           padding: isMobile ? "12px 16px" : "8px 12px", // Larger touch target
                           borderRadius: "6px",
-                          backgroundColor: formData.billingType === "NON_GST" ? "#eef2ff" : "transparent",
+                          backgroundColor: formData.billingType === "NON_GST" ? "rgba(79,93,255,0.15)" : "transparent",
                           border: formData.billingType === "NON_GST" ? "2px solid #6366f1" : "2px solid transparent",
                           transition: "all 0.2s",
                           flex: isMobile ? "1 1 100%" : "1", // Full width on mobile
@@ -2010,12 +2003,12 @@ function QuotationManagement() {
                         />
                         <span style={{ 
                           fontWeight: formData.billingType === "NON_GST" ? "600" : "400",
-                          color: "#1f2937",
+                          color: "#ffffff",
                           fontSize: "14px"
                         }}>💵 Non-GST</span>
                       </label>
                     </div>
-                    <p style={{ marginTop: "5px", color: "#6b7280", fontSize: "12px" }}>
+                    <p style={{ marginTop: "5px", color: "#7180A6", fontSize: "12px" }}>
                       {formData.billingType === "GST"
                         ? "ℹ️ GST billing includes tax calculations (CGST/SGST or IGST)"
                         : "ℹ️ Non-GST billing - no tax calculations"}
@@ -2030,7 +2023,7 @@ function QuotationManagement() {
                 width: "100%",
                 boxSizing: "border-box",
               }}>
-                <h3 style={{ color: "#374151", fontSize: "13px", fontWeight: "700", marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                <h3 style={{ color: "#A9B3D1", fontSize: "13px", fontWeight: "700", marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                   📅 Quotation Dates
                 </h3>
                   <div style={{
@@ -2044,7 +2037,7 @@ function QuotationManagement() {
                       width: "100%",
                       boxSizing: "border-box",
                     }}>
-                      <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                      <label style={{ display: "block", marginBottom: "8px", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                         Quotation Date * <span style={{ color: "#ef4444" }}>●</span>
                       </label>
                     <input
@@ -2064,21 +2057,21 @@ function QuotationManagement() {
                         maxWidth: "100%",
                         padding: isMobile ? "14px 12px" : "12px",
                         borderRadius: "8px",
-                        border: "1px solid #d1d5db",
+                        border: "1px solid rgba(255,255,255,0.1)",
                         fontSize: "16px", // Prevent iOS zoom
                         transition: "all 0.2s",
                         boxSizing: "border-box",
                         minHeight: "44px", // Touch target
                       }}
-                      onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
-                      onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
+                      onFocus={(e) => (e.target.style.borderColor = "#4F5DFF")}
+                      onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
                     />
                   </div>
                   <div style={{
                     width: "100%",
                     boxSizing: "border-box",
                   }}>
-                    <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                    <label style={{ display: "block", marginBottom: "8px", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                       Valid Until (Optional)
                     </label>
                     <input
@@ -2091,14 +2084,14 @@ function QuotationManagement() {
                         maxWidth: "100%",
                         padding: isMobile ? "14px 12px" : "12px",
                         borderRadius: "8px",
-                        border: "1px solid #d1d5db",
+                        border: "1px solid rgba(255,255,255,0.1)",
                         fontSize: "16px", // Prevent iOS zoom
                         transition: "all 0.2s",
                         boxSizing: "border-box",
                         minHeight: "44px", // Touch target
                       }}
-                      onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
-                      onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
+                      onFocus={(e) => (e.target.style.borderColor = "#4F5DFF")}
+                      onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
                     />
                   </div>
                 </div>
@@ -2106,8 +2099,8 @@ function QuotationManagement() {
 
               {/* GST Fields (Conditional) */}
               {formData.billingType === "GST" && (
-                <div style={{ marginBottom: "18px", padding: "14px", backgroundColor: "#f0f9ff", borderRadius: "8px", border: "1px solid #bae6fd" }}>
-                  <h3 style={{ color: "#374151", fontSize: "13px", fontWeight: "700", marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                <div style={{ marginBottom: "18px", padding: "14px", backgroundColor: "rgba(79,93,255,0.08)", borderRadius: "8px", border: "1px solid rgba(79,93,255,0.3)" }}>
+                  <h3 style={{ color: "#A9B3D1", fontSize: "13px", fontWeight: "700", marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                     🧾 GST Information
                   </h3>
                   <div style={{
@@ -2117,7 +2110,7 @@ function QuotationManagement() {
                     width: "100%",
                   }}>
                     <div>
-                      <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                      <label style={{ display: "block", marginBottom: "8px", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                         GST Percentage (%) * <span style={{ color: "#ef4444" }}>●</span>
                       </label>
                       <input
@@ -2133,18 +2126,18 @@ function QuotationManagement() {
                           width: "100%",
                           padding: isMobile ? "14px 12px" : "12px",
                           borderRadius: "8px",
-                          border: "1px solid #d1d5db",
+                          border: "1px solid rgba(255,255,255,0.1)",
                           fontSize: "16px", // Prevent iOS zoom
                           transition: "all 0.2s",
                           minHeight: "44px", // Touch target
                           boxSizing: "border-box",
                         }}
-                        onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
-                        onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
+                        onFocus={(e) => (e.target.style.borderColor = "#4F5DFF")}
+                        onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
                       />
                     </div>
                     <div>
-                      <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                      <label style={{ display: "block", marginBottom: "8px", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                         Customer State (Optional)
                       </label>
                       <input
@@ -2156,14 +2149,14 @@ function QuotationManagement() {
                           width: "100%",
                           padding: isMobile ? "14px 12px" : "12px",
                           borderRadius: "8px",
-                          border: "1px solid #d1d5db",
+                          border: "1px solid rgba(255,255,255,0.1)",
                           fontSize: "16px", // Prevent iOS zoom
                           transition: "all 0.2s",
                           minHeight: "44px", // Touch target
                           boxSizing: "border-box",
                         }}
-                        onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
-                        onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
+                        onFocus={(e) => (e.target.style.borderColor = "#4F5DFF")}
+                        onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
                       />
                     </div>
                   </div>
@@ -2173,7 +2166,7 @@ function QuotationManagement() {
 
               {/* Shipping Address Section */}
               <div style={{ marginBottom: "30px" }}>
-                <h3 style={{ color: "#374151", fontSize: "18px", fontWeight: "600", marginBottom: "15px" }}>
+                <h3 style={{ color: "#A9B3D1", fontSize: "18px", fontWeight: "600", marginBottom: "15px" }}>
                   📦 Shipping Address (Optional)
                 </h3>
                 <div style={{ 
@@ -2183,7 +2176,7 @@ function QuotationManagement() {
                   <label style={{ 
                     display: "block", 
                     marginBottom: "8px", 
-                    color: "#374151", 
+                    color: "#A9B3D1", 
                     fontWeight: "500", 
                     fontSize: "14px" 
                   }}>
@@ -2198,7 +2191,7 @@ function QuotationManagement() {
                       maxWidth: "100%",
                       padding: isMobile ? "14px 12px" : "12px",
                       borderRadius: "8px",
-                      border: "1px solid #d1d5db",
+                      border: "1px solid rgba(255,255,255,0.1)",
                       fontSize: "16px", // Prevent iOS zoom
                       minHeight: isMobile ? "100px" : "80px",
                       resize: "vertical",
@@ -2206,10 +2199,10 @@ function QuotationManagement() {
                       transition: "all 0.2s",
                       boxSizing: "border-box",
                     }}
-                    onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
-                    onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
+                    onFocus={(e) => (e.target.style.borderColor = "#4F5DFF")}
+                    onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
                   />
-                  <p style={{ marginTop: "5px", color: "#6b7280", fontSize: "12px" }}>
+                  <p style={{ marginTop: "5px", color: "#7180A6", fontSize: "12px" }}>
                     📦 This address will be displayed in quotation, invoice, estimate, and delivery challan PDFs
                   </p>
                 </div>
@@ -2218,7 +2211,7 @@ function QuotationManagement() {
               {/* Items Section */}
               <div style={{ marginBottom: "18px" }}>
                 <div style={{ marginBottom: "12px" }}>
-                  <h3 style={{ color: "#374151", fontSize: "13px", fontWeight: "700", margin: 0, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  <h3 style={{ color: "#A9B3D1", fontSize: "13px", fontWeight: "700", margin: 0, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                     📦 Quotation Items
                   </h3>
                 </div>
@@ -2227,11 +2220,11 @@ function QuotationManagement() {
                   <div
                     key={index}
                     style={{
-                      border: "1.5px solid #e5e7eb",
+                      border: "1.5px solid rgba(255,255,255,0.08)",
                       padding: isMobile ? "12px" : "16px",
                       marginBottom: isMobile ? "12px" : "14px",
                       borderRadius: "12px",
-                      backgroundColor: "#fafafa",
+                      backgroundColor: "rgba(17,27,53,0.95)",
                       transition: "all 0.2s",
                       width: "100%",
                       maxWidth: "100%",
@@ -2239,20 +2232,20 @@ function QuotationManagement() {
                       overflow: "hidden", // Prevent content from overflowing
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = "#6366f1";
+                      e.currentTarget.style.borderColor = "#4F5DFF";
                       e.currentTarget.style.boxShadow = "0 4px 6px -1px rgba(0, 0, 0, 0.1)";
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = "#e5e7eb";
+                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
                       e.currentTarget.style.boxShadow = "none";
                     }}
                   >
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        <div style={{ width: "24px", height: "24px", borderRadius: "50%", backgroundColor: "#6366f1", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "700", fontSize: "12px" }}>
+                        <div style={{ width: "24px", height: "24px", borderRadius: "50%", backgroundcolor: "#818CF8", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "700", fontSize: "12px" }}>
                           {index + 1}
                         </div>
-                        <strong style={{ color: "#1f2937", fontSize: "14px" }}>Item {index + 1}</strong>
+                        <strong style={{ color: "#ffffff", fontSize: "14px" }}>Item {index + 1}</strong>
                       </div>
                       {formData.items.length > 1 && (
                         <button
@@ -2277,7 +2270,7 @@ function QuotationManagement() {
                     }}>
                       {/* Glass Type Dropdown */}
                       <div style={{ marginBottom: "16px" }}>
-                        <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                        <label style={{ display: "block", marginBottom: "8px", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                           Glass Type * <span style={{ color: "#ef4444" }}>●</span>
                         </label>
                         <select
@@ -2288,7 +2281,7 @@ function QuotationManagement() {
                             width: "100%",
                             padding: isMobile ? "14px 12px" : "12px",
                             borderRadius: "8px",
-                            border: "1px solid #d1d5db",
+                            border: "1px solid rgba(255,255,255,0.1)",
                             fontSize: "16px",
                             minHeight: "44px",
                             boxSizing: "border-box",
@@ -2303,7 +2296,7 @@ function QuotationManagement() {
 
                       {/* Thickness Input */}
                       <div style={{ position: "relative" }}>
-                        <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                        <label style={{ display: "block", marginBottom: "8px", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                           Thickness * <span style={{ color: "#ef4444" }}>●</span>
                         </label>
                         <div style={{ position: "relative" }}>
@@ -2343,20 +2336,20 @@ function QuotationManagement() {
                               width: "100%",
                               padding: isMobile ? "14px 40px 14px 12px" : "12px 40px 12px 12px",
                               borderRadius: "8px",
-                              border: "1px solid #d1d5db",
+                              border: "1px solid rgba(255,255,255,0.1)",
                               fontSize: "16px", // Prevent iOS zoom
                               transition: "all 0.2s",
                               boxSizing: "border-box",
                               minHeight: "44px", // Touch target
                             }}
                             onFocus={(e) => {
-                              e.target.style.borderColor = "#6366f1";
+                              e.target.style.borderColor = "#4F5DFF";
                               setShowStockDropdown({ ...showStockDropdown, [index]: true });
                               setStockDropdownType({ ...stockDropdownType, [index]: "thickness" });
                             }}
                             onBlur={(e) => {
                               setTimeout(() => {
-                                e.target.style.borderColor = "#d1d5db";
+                                e.target.style.borderColor = "rgba(255,255,255,0.1)";
                                 setShowStockDropdown({ ...showStockDropdown, [index]: false });
                               }, 200);
                             }}
@@ -2389,8 +2382,8 @@ function QuotationManagement() {
                               left: 0,
                               right: 0,
                               zIndex: 1000,
-                              backgroundColor: "white",
-                              border: "2px solid #6366f1",
+                              backgroundColor: "rgba(17,27,53,0.95)",
+                              border: "2px solid rgba(79,93,255,0.6)",
                               borderRadius: "8px",
                               marginTop: "4px",
                               maxHeight: "400px",
@@ -2398,11 +2391,11 @@ function QuotationManagement() {
                               boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
                             }}
                           >
-                            <div style={{ padding: "8px 12px", backgroundColor: "#f3f4f6", borderBottom: "1px solid #e5e7eb", fontWeight: "600", fontSize: "12px", color: "#6b7280" }}>
+                            <div style={{ padding: "8px 12px", backgroundColor: "rgba(17,27,53,0.7)", borderBottom: "1px solid rgba(255,255,255,0.07)", fontWeight: "600", fontSize: "12px", color: "#7180A6" }}>
                               Available Stock ({allStock.filter(s => s.quantity > 0).length} items)
                             </div>
                             {allStock.filter(s => s.quantity > 0).length === 0 ? (
-                              <div style={{ padding: "16px", textAlign: "center", color: "#9ca3af", fontSize: "14px" }}>
+                              <div style={{ padding: "16px", textAlign: "center", color: "#7180A6", fontSize: "14px" }}>
                                 No stock available
                               </div>
                             ) : (
@@ -2421,12 +2414,12 @@ function QuotationManagement() {
                                       key={`${stockItem.id}-${stockIndex}`}
                                       style={{
                                         padding: "12px",
-                                        borderBottom: "1px solid #e5e7eb",
+                                        borderBottom: "1px solid rgba(255,255,255,0.07)",
                                         cursor: "pointer",
                                         transition: "background-color 0.2s",
                                       }}
-                                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f3f4f6")}
-                                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "white")}
+                                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.08)")}
+                                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.08)")}
                                       onClick={(e) => {
                                         e.preventDefault();
                                         e.stopPropagation();
@@ -2448,16 +2441,16 @@ function QuotationManagement() {
                                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                                         <div style={{ flex: 1 }}>
                                           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
-                                            <div style={{ fontWeight: "600", color: "#1f2937", fontSize: "14px" }}>
+                                            <div style={{ fontWeight: "600", color: "#ffffff", fontSize: "14px" }}>
                                               {glassType}
                                             </div>
                                             {thicknessDisplay && (
-                                              <span style={{ fontSize: "12px", color: "#6b7280", backgroundColor: "#e5e7eb", padding: "2px 6px", borderRadius: "4px" }}>
+                                              <span style={{ fontSize: "12px", color: "#7180A6", backgroundColor: "rgba(255,255,255,0.08)", padding: "2px 6px", borderRadius: "4px" }}>
                                                 {thicknessDisplay}
                                               </span>
                                             )}
                                           </div>
-                                          <div style={{ fontSize: "12px", color: "#6b7280", display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "4px" }}>
+                                          <div style={{ fontSize: "12px", color: "#7180A6", display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "4px" }}>
                                             <span>📏 Size: {size}</span>
                                             <span>📍 Stand: {stockItem.standNo}</span>
                                             <span>📦 Qty: {stockItem.quantity}</span>
@@ -2483,7 +2476,7 @@ function QuotationManagement() {
                             onChange={(e) => handleItemChange(index, "sizeInMM", e.target.checked)}
                             style={{ cursor: "pointer", width: "18px", height: "18px" }}
                           />
-                          <span style={{ color: "#374151", fontWeight: "500", fontSize: "14px" }}>Size in mm</span>
+                          <span style={{ color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>Size in mm</span>
                         </label>
                       </div>
                       
@@ -2491,7 +2484,7 @@ function QuotationManagement() {
                       <div style={{ display: "flex", gap: 8, width: "100%", boxSizing: "border-box" }}>
                         {/* Height */}
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <label style={{ display: "block", marginBottom: 5, color: "#374151", fontWeight: "500", fontSize: 13 }}>
+                          <label style={{ display: "block", marginBottom: 5, color: "#A9B3D1", fontWeight: "500", fontSize: 13 }}>
                             H * <span style={{ color: "#ef4444" }}>●</span>
                           </label>
                           <div style={{ display: "flex", gap: 4 }}>
@@ -2504,16 +2497,16 @@ function QuotationManagement() {
                               style={{
                                 flex: 1, minWidth: 0,
                                 padding: "10px 8px",
-                                borderRadius: 7, border: "1px solid #d1d5db",
+                                borderRadius: 7, border: "1px solid rgba(255,255,255,0.1)",
                                 fontSize: 16, boxSizing: "border-box", minHeight: 44,
                               }}
-                              onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
-                              onBlur={(e)  => (e.target.style.borderColor = "#d1d5db")}
+                              onFocus={(e) => (e.target.style.borderColor = "#4F5DFF")}
+                              onBlur={(e)  => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
                             />
                             <div style={{
                               width: 44, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
-                              borderRadius: 7, border: "1px solid #d1d5db", backgroundColor: "#f3f4f6",
-                              fontSize: 12, color: "#6b7280", minHeight: 44,
+                              borderRadius: 7, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(17,27,53,0.7)",
+                              fontSize: 12, color: "#7180A6", minHeight: 44,
                             }}>
                               {item.sizeInMM ? "MM" : "IN"}
                             </div>
@@ -2522,7 +2515,7 @@ function QuotationManagement() {
 
                         {/* Width */}
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <label style={{ display: "block", marginBottom: 5, color: "#374151", fontWeight: "500", fontSize: 13 }}>
+                          <label style={{ display: "block", marginBottom: 5, color: "#A9B3D1", fontWeight: "500", fontSize: 13 }}>
                             W * <span style={{ color: "#ef4444" }}>●</span>
                           </label>
                           <div style={{ display: "flex", gap: 4 }}>
@@ -2535,16 +2528,16 @@ function QuotationManagement() {
                               style={{
                                 flex: 1, minWidth: 0,
                                 padding: "10px 8px",
-                                borderRadius: 7, border: "1px solid #d1d5db",
+                                borderRadius: 7, border: "1px solid rgba(255,255,255,0.1)",
                                 fontSize: 16, boxSizing: "border-box", minHeight: 44,
                               }}
-                              onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
-                              onBlur={(e)  => (e.target.style.borderColor = "#d1d5db")}
+                              onFocus={(e) => (e.target.style.borderColor = "#4F5DFF")}
+                              onBlur={(e)  => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
                             />
                             <div style={{
                               width: 44, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
-                              borderRadius: 7, border: "1px solid #d1d5db", backgroundColor: "#f3f4f6",
-                              fontSize: 12, color: "#6b7280", minHeight: 44,
+                              borderRadius: 7, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(17,27,53,0.7)",
+                              fontSize: 12, color: "#7180A6", minHeight: 44,
                             }}>
                               {item.sizeInMM ? "MM" : "IN"}
                             </div>
@@ -2553,16 +2546,16 @@ function QuotationManagement() {
                       </div>
                       {/* Table Selection — always 2 columns */}
                       <div style={{ gridColumn: isMobile ? "1" : "1 / -1", marginTop: "8px", marginBottom: "6px" }}>
-                        <div style={{ fontSize: 12, fontWeight: 600, color: "#6b7280", marginBottom: 6 }}>📊 Table Selection</div>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: "#7180A6", marginBottom: 6 }}>📊 Table Selection</div>
                         <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "8px" }}>
                           {/* Height Table */}
                           <div style={{
-                            border: "1px solid #e5e7eb",
+                            border: "1px solid rgba(255,255,255,0.08)",
                             borderRadius: "7px",
                             padding: "10px",
-                            backgroundColor: "#fafafa",
+                            backgroundColor: "rgba(17,27,53,0.95)",
                           }}>
-                            <label style={{ display: "block", marginBottom: "6px", color: "#374151", fontWeight: "500", fontSize: "12px" }}>
+                            <label style={{ display: "block", marginBottom: "6px", color: "#A9B3D1", fontWeight: "500", fontSize: "12px" }}>
                               Height Tbl
                             </label>
                             <div style={{ display: "flex", gap: "6px", marginBottom: "6px", alignItems: "center" }}>
@@ -2613,15 +2606,15 @@ function QuotationManagement() {
                                   width: isMobile ? "70px" : "60px",
                                   padding: "8px",
                                   borderRadius: "6px",
-                                  border: "1px solid #d1d5db",
+                                  border: "1px solid rgba(255,255,255,0.1)",
                                   fontSize: "14px",
                                   textAlign: "center",
                                 }}
                               />
                             </div>
                             {item.selectedHeightTableValue && (
-                              <div style={{ marginTop: "6px", padding: "5px 8px", backgroundColor: "#eef2ff", borderRadius: "5px", border: "1px solid #6366f1" }}>
-                                <p style={{ fontSize: "12px", color: "#6366f1", fontWeight: "600", margin: 0 }}>
+                              <div style={{ marginTop: "6px", padding: "5px 8px", backgroundColor: "rgba(79,93,255,0.15)", borderRadius: "5px", border: "1px solid rgba(79,93,255,0.5)" }}>
+                                <p style={{ fontSize: "12px", color: "#818CF8", fontWeight: "600", margin: 0 }}>
                                   ✓ {item.selectedHeightTableValue}
                                 </p>
                               </div>
@@ -2630,13 +2623,13 @@ function QuotationManagement() {
 
                           {/* Width Table */}
                           <div style={{
-                            border: "1px solid #e5e7eb",
+                            border: "1px solid rgba(255,255,255,0.08)",
                             borderRadius: "7px",
                             padding: "10px",
-                            backgroundColor: "#fafafa",
+                            backgroundColor: "rgba(17,27,53,0.95)",
                             boxSizing: "border-box",
                           }}>
-                            <label style={{ display: "block", marginBottom: "6px", color: "#374151", fontWeight: "500", fontSize: "12px" }}>
+                            <label style={{ display: "block", marginBottom: "6px", color: "#A9B3D1", fontWeight: "500", fontSize: "12px" }}>
                               Width Tbl
                             </label>
                             <div style={{ display: "flex", gap: "6px", marginBottom: "6px", alignItems: "center" }}>
@@ -2687,15 +2680,15 @@ function QuotationManagement() {
                                   width: isMobile ? "70px" : "60px",
                                   padding: "8px",
                                   borderRadius: "6px",
-                                  border: "1px solid #d1d5db",
+                                  border: "1px solid rgba(255,255,255,0.1)",
                                   fontSize: "14px",
                                   textAlign: "center",
                                 }}
                               />
                             </div>
                             {item.selectedWidthTableValue && (
-                              <div style={{ marginTop: "6px", padding: "5px 8px", backgroundColor: "#eef2ff", borderRadius: "5px", border: "1px solid #6366f1" }}>
-                                <p style={{ fontSize: "12px", color: "#6366f1", fontWeight: "600", margin: 0 }}>
+                              <div style={{ marginTop: "6px", padding: "5px 8px", backgroundColor: "rgba(79,93,255,0.15)", borderRadius: "5px", border: "1px solid rgba(79,93,255,0.5)" }}>
+                                <p style={{ fontSize: "12px", color: "#818CF8", fontWeight: "600", margin: 0 }}>
                                   ✓ {item.selectedWidthTableValue}
                                 </p>
                               </div>
@@ -2707,7 +2700,7 @@ function QuotationManagement() {
 
                       {/* Polish Type Section */}
                       <div style={{ gridColumn: isMobile ? "1" : "1 / -1", marginTop: "8px", marginBottom: "6px" }}>
-                        <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                        <label style={{ display: "block", marginBottom: "8px", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                           Polish Type (Optional)
                         </label>
                         <div style={{
@@ -2715,8 +2708,8 @@ function QuotationManagement() {
                           gap: "8px",
                           padding: "6px",
                           borderRadius: "8px",
-                          border: "1px solid #d1d5db",
-                          backgroundColor: "#f9fafb",
+                          border: "1px solid rgba(255,255,255,0.1)",
+                          backgroundColor: "rgba(255,255,255,0.04)",
                           flexWrap: "nowrap",
                         }}>
                           <label style={{
@@ -2726,7 +2719,7 @@ function QuotationManagement() {
                             cursor: "pointer",
                             padding: "8px 10px",
                             borderRadius: "6px",
-                            backgroundColor: item.polish === "Hand-Polish" ? "#eef2ff" : "transparent",
+                            backgroundColor: item.polish === "Hand-Polish" ? "rgba(79,93,255,0.15)" : "transparent",
                             border: item.polish === "Hand-Polish" ? "2px solid #6366f1" : "2px solid transparent",
                             transition: "all 0.2s",
                             flex: 1,
@@ -2741,7 +2734,7 @@ function QuotationManagement() {
                               onChange={(e) => handleItemChange(index, "polish", e.target.value)}
                               style={{ cursor: "pointer" }}
                             />
-                            <span style={{ fontWeight: item.polish === "Hand-Polish" ? "600" : "400", color: "#374151", fontSize: "13px" }}>Hand-Polish</span>
+                            <span style={{ fontWeight: item.polish === "Hand-Polish" ? "600" : "400", color: "#A9B3D1", fontSize: "13px" }}>Hand-Polish</span>
                           </label>
                           <label style={{
                             display: "flex",
@@ -2750,7 +2743,7 @@ function QuotationManagement() {
                             cursor: "pointer",
                             padding: "8px 10px",
                             borderRadius: "6px",
-                            backgroundColor: item.polish === "CNC Polish" ? "#eef2ff" : "transparent",
+                            backgroundColor: item.polish === "CNC Polish" ? "rgba(79,93,255,0.15)" : "transparent",
                             border: item.polish === "CNC Polish" ? "2px solid #6366f1" : "2px solid transparent",
                             transition: "all 0.2s",
                             flex: 1,
@@ -2765,30 +2758,30 @@ function QuotationManagement() {
                               onChange={(e) => handleItemChange(index, "polish", e.target.value)}
                               style={{ cursor: "pointer" }}
                             />
-                            <span style={{ fontWeight: item.polish === "CNC Polish" ? "600" : "400", color: "#374151", fontSize: "13px" }}>CNC Polish</span>
+                            <span style={{ fontWeight: item.polish === "CNC Polish" ? "600" : "400", color: "#A9B3D1", fontSize: "13px" }}>CNC Polish</span>
                           </label>
                         </div>
-                        <p style={{ marginTop: "5px", color: "#6b7280", fontSize: "11px" }}>✨ Select the type of polish for this item</p>
+                        <p style={{ marginTop: "5px", color: "#7180A6", fontSize: "11px" }}>✨ Select the type of polish for this item</p>
                       </div>
 
                       {/* Polish Selection Section */}
                       <div style={{ gridColumn: isMobile ? "1" : "1 / -1", marginTop: "6px", marginBottom: "6px" }}>
-                        <div style={{ fontSize: 12, fontWeight: 600, color: "#6b7280", marginBottom: 6 }}>✨ Polish Selection</div>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: "#7180A6", marginBottom: 6 }}>✨ Polish Selection</div>
 
                         {/* Rate Configuration — always 3 columns */}
                         <div style={{
-                          border: "1px solid #e5e7eb",
+                          border: "1px solid rgba(255,255,255,0.08)",
                           borderRadius: "7px",
                           padding: "10px",
                           marginBottom: "8px",
-                          backgroundColor: "#fafafa",
+                          backgroundColor: "rgba(17,27,53,0.95)",
                         }}>
-                          <label style={{ display: "block", marginBottom: "6px", color: "#374151", fontWeight: "500", fontSize: "12px" }}>
+                          <label style={{ display: "block", marginBottom: "6px", color: "#A9B3D1", fontWeight: "500", fontSize: "12px" }}>
                             Rate/Rft
                           </label>
                           <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)", gap: "8px" }}>
                             <div>
-                              <label style={{ display: "block", marginBottom: "5px", fontSize: isMobile ? "11px" : "13px", color: "#6b7280" }}>{isMobile ? "Polish" : "P (Polish)"}</label>
+                              <label style={{ display: "block", marginBottom: "5px", fontSize: isMobile ? "11px" : "13px", color: "#7180A6" }}>{isMobile ? "Polish" : "P (Polish)"}</label>
                               <input
                                 type="text"
                                 value={item.polishRates?.P !== undefined && item.polishRates?.P !== null ? String(item.polishRates.P) : "15"}
@@ -2831,13 +2824,13 @@ function QuotationManagement() {
                                   width: "100%",
                                   padding: "8px",
                                   borderRadius: "6px",
-                                  border: "1px solid #d1d5db",
+                                  border: "1px solid rgba(255,255,255,0.1)",
                                   fontSize: "14px",
                                 }}
                               />
                             </div>
                             <div>
-                              <label style={{ display: "block", marginBottom: "5px", fontSize: isMobile ? "11px" : "13px", color: "#6b7280" }}>{isMobile ? "Half-Rnd" : "H (Half-round)"}</label>
+                              <label style={{ display: "block", marginBottom: "5px", fontSize: isMobile ? "11px" : "13px", color: "#7180A6" }}>{isMobile ? "Half-Rnd" : "H (Half-round)"}</label>
                               <input
                                 type="text"
                                 value={item.polishRates?.H !== undefined && item.polishRates?.H !== null ? String(item.polishRates.H) : "75"}
@@ -2880,13 +2873,13 @@ function QuotationManagement() {
                                   width: "100%",
                                   padding: "8px",
                                   borderRadius: "6px",
-                                  border: "1px solid #d1d5db",
+                                  border: "1px solid rgba(255,255,255,0.1)",
                                   fontSize: "14px",
                                 }}
                               />
                             </div>
                             <div>
-                              <label style={{ display: "block", marginBottom: "5px", fontSize: isMobile ? "11px" : "13px", color: "#6b7280" }}>{isMobile ? "Beveling" : "B (Beveling)"}</label>
+                              <label style={{ display: "block", marginBottom: "5px", fontSize: isMobile ? "11px" : "13px", color: "#7180A6" }}>{isMobile ? "Beveling" : "B (Beveling)"}</label>
                               <input
                                 type="text"
                                 value={item.polishRates?.B !== undefined && item.polishRates?.B !== null ? String(item.polishRates.B) : "75"}
@@ -2929,7 +2922,7 @@ function QuotationManagement() {
                                   width: "100%",
                                   padding: "8px",
                                   borderRadius: "6px",
-                                  border: "1px solid #d1d5db",
+                                  border: "1px solid rgba(255,255,255,0.1)",
                                   fontSize: "14px",
                                 }}
                               />
@@ -2939,16 +2932,16 @@ function QuotationManagement() {
 
                         {/* Polish Selection Table */}
                         <div style={{
-                          border: "1px solid #e5e7eb",
+                          border: "1px solid rgba(255,255,255,0.08)",
                           borderRadius: "7px",
                           padding: "8px",
-                          backgroundColor: "#fafafa",
+                          backgroundColor: "rgba(17,27,53,0.95)",
                         }}>
                           {isMobile ? (
                             // Mobile: flex card layout — no horizontal scroll
                             <div>
                               {/* Header */}
-                              <div style={{ display: "flex", alignItems: "center", padding: "6px 4px 8px", borderBottom: "2px solid #e5e7eb" }}>
+                              <div style={{ display: "flex", alignItems: "center", padding: "6px 4px 8px", borderBottom: "2px solid rgba(255,255,255,0.08)" }}>
                                 <div style={{ width: 28, flexShrink: 0 }}>
                                   <input
                                     type="checkbox"
@@ -2971,11 +2964,11 @@ function QuotationManagement() {
                                     style={{ cursor: "pointer", width: 16, height: 16 }}
                                   />
                                 </div>
-                                <div style={{ flex: 1, fontSize: 12, fontWeight: 700, color: "#374151", textTransform: "uppercase", letterSpacing: "0.05em" }}>Side</div>
+                                <div style={{ flex: 1, fontSize: 12, fontWeight: 700, color: "#A9B3D1", textTransform: "uppercase", letterSpacing: "0.05em" }}>Side</div>
                                 <div style={{ display: "flex" }}>
                                   {["P", "H", "B"].map(type => (
                                     <label key={type} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, minWidth: 52, cursor: "pointer" }}>
-                                      <span style={{ fontSize: 13, fontWeight: 700, color: "#374151" }}>{type}</span>
+                                      <span style={{ fontSize: 13, fontWeight: 700, color: "#A9B3D1" }}>{type}</span>
                                       <input
                                         type="checkbox"
                                         checked={item.polishSelection?.every(row => row.checked && row.type === type) || false}
@@ -2993,7 +2986,7 @@ function QuotationManagement() {
                                 { side: "Height 2", checked: false, type: null, rate: 0 },
                                 { side: "Width 2",  checked: false, type: null, rate: 0 },
                               ]).map((row, rowIndex) => (
-                                <div key={rowIndex} style={{ display: "flex", alignItems: "center", padding: "10px 4px", borderBottom: "1px solid #e5e7eb" }}>
+                                <div key={rowIndex} style={{ display: "flex", alignItems: "center", padding: "10px 4px", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
                                   <div style={{ width: 28, flexShrink: 0 }}>
                                     <input
                                       type="checkbox"
@@ -3003,9 +2996,9 @@ function QuotationManagement() {
                                     />
                                   </div>
                                   <div style={{ flex: 1, minWidth: 0 }}>
-                                    <div style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>{row.side}</div>
+                                    <div style={{ fontSize: 13, color: "#A9B3D1", fontWeight: 500 }}>{row.side}</div>
                                     {row.checked && row.type && (
-                                      <div style={{ fontSize: 11, color: "#6366f1", fontWeight: 600, marginTop: 2 }}>₹{row.rate || 0}/ft</div>
+                                      <div style={{ fontSize: 11, color: "#818CF8", fontWeight: 600, marginTop: 2 }}>₹{row.rate || 0}/ft</div>
                                     )}
                                   </div>
                                   <div style={{ display: "flex" }}>
@@ -3030,8 +3023,8 @@ function QuotationManagement() {
                             <div style={{ overflowX: "auto" }}>
                               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                                 <thead>
-                                  <tr style={{ borderBottom: "2px solid #e5e7eb" }}>
-                                    <th style={{ padding: "10px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#374151" }}>
+                                  <tr style={{ borderBottom: "2px solid rgba(255,255,255,0.08)" }}>
+                                    <th style={{ padding: "10px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#A9B3D1" }}>
                                       <label style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "4px", cursor: "pointer" }}>
                                         <span>Side</span>
                                         <input
@@ -3058,7 +3051,7 @@ function QuotationManagement() {
                                         />
                                       </label>
                                     </th>
-                                    <th style={{ padding: "10px", textAlign: "center", fontSize: "13px", fontWeight: "600", color: "#374151" }}>
+                                    <th style={{ padding: "10px", textAlign: "center", fontSize: "13px", fontWeight: "600", color: "#A9B3D1" }}>
                                       <label style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", cursor: "pointer" }}>
                                         <span>P</span>
                                         <input
@@ -3069,7 +3062,7 @@ function QuotationManagement() {
                                         />
                                       </label>
                                     </th>
-                                    <th style={{ padding: "10px", textAlign: "center", fontSize: "13px", fontWeight: "600", color: "#374151" }}>
+                                    <th style={{ padding: "10px", textAlign: "center", fontSize: "13px", fontWeight: "600", color: "#A9B3D1" }}>
                                       <label style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", cursor: "pointer" }}>
                                         <span>H</span>
                                         <input
@@ -3080,7 +3073,7 @@ function QuotationManagement() {
                                         />
                                       </label>
                                     </th>
-                                    <th style={{ padding: "10px", textAlign: "center", fontSize: "13px", fontWeight: "600", color: "#374151" }}>
+                                    <th style={{ padding: "10px", textAlign: "center", fontSize: "13px", fontWeight: "600", color: "#A9B3D1" }}>
                                       <label style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", cursor: "pointer" }}>
                                         <span>B</span>
                                         <input
@@ -3091,7 +3084,7 @@ function QuotationManagement() {
                                         />
                                       </label>
                                     </th>
-                                    <th style={{ padding: "10px", textAlign: "right", fontSize: "13px", fontWeight: "600", color: "#374151" }}>Rate</th>
+                                    <th style={{ padding: "10px", textAlign: "right", fontSize: "13px", fontWeight: "600", color: "#A9B3D1" }}>Rate</th>
                                   </tr>
                                 </thead>
                                 <tbody>
@@ -3101,7 +3094,7 @@ function QuotationManagement() {
                                     { side: "Height 2", checked: false, type: null, rate: 0 },
                                     { side: "Width 2",  checked: false, type: null, rate: 0 },
                                   ]).map((row, rowIndex) => (
-                                    <tr key={rowIndex} style={{ borderBottom: "1px solid #e5e7eb" }}>
+                                    <tr key={rowIndex} style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
                                       <td style={{ padding: "10px" }}>
                                         <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
                                           <input
@@ -3110,7 +3103,7 @@ function QuotationManagement() {
                                             onChange={(e) => handlePolishCheckboxChange(index, rowIndex, e.target.checked)}
                                             style={{ cursor: "pointer", width: "18px", height: "18px" }}
                                           />
-                                          <span style={{ fontSize: "13px", color: "#374151" }}>{row.side}</span>
+                                          <span style={{ fontSize: "13px", color: "#A9B3D1" }}>{row.side}</span>
                                         </label>
                                       </td>
                                       <td style={{ padding: "10px", textAlign: "center" }}>
@@ -3143,7 +3136,7 @@ function QuotationManagement() {
                                           style={{ cursor: row.checked ? "pointer" : "not-allowed", width: "18px", height: "18px" }}
                                         />
                                       </td>
-                                      <td style={{ padding: "10px", textAlign: "right", fontSize: "13px", color: "#6b7280" }}>
+                                      <td style={{ padding: "10px", textAlign: "right", fontSize: "13px", color: "#7180A6" }}>
                                         {row.checked && row.type ? `₹${row.rate || 0}` : "-"}
                                       </td>
                                     </tr>
@@ -3158,7 +3151,7 @@ function QuotationManagement() {
                       {/* Quantity and Selling Price — always 2-per-row */}
                       <div style={{ gridColumn: "1 / -1", display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "8px", marginTop: "8px", width: "100%", minWidth: 0 }}>
                       <div>
-                        <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                        <label style={{ display: "block", marginBottom: "8px", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                           Quantity * <span style={{ color: "#ef4444" }}>●</span>
                         </label>
                         <input
@@ -3172,19 +3165,19 @@ function QuotationManagement() {
                             width: "100%",
                             padding: isMobile ? "14px 12px" : "12px",
                             borderRadius: "8px",
-                            border: "1px solid #d1d5db",
+                            border: "1px solid rgba(255,255,255,0.1)",
                             fontSize: "16px", // Prevent iOS zoom
                             transition: "all 0.2s",
                             minHeight: "44px", // Touch target
                             boxSizing: "border-box",
                           }}
-                          onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
-                          onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
+                          onFocus={(e) => (e.target.style.borderColor = "#4F5DFF")}
+                          onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
                         />
-                        <p style={{ marginTop: "5px", color: "#6b7280", fontSize: "11px" }}>🔢 Number of pieces</p>
+                        <p style={{ marginTop: "5px", color: "#7180A6", fontSize: "11px" }}>🔢 Number of pieces</p>
                       </div>
                       <div>
-                        <label style={{ display: "block", marginBottom: "8px", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                        <label style={{ display: "block", marginBottom: "8px", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                           Selling Price (₹) * <span style={{ color: "#ef4444" }}>●</span>
                         </label>
                         <input
@@ -3204,16 +3197,16 @@ function QuotationManagement() {
                             width: "100%",
                             padding: isMobile ? "14px 12px" : "12px",
                             borderRadius: "8px",
-                            border: "1px solid #d1d5db",
+                            border: "1px solid rgba(255,255,255,0.1)",
                             fontSize: "16px", // Prevent iOS zoom
                             transition: "all 0.2s",
                             boxSizing: "border-box",
                             minHeight: "44px", // Touch target
                           }}
-                          onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
-                          onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
+                          onFocus={(e) => (e.target.style.borderColor = "#4F5DFF")}
+                          onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
                         />
-                        <p style={{ marginTop: "5px", color: "#6b7280", fontSize: "11px" }}>
+                        <p style={{ marginTop: "5px", color: "#7180A6", fontSize: "11px" }}>
                           💰 Selling price per square foot (modifiable)
                           {(() => {
                             // Show calculated default price as helper text
@@ -3238,7 +3231,7 @@ function QuotationManagement() {
                         width: "100%",
                         boxSizing: "border-box",
                       }}>
-                        <label style={{ display: "block", marginBottom: "6px", color: "#374151", fontWeight: "500", fontSize: 13 }}>
+                        <label style={{ display: "block", marginBottom: "6px", color: "#A9B3D1", fontWeight: "500", fontSize: 13 }}>
                           Area (SqFT) 🔒
                         </label>
                         <input
@@ -3252,16 +3245,16 @@ function QuotationManagement() {
                             width: "100%",
                             padding: "10px 12px",
                             borderRadius: "7px",
-                            border: "1px solid #d1d5db",
+                            border: "1px solid rgba(255,255,255,0.1)",
                             fontSize: "16px",
-                            backgroundColor: "#f3f4f6",
-                            color: "#6b7280",
+                            backgroundColor: "rgba(17,27,53,0.7)",
+                            color: "#7180A6",
                             cursor: "not-allowed",
                             boxSizing: "border-box",
                             minHeight: 44,
                           }}
                         />
-                        <p style={{ marginTop: "4px", color: "#6b7280", fontSize: "11px" }}>
+                        <p style={{ marginTop: "4px", color: "#7180A6", fontSize: "11px" }}>
                           Auto-calculated in square feet
                         </p>
                       </div>
@@ -3272,7 +3265,7 @@ function QuotationManagement() {
                         <label style={{ 
                           display: "block", 
                           marginBottom: "8px", 
-                          color: "#374151", 
+                          color: "#A9B3D1", 
                           fontWeight: "500", 
                           fontSize: isMobile ? "13px" : "14px" 
                         }}>
@@ -3304,17 +3297,17 @@ function QuotationManagement() {
                             maxWidth: "100%",
                             padding: isMobile ? "14px 12px" : "12px",
                             borderRadius: "8px",
-                            border: "1px solid #d1d5db",
+                            border: "1px solid rgba(255,255,255,0.1)",
                             fontSize: "16px", // Prevent iOS zoom
-                            backgroundColor: "#fef3c7",
-                            color: "#92400e",
+                            backgroundColor: "rgba(255,185,94,0.1)",
+                            color: "#FFB95E",
                             fontWeight: "600",
                             cursor: "not-allowed",
                             boxSizing: "border-box",
                             minHeight: "44px", // Touch target
                           }}
                         />
-                        <p style={{ marginTop: "5px", color: "#6b7280", fontSize: isMobile ? "11px" : "11px" }}>✨ Auto-calculated: (Table height × Table width in ft) × Rate per SqFt × Quantity</p>
+                        <p style={{ marginTop: "5px", color: "#7180A6", fontSize: isMobile ? "11px" : "11px" }}>✨ Auto-calculated: (Table height × Table width in ft) × Rate per SqFt × Quantity</p>
                       </div>
                       
                       {/* Profit Field - Read Only */}
@@ -3325,7 +3318,7 @@ function QuotationManagement() {
                         <label style={{ 
                           display: "block", 
                           marginBottom: "8px", 
-                          color: "#374151", 
+                          color: "#A9B3D1", 
                           fontWeight: "500", 
                           fontSize: isMobile ? "13px" : "14px" 
                         }}>
@@ -3363,7 +3356,7 @@ function QuotationManagement() {
                             maxWidth: "100%",
                             padding: isMobile ? "14px 12px" : "12px",
                             borderRadius: "8px",
-                            border: "1px solid #d1d5db",
+                            border: "1px solid rgba(255,255,255,0.1)",
                             fontSize: "16px", // Prevent iOS zoom
                             backgroundColor: "#d1fae5",
                             color: "#065f46",
@@ -3373,7 +3366,7 @@ function QuotationManagement() {
                             minHeight: "44px", // Touch target
                           }}
                         />
-                        <p style={{ marginTop: "5px", color: "#6b7280", fontSize: isMobile ? "11px" : "11px" }}>
+                        <p style={{ marginTop: "5px", color: "#7180A6", fontSize: isMobile ? "11px" : "11px" }}>
                           ✨ Auto-calculated: (Selling Price - Purchase Price) × Area × Quantity
                         </p>
                       </div>
@@ -3384,7 +3377,7 @@ function QuotationManagement() {
                         <label style={{ 
                           display: "block", 
                           marginBottom: "8px", 
-                          color: "#374151", 
+                          color: "#A9B3D1", 
                           fontWeight: "500", 
                           fontSize: isMobile ? "13px" : "14px" 
                         }}>
@@ -3469,9 +3462,9 @@ function QuotationManagement() {
                             maxWidth: "100%",
                             padding: isMobile ? "14px 12px" : "12px",
                             borderRadius: "8px",
-                            border: "1px solid #d1d5db",
+                            border: "1px solid rgba(255,255,255,0.1)",
                             fontSize: "16px", // Prevent iOS zoom
-                            backgroundColor: "#e0f2fe",
+                            backgroundColor: "rgba(79,93,255,0.1)",
                             color: "#0c4a6e",
                             fontWeight: "600",
                             cursor: "not-allowed",
@@ -3479,7 +3472,7 @@ function QuotationManagement() {
                             minHeight: "44px", // Touch target
                           }}
                         />
-                        <p style={{ marginTop: "5px", color: "#6b7280", fontSize: "11px" }}>✨ Auto-calculated: Group by polish type, sum sides, convert to ft, × polish rate, sum all, × Quantity</p>
+                        <p style={{ marginTop: "5px", color: "#7180A6", fontSize: "11px" }}>✨ Auto-calculated: Group by polish type, sum sides, convert to ft, × polish rate, sum all, × Quantity</p>
                       </div>
                       </div>
                     </div>
@@ -3493,7 +3486,7 @@ function QuotationManagement() {
                         <label style={{ 
                           display: "block", 
                           marginBottom: "8px", 
-                          color: "#374151", 
+                          color: "#A9B3D1", 
                           fontWeight: "500", 
                           fontSize: isMobile ? "13px" : "14px" 
                         }}>
@@ -3509,16 +3502,16 @@ function QuotationManagement() {
                             maxWidth: "100%",
                             padding: isMobile ? "14px 12px" : "12px",
                             borderRadius: "8px",
-                            border: "1px solid #d1d5db",
+                            border: "1px solid rgba(255,255,255,0.1)",
                             fontSize: "16px", // Prevent iOS zoom
                             transition: "all 0.2s",
                             boxSizing: "border-box",
                             minHeight: "44px", // Touch target
                           }}
-                          onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
-                          onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
+                          onFocus={(e) => (e.target.style.borderColor = "#4F5DFF")}
+                          onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
                         />
-                        <p style={{ marginTop: "5px", color: "#6b7280", fontSize: isMobile ? "11px" : "11px" }}>📋 HSN code for GST (optional)</p>
+                        <p style={{ marginTop: "5px", color: "#7180A6", fontSize: isMobile ? "11px" : "11px" }}>📋 HSN code for GST (optional)</p>
                       </div>
                     )}
 
@@ -3529,7 +3522,7 @@ function QuotationManagement() {
                       <label style={{ 
                         display: "block", 
                         marginBottom: "8px", 
-                        color: "#374151", 
+                        color: "#A9B3D1", 
                         fontWeight: "500", 
                         fontSize: isMobile ? "13px" : "14px" 
                       }}>
@@ -3544,7 +3537,7 @@ function QuotationManagement() {
                           maxWidth: "100%",
                           padding: isMobile ? "14px 12px" : "12px",
                           borderRadius: "8px",
-                          border: "1px solid #d1d5db",
+                          border: "1px solid rgba(255,255,255,0.1)",
                           fontSize: "16px", // Prevent iOS zoom
                           minHeight: isMobile ? "100px" : "80px",
                           resize: "vertical",
@@ -3552,8 +3545,8 @@ function QuotationManagement() {
                           transition: "all 0.2s",
                           boxSizing: "border-box",
                         }}
-                        onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
-                        onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
+                        onFocus={(e) => (e.target.style.borderColor = "#4F5DFF")}
+                        onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
                       />
                     </div>
                   </div>
@@ -3565,14 +3558,14 @@ function QuotationManagement() {
                   justifyContent: "center", 
                   marginTop: "20px",
                   paddingTop: "20px",
-                  borderTop: "1px solid #e5e7eb"
+                  borderTop: "1px solid rgba(255,255,255,0.07)"
                 }}>
                   <button
                     type="button"
                     onClick={handleAddItem}
                     style={{
                       padding: "12px 24px",
-                      backgroundColor: "#6366f1",
+                      backgroundcolor: "#818CF8",
                       color: "white",
                       border: "none",
                       borderRadius: "8px",
@@ -3586,11 +3579,11 @@ function QuotationManagement() {
                       boxShadow: "0 4px 6px -1px rgba(99, 102, 241, 0.3)",
                     }}
                     onMouseOver={(e) => {
-                      e.target.style.backgroundColor = "#4f46e5";
+                      e.target.style.backgroundColor = "#3D4DE8";
                       e.target.style.boxShadow = "0 6px 8px -1px rgba(99, 102, 241, 0.4)";
                     }}
                     onMouseOut={(e) => {
-                      e.target.style.backgroundColor = "#6366f1";
+                      e.target.style.backgroundColor = "#4F5DFF";
                       e.target.style.boxShadow = "0 4px 6px -1px rgba(99, 102, 241, 0.3)";
                     }}
                   >
@@ -3600,27 +3593,27 @@ function QuotationManagement() {
               </div>
 
               {/* ── Additional Charges (collapsible) — after all items ── */}
-              <div style={{ marginBottom: "16px", border: "1.5px solid #e5e7eb", borderRadius: 10, overflow: "hidden" }}>
+              <div style={{ marginBottom: "16px", border: "1.5px solid rgba(255,255,255,0.08)", borderRadius: 10, overflow: "hidden" }}>
                 {/* Toggle header */}
                 <button
                   type="button"
                   onClick={() => setShowCharges(v => !v)}
                   style={{
                     width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
-                    padding: "11px 14px", background: showCharges ? "#f8fafc" : "#fff",
-                    border: "none", cursor: "pointer", borderBottom: showCharges ? "1.5px solid #e5e7eb" : "none",
+                    padding: "11px 14px", background: "rgba(17,27,53,0.9)",
+                    border: "none", cursor: "pointer", borderBottom: showCharges ? "1.5px solid rgba(255,255,255,0.08)" : "none",
                     fontFamily: "inherit", transition: "background 140ms ease",
                   }}
                 >
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "#374151", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: "#A9B3D1", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                     💰 Additional Charges
                     {(parseFloat(formData.installationCharge) > 0 || parseFloat(formData.transportCharge) > 0 || parseFloat(formData.discountValue) > 0 || formData.transportationRequired) && (
-                      <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 600, color: "#6366f1", textTransform: "none", letterSpacing: 0 }}>
+                      <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 600, color: "#818CF8", textTransform: "none", letterSpacing: 0 }}>
                         (applied)
                       </span>
                     )}
                   </span>
-                  <span style={{ fontSize: 11, color: "#94a3b8", fontWeight: 500 }}>
+                  <span style={{ fontSize: 11, color: "#7180A6", fontWeight: 500 }}>
                     {showCharges ? "▲ Collapse" : "▼ Expand"}
                   </span>
                 </button>
@@ -3628,8 +3621,8 @@ function QuotationManagement() {
                 {showCharges && (
                   <div style={{ padding: "14px" }}>
                     {/* Transportation checkbox */}
-                    <div style={{ marginBottom: "12px", padding: "10px 14px", backgroundColor: "#f0f9ff", borderRadius: "8px", border: "1px solid #bae6fd" }}>
-                      <label style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", color: "#374151", fontWeight: "500", fontSize: "14px" }}>
+                    <div style={{ marginBottom: "12px", padding: "10px 14px", backgroundColor: "rgba(79,93,255,0.08)", borderRadius: "8px", border: "1px solid rgba(79,93,255,0.3)" }}>
+                      <label style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                         <input
                           type="checkbox"
                           checked={formData.transportationRequired}
@@ -3644,49 +3637,49 @@ function QuotationManagement() {
                     <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: isMobile ? "12px" : "14px", width: "100%" }}>
                       {/* Installation */}
                       <div>
-                        <label style={{ display: "block", marginBottom: "5px", color: "#374151", fontWeight: "600", fontSize: "12.5px" }}>
+                        <label style={{ display: "block", marginBottom: "5px", color: "#A9B3D1", fontWeight: "600", fontSize: "12.5px" }}>
                           Installation Charge (₹)
                         </label>
                         <input
                           type="number" min="0" step="0.01"
                           value={formData.installationCharge === 0 ? "" : formData.installationCharge}
                           onChange={(e) => setFormData({ ...formData, installationCharge: parseFloat(e.target.value) || 0 })}
-                          onFocus={(e) => { e.target.style.borderColor = "#6366f1"; if (e.target.value === "0" || e.target.value === "") e.target.value = ""; }}
-                          onBlur={(e) => { e.target.style.borderColor = "#d1d5db"; if (e.target.value === "" || e.target.value === "0") setFormData({ ...formData, installationCharge: 0 }); }}
+                          onFocus={(e) => { e.target.style.borderColor = "#4F5DFF"; if (e.target.value === "0" || e.target.value === "") e.target.value = ""; }}
+                          onBlur={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.1)"; if (e.target.value === "" || e.target.value === "0") setFormData({ ...formData, installationCharge: 0 }); }}
                           placeholder="0.00"
-                          style={{ width: "100%", padding: isMobile ? "14px 12px" : "9px 12px", borderRadius: "8px", border: "1px solid #d1d5db", fontSize: "16px", transition: "all 0.2s", boxSizing: "border-box", minHeight: isMobile ? "44px" : "auto" }}
+                          style={{ width: "100%", padding: isMobile ? "14px 12px" : "9px 12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.1)", fontSize: "16px", transition: "all 0.2s", boxSizing: "border-box", minHeight: isMobile ? "44px" : "auto" }}
                         />
                       </div>
 
                       {/* Transport */}
                       <div>
-                        <label style={{ display: "block", marginBottom: "5px", color: "#374151", fontWeight: "600", fontSize: "12.5px" }}>
+                        <label style={{ display: "block", marginBottom: "5px", color: "#A9B3D1", fontWeight: "600", fontSize: "12.5px" }}>
                           Transport Charge (₹)
                         </label>
                         <input
                           type="number" min="0" step="0.01"
                           value={formData.transportCharge === 0 ? "" : formData.transportCharge}
                           onChange={(e) => setFormData({ ...formData, transportCharge: parseFloat(e.target.value) || 0 })}
-                          onFocus={(e) => { e.target.style.borderColor = "#6366f1"; if (e.target.value === "0" || e.target.value === "") e.target.value = ""; }}
-                          onBlur={(e) => { e.target.style.borderColor = "#d1d5db"; if (e.target.value === "" || e.target.value === "0") setFormData({ ...formData, transportCharge: 0 }); }}
+                          onFocus={(e) => { e.target.style.borderColor = "#4F5DFF"; if (e.target.value === "0" || e.target.value === "") e.target.value = ""; }}
+                          onBlur={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.1)"; if (e.target.value === "" || e.target.value === "0") setFormData({ ...formData, transportCharge: 0 }); }}
                           placeholder="0.00"
-                          style={{ width: "100%", padding: isMobile ? "14px 12px" : "9px 12px", borderRadius: "8px", border: "1px solid #d1d5db", fontSize: "16px", transition: "all 0.2s", boxSizing: "border-box", minHeight: isMobile ? "44px" : "auto" }}
+                          style={{ width: "100%", padding: isMobile ? "14px 12px" : "9px 12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.1)", fontSize: "16px", transition: "all 0.2s", boxSizing: "border-box", minHeight: isMobile ? "44px" : "auto" }}
                         />
                       </div>
 
                       {/* Discount */}
                       <div>
-                        <label style={{ display: "block", marginBottom: "5px", color: "#374151", fontWeight: "600", fontSize: "12.5px" }}>
+                        <label style={{ display: "block", marginBottom: "5px", color: "#A9B3D1", fontWeight: "600", fontSize: "12.5px" }}>
                           Discount
                         </label>
                         <div style={{ display: "flex", gap: "6px", marginBottom: "8px" }}>
                           <button type="button"
                             onClick={() => setFormData({ ...formData, discountType: "AMOUNT", discountValue: 0, discount: 0 })}
-                            style={{ flex: 1, padding: "7px 10px", backgroundColor: formData.discountType === "AMOUNT" ? "#6366f1" : "#e5e7eb", color: formData.discountType === "AMOUNT" ? "white" : "#374151", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontWeight: "500", transition: "all 0.2s" }}
+                            style={{ flex: 1, padding: "7px 10px", backgroundColor: formData.discountType === "AMOUNT" ? "#4F5DFF" : "rgba(255,255,255,0.08)", color: formData.discountType === "AMOUNT" ? "white" : "#374151", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontWeight: "500", transition: "all 0.2s" }}
                           >Amount (₹)</button>
                           <button type="button"
                             onClick={() => setFormData({ ...formData, discountType: "PERCENTAGE", discountValue: 0, discount: 0 })}
-                            style={{ flex: 1, padding: "7px 10px", backgroundColor: formData.discountType === "PERCENTAGE" ? "#6366f1" : "#e5e7eb", color: formData.discountType === "PERCENTAGE" ? "white" : "#374151", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontWeight: "500", transition: "all 0.2s" }}
+                            style={{ flex: 1, padding: "7px 10px", backgroundColor: formData.discountType === "PERCENTAGE" ? "#4F5DFF" : "rgba(255,255,255,0.08)", color: formData.discountType === "PERCENTAGE" ? "white" : "#374151", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontWeight: "500", transition: "all 0.2s" }}
                           >Percentage (%)</button>
                         </div>
                         <input
@@ -3694,12 +3687,12 @@ function QuotationManagement() {
                           max={formData.discountType === "PERCENTAGE" ? "100" : undefined}
                           value={formData.discountValue === 0 ? "" : formData.discountValue}
                           onChange={(e) => setFormData({ ...formData, discountValue: parseFloat(e.target.value) || 0 })}
-                          onFocus={(e) => { e.target.style.borderColor = "#6366f1"; if (e.target.value === "0" || e.target.value === "") e.target.value = ""; }}
-                          onBlur={(e) => { e.target.style.borderColor = "#d1d5db"; if (e.target.value === "" || e.target.value === "0") setFormData({ ...formData, discountValue: 0, discount: 0 }); }}
+                          onFocus={(e) => { e.target.style.borderColor = "#4F5DFF"; if (e.target.value === "0" || e.target.value === "") e.target.value = ""; }}
+                          onBlur={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.1)"; if (e.target.value === "" || e.target.value === "0") setFormData({ ...formData, discountValue: 0, discount: 0 }); }}
                           placeholder="0.00"
-                          style={{ width: "100%", padding: isMobile ? "14px 12px" : "9px 12px", borderRadius: "8px", border: "1px solid #d1d5db", fontSize: "16px", transition: "all 0.2s", boxSizing: "border-box", minHeight: isMobile ? "44px" : "auto" }}
+                          style={{ width: "100%", padding: isMobile ? "14px 12px" : "9px 12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.1)", fontSize: "16px", transition: "all 0.2s", boxSizing: "border-box", minHeight: isMobile ? "44px" : "auto" }}
                         />
-                        <p style={{ marginTop: "5px", color: "#6b7280", fontSize: "12px" }}>
+                        <p style={{ marginTop: "5px", color: "#7180A6", fontSize: "12px" }}>
                           🎁 {formData.discountType === "PERCENTAGE" ? "Discount percentage (0-100%)" : "Discount amount in ₹"}
                         </p>
                       </div>
@@ -3709,13 +3702,13 @@ function QuotationManagement() {
               </div>
 
               {/* Action Buttons */}
-              <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: "10px", paddingTop: "14px", borderTop: "1.5px solid #e5e7eb", justifyContent: "flex-end" }}>
+              <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: "10px", paddingTop: "14px", borderTop: "1.5px solid rgba(255,255,255,0.07)", justifyContent: "flex-end" }}>
                 <button
                   type="button"
                   onClick={() => { setShowForm(false); resetForm(); }}
-                  style={{ padding: "9px 20px", backgroundColor: "#6b7280", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontWeight: "500", transition: "all 0.2s" }}
-                  onMouseOver={(e) => (e.target.style.backgroundColor = "#4b5563")}
-                  onMouseOut={(e) => (e.target.style.backgroundColor = "#6b7280")}
+                  style={{ padding: "9px 20px", backgroundcolor: "#7180A6", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontWeight: "500", transition: "all 0.2s" }}
+                  onMouseOver={(e) => (e.target.style.backgroundColor = "rgba(255,255,255,0.14)")}
+                  onMouseOut={(e) => (e.target.style.backgroundColor = "rgba(255,255,255,0.08)")}
                 >
                   Cancel
                 </button>
@@ -3741,14 +3734,14 @@ function QuotationManagement() {
                 const _gst  = formData.billingType === "GST" ? (_sub + _inst + _tr - _disc) * ((parseFloat(formData.gstPercentage) || 18) / 100) : 0;
                 const _tot  = _sub + _inst + _tr - _disc + _gst;
                 const SRow = ({ label, value, hi, color, last }) => (
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: last ? "none" : "1px solid #f1f5f9" }}>
-                    <span style={{ fontSize: 12, color: hi ? "#0f172a" : "#64748b", fontWeight: hi ? 700 : 500 }}>{label}</span>
-                    <span style={{ fontSize: hi ? 14 : 13, fontWeight: hi ? 800 : 600, color: color || (hi ? "#4f46e5" : "#1e293b"), letterSpacing: "-0.01em" }}>{value}</span>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: last ? "none" : "1px solid rgba(255,255,255,0.06)" }}>
+                    <span style={{ fontSize: 12, color: hi ? "#ffffff" : "#A9B3D1", fontWeight: hi ? 700 : 500 }}>{label}</span>
+                    <span style={{ fontSize: hi ? 14 : 13, fontWeight: hi ? 800 : 600, color: color || (hi ? "#4F5DFF" : "#ffffff"), letterSpacing: "-0.01em" }}>{value}</span>
                   </div>
                 );
                 return (
-                  <div style={{ width: 210, flexShrink: 0, position: "sticky", top: 16, background: "#fff", border: "1.5px solid #e2e8f0", borderRadius: 12, padding: "14px", boxShadow: "0 2px 8px rgba(15,23,42,0.07)" }}>
-                    <div style={{ fontSize: 10.5, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>Live Summary</div>
+                  <div style={{ width: 210, flexShrink: 0, position: "sticky", top: 16, background: "rgba(22,36,69,0.95)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, padding: "14px", boxShadow: "0 4px 24px rgba(0,0,0,0.4)" }}>
+                    <div style={{ fontSize: 10.5, fontWeight: 700, color: "#7180A6", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>Live Summary</div>
                     <SRow label="Subtotal"                       value={`₹${_sub.toFixed(2)}`} />
                     {_rft  > 0 && <SRow label="Running Ft"       value={`₹${_rft.toFixed(2)}`} />}
                     {_inst > 0 && <SRow label="Installation"     value={`₹${_inst.toFixed(2)}`} />}
@@ -3756,7 +3749,7 @@ function QuotationManagement() {
                     {_disc > 0 && <SRow label="Discount"         value={`−₹${_disc.toFixed(2)}`} color="#16a34a" />}
                     {_gst  > 0 && <SRow label={`GST ${formData.gstPercentage}%`} value={`₹${_gst.toFixed(2)}`} />}
                     <SRow label="Grand Total" value={`₹${_tot.toFixed(2)}`} hi last />
-                    <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1.5px solid #e2e8f0", fontSize: 11, color: "#94a3b8", textAlign: "center" }}>
+                    <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1px solid rgba(255,255,255,0.07)", fontSize: 11, color: "#7180A6", textAlign: "center" }}>
                       {formData.items.length} item{formData.items.length !== 1 ? "s" : ""}
                     </div>
                   </div>
@@ -3767,21 +3760,24 @@ function QuotationManagement() {
         )}
 
         {loading ? (
-          <div style={{ textAlign: "center", color: "#64748b", padding: "20px" }}>Loading...</div>
+          <div style={{ textAlign: "center", color: "#7180A6", padding: "20px" }}>Loading...</div>
         ) : (
           <div
             style={{
-              backgroundColor: "white",
-              borderRadius: "8px",
+              backgroundColor: "#111B35",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: "16px",
               overflow: "hidden",
+              boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
             }}
           >
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", minWidth: isMobile ? "auto" : "720px", fontSize: "13px" }}>
+            <div style={{ overflowX: "auto", background: "#111B35" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", minWidth: isMobile ? "auto" : "720px", fontSize: "13px", background: "#111B35" }}>
                 <thead>
-                  <tr style={{ background: "#f8fafc", borderBottom: "1.5px solid #e2e8f0" }}>
+                  <tr style={{ background: "rgba(255,255,255,0.04)", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
                     {[
-                      [isMobile ? "#" : "Quotation #", isMobile ? "52px" : "auto"],
+                      ["ID",         "60px"],
+                      [isMobile ? "Quotation #" : "Quotation #", isMobile ? "auto" : "auto"],
                       ["Customer",   "auto"],
                       ...(!isMobile ? [
                         ["Billing",  "80px"],
@@ -3793,9 +3789,9 @@ function QuotationManagement() {
                       ["Actions",   "116px"],
                     ].map(([label, w]) => (
                       <th key={label} style={{
-                        padding: "9px 12px", textAlign: "left",
-                        fontSize: "11px", fontWeight: 700, color: "#64748b",
-                        textTransform: "uppercase", letterSpacing: "0.05em",
+                        padding: "10px 12px", textAlign: "left",
+                        fontSize: "10.5px", fontWeight: 700, color: "#7180A6",
+                        textTransform: "uppercase", letterSpacing: "0.08em",
                         whiteSpace: "nowrap", width: w,
                       }}>{label}</th>
                     ))}
@@ -3806,30 +3802,33 @@ function QuotationManagement() {
                   <tr
                     key={quotation.id}
                     style={{
-                      borderBottom: "1px solid #f1f5f9",
-                      backgroundColor: "#ffffff",
+                      borderBottom: "1px solid rgba(255,255,255,0.05)",
+                      backgroundColor: "#111B35",
                       transition: "background 120ms ease",
                     }}
-                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#fafbfd")}
-                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#ffffff")}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#0A0F1E")}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#111B35")}
                   >
-                    <td style={{ padding: isMobile ? "9px 8px" : "9px 12px", fontWeight: 600, color: "#1e293b", whiteSpace: "nowrap", width: isMobile ? 52 : "auto" }}>
+                    <td style={{ padding: isMobile ? "9px 8px" : "10px 12px", color: "#7180A6", fontSize: 12, whiteSpace: "nowrap", width: 60 }}>
+                      #{quotation.id}
+                    </td>
+                    <td style={{ padding: isMobile ? "9px 8px" : "10px 12px", fontWeight: 700, color: "#E2E8F0", whiteSpace: "nowrap" }}>
                       {isMobile
                         ? `#${(quotation.quotationNumber || "").split("-").pop()}`
                         : quotation.quotationNumber}
                     </td>
-                    <td style={{ padding: isMobile ? "9px 8px" : "9px 12px", color: "#374151", maxWidth: isMobile ? "none" : 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{quotation.customerName}</td>
+                    <td style={{ padding: isMobile ? "9px 8px" : "10px 12px", fontWeight: 600, color: "#E2E8F0", maxWidth: isMobile ? "none" : 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{quotation.customerName}</td>
                     {!isMobile && (
                       <>
-                        <td style={{ padding: "9px 12px", color: "#64748b", fontSize: "12px" }}>{quotation.billingType}</td>
-                        <td style={{ padding: "9px 12px" }}>
+                        <td style={{ padding: "10px 12px", color: "#7180A6", fontSize: "12px" }}>{quotation.billingType}</td>
+                        <td style={{ padding: "10px 12px" }}>
                           {quotation.referenceArchitect
                             ? <Badge status="INFO" dot label={`🏛️ ${quotation.referenceArchitect.name}`} />
-                            : <span style={{ color: "#cbd5e1" }}>—</span>}
+                            : <span style={{ color: "rgba(255,255,255,0.2)" }}>—</span>}
                         </td>
-                        <td style={{ padding: "9px 12px" }}>{getStatusBadge(quotation.status)}</td>
-                        <td style={{ padding: "9px 12px", fontWeight: 600, color: "#0f172a", whiteSpace: "nowrap" }}>₹{(parseFloat(quotation.grandTotal) || 0).toFixed(2)}</td>
-                        <td style={{ padding: "9px 12px", color: "#64748b", fontSize: "12px", whiteSpace: "nowrap" }}>{quotation.quotationDate}</td>
+                        <td style={{ padding: "10px 12px" }}>{getStatusBadge(quotation.status)}</td>
+                        <td style={{ padding: "10px 12px", fontWeight: 700, color: "#37E3A5", whiteSpace: "nowrap" }}>₹{(parseFloat(quotation.grandTotal) || 0).toFixed(2)}</td>
+                        <td style={{ padding: "10px 12px", color: "#7180A6", fontSize: "12px", whiteSpace: "nowrap" }}>{quotation.quotationDate}</td>
                       </>
                     )}
                     {/* ── Action group ── */}
@@ -3852,10 +3851,10 @@ function QuotationManagement() {
 
             {/* Empty State */}
             {quotations.length === 0 && (
-              <div style={{ padding: "60px 20px", textAlign: "center", color: "#6b7280" }}>
-                <div style={{ fontSize: "48px", marginBottom: "16px", opacity: 0.5 }}>📄</div>
-                <p style={{ fontSize: "16px", fontWeight: "500", marginBottom: "8px" }}>No quotations found</p>
-                <p style={{ fontSize: "14px", color: "#9ca3af" }}>Click 'Create New Quotation' to get started</p>
+              <div style={{ padding: "60px 20px", textAlign: "center" }}>
+                <div style={{ fontSize: "40px", marginBottom: "12px", opacity: 0.3 }}>📄</div>
+                <p style={{ fontSize: "15px", fontWeight: "600", marginBottom: "6px", color: "#ffffff" }}>No quotations found</p>
+                <p style={{ fontSize: "13px", color: "#7180A6" }}>Click 'Create New Quotation' to get started</p>
               </div>
             )}
           </div>
@@ -3869,7 +3868,8 @@ function QuotationManagement() {
               left: 0,
               right: 0,
               bottom: 0,
-              backgroundColor: "rgba(0,0,0,0.6)",
+              backgroundColor: "rgba(5,11,31,0.85)",
+              backdropFilter: "blur(8px)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -3883,14 +3883,15 @@ function QuotationManagement() {
           >
             <div
               style={{
-                backgroundColor: "#fff",
+                backgroundColor: "rgba(17,27,53,0.98)",
+                border: "1px solid rgba(255,255,255,0.1)",
                 padding: 0,
                 borderRadius: "14px",
                 maxWidth: "1100px",
                 width: "100%",
                 maxHeight: "calc(100vh - 100px)",
                 overflow: "auto",
-                boxShadow: "0 20px 40px -8px rgba(15,23,42,.16), 0 4px 12px -4px rgba(15,23,42,.08)",
+                boxShadow: "0 24px 64px rgba(0,0,0,0.6)",
                 position: "relative",
                 zIndex: 10003,
                 display: "flex",
@@ -3901,14 +3902,14 @@ function QuotationManagement() {
               {/* ═══ PREMIUM QUOTATION VIEWER ═══ */}
 
               {/* Sticky header */}
-              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'14px 20px 12px', borderBottom:'1px solid #f1f5f9', position:'sticky', top:0, background:'#fff', zIndex:10, flexWrap:'wrap', gap:8 }}>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'14px 20px 12px', borderBottom:'1px solid rgba(255,255,255,0.08)', position:'sticky', top:0, background:'rgba(17,27,53,0.98)', zIndex:10, flexWrap:'wrap', gap:8 }}>
                 <div>
                   <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
-                    <span style={{ fontSize:11, fontWeight:700, color:'#94a3b8', fontFamily:"'Inter',-apple-system,sans-serif", textTransform:'uppercase', letterSpacing:'0.06em' }}>Quotation</span>
-                    <span style={{ fontSize:15, fontWeight:700, color:'#0f172a', fontFamily:"'Inter',-apple-system,sans-serif", letterSpacing:'-0.02em' }}>{selectedQuotation.quotationNumber}</span>
+                    <span style={{ fontSize:11, fontWeight:700, color:'#7180A6', fontFamily:"'Inter',-apple-system,sans-serif", textTransform:'uppercase', letterSpacing:'0.06em' }}>Quotation</span>
+                    <span style={{ fontSize:15, fontWeight:700, color:'#E2E8F0', fontFamily:"'Inter',-apple-system,sans-serif", letterSpacing:'-0.02em' }}>{selectedQuotation.quotationNumber}</span>
                     {getStatusBadge(selectedQuotation.status)}
                   </div>
-                  <div style={{ fontSize:11.5, color:'#94a3b8', marginTop:2, fontFamily:"'Inter',-apple-system,sans-serif" }}>
+                  <div style={{ fontSize:11.5, color:'#7180A6', marginTop:2, fontFamily:"'Inter',-apple-system,sans-serif" }}>
                     {selectedQuotation.quotationDate}{selectedQuotation.createdBy ? ` · ${selectedQuotation.createdBy}` : ''}
                   </div>
                 </div>
@@ -3920,36 +3921,36 @@ function QuotationManagement() {
                   <DocDropdownBtn label="Download" icon="⬇️" iconOnly={isMobile} items={[
                     { icon:'📥', label:'Quotation PDF', onClick: async () => { try { const r = await downloadQuotationPdf(selectedQuotation.id); const url = window.URL.createObjectURL(new Blob([r.data])); const a = document.createElement('a'); a.href=url; a.setAttribute('download',`quotation-${selectedQuotation.quotationNumber}.pdf`); document.body.appendChild(a); a.click(); a.remove(); window.URL.revokeObjectURL(url); } catch { alert('Failed to download quotation PDF'); } } },
                   ]} />
-                  <button onClick={() => setSelectedQuotation(null)} style={{ width:32, height:32, borderRadius:'50%', border:'1px solid #e2e8f0', background:'#f8fafc', cursor:'pointer', fontSize:14, color:'#64748b', display:'flex', alignItems:'center', justifyContent:'center', transition:'all 140ms ease', flexShrink:0 }}
-                    onMouseEnter={e=>{ e.currentTarget.style.background='#f1f5f9'; e.currentTarget.style.color='#374151'; }}
-                    onMouseLeave={e=>{ e.currentTarget.style.background='#f8fafc'; e.currentTarget.style.color='#64748b'; }}>✕</button>
+                  <button onClick={() => setSelectedQuotation(null)} style={{ width:32, height:32, borderRadius:'50%', border:'1px solid rgba(255,255,255,0.1)', background:'rgba(255,255,255,0.08)', cursor:'pointer', fontSize:14, color:'#A9B3D1', display:'flex', alignItems:'center', justifyContent:'center', transition:'all 140ms ease', flexShrink:0 }}
+                    onMouseEnter={e=>{ e.currentTarget.style.background='rgba(255,255,255,0.15)'; e.currentTarget.style.color='#E2E8F0'; }}
+                    onMouseLeave={e=>{ e.currentTarget.style.background='rgba(255,255,255,0.08)'; e.currentTarget.style.color='#A9B3D1'; }}>✕</button>
                 </div>
               </div>
 
               {/* Meta strip */}
-              <div style={{ display:'flex', flexWrap:'wrap', borderBottom:'1px solid #f1f5f9', background:'#fafbfc' }}>
+              <div style={{ display:'flex', flexWrap:'wrap', borderBottom:'1px solid rgba(255,255,255,0.08)', background:'rgba(255,255,255,0.03)' }}>
                 <MetaField label="Customer">
-                  <div style={{ fontSize:13, fontWeight:600, color:'#0f172a', fontFamily:"'Inter',-apple-system,sans-serif" }}>{selectedQuotation.customerName}</div>
-                  {selectedQuotation.customerMobile && <div style={{ fontSize:11.5, color:'#64748b' }}>📱 {selectedQuotation.customerMobile}</div>}
+                  <div style={{ fontSize:13, fontWeight:600, color:'#E2E8F0', fontFamily:"'Inter',-apple-system,sans-serif" }}>{selectedQuotation.customerName}</div>
+                  {selectedQuotation.customerMobile && <div style={{ fontSize:11.5, color:'#7180A6' }}>📱 {selectedQuotation.customerMobile}</div>}
                 </MetaField>
                 {selectedQuotation.referenceArchitect && (
                   <MetaField label="Ref. Architect">
-                    <div style={{ fontSize:13, fontWeight:600, color:'#0f172a', fontFamily:"'Inter',-apple-system,sans-serif" }}>{selectedQuotation.referenceArchitect.name}</div>
-                    {selectedQuotation.referenceArchitect.mobile && <div style={{ fontSize:11.5, color:'#64748b' }}>📱 {selectedQuotation.referenceArchitect.mobile}</div>}
+                    <div style={{ fontSize:13, fontWeight:600, color:'#E2E8F0', fontFamily:"'Inter',-apple-system,sans-serif" }}>{selectedQuotation.referenceArchitect.name}</div>
+                    {selectedQuotation.referenceArchitect.mobile && <div style={{ fontSize:11.5, color:'#7180A6' }}>📱 {selectedQuotation.referenceArchitect.mobile}</div>}
                   </MetaField>
                 )}
                 <MetaField label="Billing">
-                  <span style={{ fontSize:13, fontWeight:600, color:'#0f172a', fontFamily:"'Inter',-apple-system,sans-serif" }}>{selectedQuotation.billingType}</span>
+                  <span style={{ fontSize:13, fontWeight:600, color:'#E2E8F0', fontFamily:"'Inter',-apple-system,sans-serif" }}>{selectedQuotation.billingType}</span>
                 </MetaField>
-                {selectedQuotation.validUntil && <MetaField label="Valid Until"><span style={{ fontSize:13, fontWeight:500, color:'#374151', fontFamily:"'Inter',-apple-system,sans-serif" }}>{selectedQuotation.validUntil}</span></MetaField>}
-                {selectedQuotation.customerState && <MetaField label="State"><span style={{ fontSize:13, fontWeight:500, color:'#374151', fontFamily:"'Inter',-apple-system,sans-serif" }}>{selectedQuotation.customerState}</span></MetaField>}
+                {selectedQuotation.validUntil && <MetaField label="Valid Until"><span style={{ fontSize:13, fontWeight:500, color:'#A9B3D1', fontFamily:"'Inter',-apple-system,sans-serif" }}>{selectedQuotation.validUntil}</span></MetaField>}
+                {selectedQuotation.customerState && <MetaField label="State"><span style={{ fontSize:13, fontWeight:500, color:'#A9B3D1', fontFamily:"'Inter',-apple-system,sans-serif" }}>{selectedQuotation.customerState}</span></MetaField>}
               </div>
 
               {/* Financial KPI strip */}
               {(() => {
                 const rsum = getRunningFtSummaryFromQuotation(selectedQuotation);
                 return (
-                  <div style={{ display:'flex', flexWrap:'wrap', borderBottom:'1px solid #f1f5f9' }}>
+                  <div style={{ display:'flex', flexWrap:'wrap', borderBottom:'1px solid rgba(255,255,255,0.08)' }}>
                     <KpiCell label="Subtotal" value={selectedQuotation.subtotal} />
                     {(rsum?.total || 0) > 0 && <KpiCell label="Running Ft" value={rsum.total} />}
                     {parseFloat(selectedQuotation.installationCharge) > 0 && <KpiCell label="Installation" value={selectedQuotation.installationCharge} />}
@@ -3978,15 +3979,15 @@ function QuotationManagement() {
 
               {/* Items table */}
               <div style={{ padding:'0 0 16px', flex:1 }}>
-                <div style={{ padding:'12px 20px 8px', fontSize:11, fontWeight:700, color:'#64748b', textTransform:'uppercase', letterSpacing:'0.06em', fontFamily:"'Inter',-apple-system,sans-serif" }}>
+                <div style={{ padding:'12px 20px 8px', fontSize:11, fontWeight:700, color:'#7180A6', textTransform:'uppercase', letterSpacing:'0.06em', fontFamily:"'Inter',-apple-system,sans-serif" }}>
                   Items ({selectedQuotation.items?.length || 0})
                 </div>
                 <div style={{ overflowX:'auto' }}>
                   <table style={{ width:'100%', borderCollapse:'collapse', minWidth:'580px', fontSize:13, fontFamily:"'Inter',-apple-system,sans-serif" }}>
                     <thead>
-                      <tr style={{ background:'#f8fafc', borderBottom:'1.5px solid #e2e8f0' }}>
+                      <tr style={{ background:'rgba(255,255,255,0.04)', borderBottom:'1.5px solid rgba(255,255,255,0.1)' }}>
                         {['#','Glass Type','Thickness','Size','Design','Qty','Rate/SqFt','Amount','Running Ft'].map((h,i) => (
-                          <th key={h} style={{ padding:'8px 12px', textAlign: i===0||i===5||i===6||i===7||i===8 ? 'right':'left', fontSize:'10.5px', fontWeight:700, color:'#64748b', textTransform:'uppercase', letterSpacing:'0.05em', whiteSpace:'nowrap' }}>{h}</th>
+                          <th key={h} style={{ padding:'8px 12px', textAlign: i===0||i===5||i===6||i===7||i===8 ? 'right':'left', fontSize:'10.5px', fontWeight:700, color:'#7180A6', textTransform:'uppercase', letterSpacing:'0.05em', whiteSpace:'nowrap' }}>{h}</th>
                         ))}
                       </tr>
                     </thead>
@@ -3994,18 +3995,18 @@ function QuotationManagement() {
                       {selectedQuotation.items?.map((item, idx) => {
                         const running = getRunningFtForItem(item);
                         return (
-                          <tr key={idx} style={{ borderBottom:'1px solid #f1f5f9', background:'#fff', transition:'background 120ms ease' }}
-                            onMouseEnter={e=>e.currentTarget.style.background='#fafbfd'}
-                            onMouseLeave={e=>e.currentTarget.style.background='#fff'}>
-                            <td style={{ padding:'8px 12px', textAlign:'right', color:'#94a3b8', fontWeight:600, width:32 }}>{idx+1}</td>
-                            <td style={{ padding:'8px 12px', fontWeight:600, color:'#0f172a' }}>{item.glassType||'N/A'}</td>
-                            <td style={{ padding:'8px 12px', color:'#475569' }}>{item.thickness||'—'}</td>
-                            <td style={{ padding:'8px 12px', color:'#475569', whiteSpace:'nowrap' }}>{(v=>isNaN(parseFloat(v))?v:String(parseFloat(v)))(item.height)} {item.heightUnit||'FEET'} × {(v=>isNaN(parseFloat(v))?v:String(parseFloat(v)))(item.width)} {item.widthUnit||'FEET'}</td>
-                            <td style={{ padding:'8px 12px', color:'#64748b' }}>{item.design ? (item.design==='POLISH'?'Polish':item.design==='BEVELING'?'Beveling':item.design==='HALF_ROUND'?'Half Round':item.design):'—'}</td>
-                            <td style={{ padding:'8px 12px', color:'#374151', textAlign:'right' }}>{item.quantity}</td>
-                            <td style={{ padding:'8px 12px', color:'#374151', textAlign:'right', whiteSpace:'nowrap' }}>₹{(parseFloat(item.sellingPrice||item.ratePerSqft)||0).toFixed(2)}</td>
-                            <td style={{ padding:'8px 12px', fontWeight:700, color:'#0f172a', textAlign:'right', whiteSpace:'nowrap' }}>₹{(parseFloat(item.subtotal)||0).toFixed(2)}</td>
-                            <td style={{ padding:'8px 12px', fontWeight:600, color:'#6366f1', textAlign:'right', whiteSpace:'nowrap' }}>{running>0?`₹${running.toFixed(2)}`:'—'}</td>
+                          <tr key={idx} style={{ borderBottom:'1px solid rgba(255,255,255,0.05)', background:'rgba(17,27,53,0.5)', transition:'background 120ms ease' }}
+                            onMouseEnter={e=>e.currentTarget.style.background='#0A0F1E'}
+                            onMouseLeave={e=>e.currentTarget.style.background='rgba(17,27,53,0.5)'}>
+                            <td style={{ padding:'8px 12px', textAlign:'right', color:'#7180A6', fontWeight:600, width:32 }}>{idx+1}</td>
+                            <td style={{ padding:'8px 12px', fontWeight:600, color:'#E2E8F0' }}>{item.glassType||'N/A'}</td>
+                            <td style={{ padding:'8px 12px', color:'#A9B3D1' }}>{item.thickness||'—'}</td>
+                            <td style={{ padding:'8px 12px', color:'#A9B3D1', whiteSpace:'nowrap' }}>{(v=>isNaN(parseFloat(v))?v:String(parseFloat(v)))(item.height)} {item.heightUnit||'FEET'} × {(v=>isNaN(parseFloat(v))?v:String(parseFloat(v)))(item.width)} {item.widthUnit||'FEET'}</td>
+                            <td style={{ padding:'8px 12px', color:'#7180A6' }}>{item.design ? (item.design==='POLISH'?'Polish':item.design==='BEVELING'?'Beveling':item.design==='HALF_ROUND'?'Half Round':item.design):'—'}</td>
+                            <td style={{ padding:'8px 12px', color:'#A9B3D1', textAlign:'right' }}>{item.quantity}</td>
+                            <td style={{ padding:'8px 12px', color:'#A9B3D1', textAlign:'right', whiteSpace:'nowrap' }}>₹{(parseFloat(item.sellingPrice||item.ratePerSqft)||0).toFixed(2)}</td>
+                            <td style={{ padding:'8px 12px', fontWeight:700, color:'#37E3A5', textAlign:'right', whiteSpace:'nowrap' }}>₹{(parseFloat(item.subtotal)||0).toFixed(2)}</td>
+                            <td style={{ padding:'8px 12px', fontWeight:600, color:'#818CF8', textAlign:'right', whiteSpace:'nowrap' }}>{running>0?`₹${running.toFixed(2)}`:'—'}</td>
                           </tr>
                         );
                       })}
@@ -4018,41 +4019,41 @@ function QuotationManagement() {
               <div style={{ display:'none' }}>
               {/* Quotation Header Info */}
               <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "20px", marginBottom: "25px" }}>
-                <div style={{ padding: "15px", backgroundColor: "#f9fafb", borderRadius: "10px", border: "1px solid #e5e7eb" }}>
-                  <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "5px", fontWeight: "500" }}>Quotation Number</div>
-                  <div style={{ fontSize: "18px", color: "#1f2937", fontWeight: "700" }}>{selectedQuotation.quotationNumber}</div>
+                <div style={{ padding: "15px", backgroundColor: "rgba(255,255,255,0.04)", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.08)" }}>
+                  <div style={{ fontSize: "12px", color: "#7180A6", marginBottom: "5px", fontWeight: "500" }}>Quotation Number</div>
+                  <div style={{ fontSize: "18px", color: "#ffffff", fontWeight: "700" }}>{selectedQuotation.quotationNumber}</div>
                 </div>
-                <div style={{ padding: "15px", backgroundColor: "#f9fafb", borderRadius: "10px", border: "1px solid #e5e7eb" }}>
-                  <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "5px", fontWeight: "500" }}>Status</div>
+                <div style={{ padding: "15px", backgroundColor: "rgba(255,255,255,0.04)", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.08)" }}>
+                  <div style={{ fontSize: "12px", color: "#7180A6", marginBottom: "5px", fontWeight: "500" }}>Status</div>
                   <div>{getStatusBadge(selectedQuotation.status)}</div>
                 </div>
-                <div style={{ padding: "15px", backgroundColor: "#f9fafb", borderRadius: "10px", border: "1px solid #e5e7eb" }}>
-                  <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "5px", fontWeight: "500" }}>Customer</div>
-                  <div style={{ fontSize: "16px", color: "#1f2937", fontWeight: "600" }}>{selectedQuotation.customerName}</div>
+                <div style={{ padding: "15px", backgroundColor: "rgba(255,255,255,0.04)", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.08)" }}>
+                  <div style={{ fontSize: "12px", color: "#7180A6", marginBottom: "5px", fontWeight: "500" }}>Customer</div>
+                  <div style={{ fontSize: "16px", color: "#ffffff", fontWeight: "600" }}>{selectedQuotation.customerName}</div>
                   {selectedQuotation.customerMobile && (
-                    <div style={{ fontSize: "13px", color: "#6b7280", marginTop: "4px" }}>📱 {selectedQuotation.customerMobile}</div>
+                    <div style={{ fontSize: "13px", color: "#7180A6", marginTop: "4px" }}>📱 {selectedQuotation.customerMobile}</div>
                   )}
                 </div>
                 {selectedQuotation.referenceArchitect && (
-                  <div style={{ padding: "15px", backgroundColor: "#f0fdf4", borderRadius: "10px", border: "1px solid #bbf7d0" }}>
-                    <div style={{ fontSize: "12px", color: "#16a34a", marginBottom: "5px", fontWeight: "500" }}>🏛️ Reference By</div>
+                  <div style={{ padding: "15px", backgroundColor: "rgba(55,227,165,0.08)", borderRadius: "10px", border: "1px solid rgba(55,227,165,0.25)" }}>
+                    <div style={{ fontSize: "12px", color: "#37E3A5", marginBottom: "5px", fontWeight: "500" }}>🏛️ Reference By</div>
                     <div style={{ fontSize: "16px", color: "#0f172a", fontWeight: "600" }}>{selectedQuotation.referenceArchitect.name}</div>
-                    {selectedQuotation.referenceArchitect.mobile && <div style={{ fontSize: "13px", color: "#64748b", marginTop: "4px" }}>📱 {selectedQuotation.referenceArchitect.mobile}</div>}
-                    {selectedQuotation.referenceArchitect.email  && <div style={{ fontSize: "13px", color: "#64748b", marginTop: "2px" }}>📧 {selectedQuotation.referenceArchitect.email}</div>}
+                    {selectedQuotation.referenceArchitect.mobile && <div style={{ fontSize: "13px", color: "#7180A6", marginTop: "4px" }}>📱 {selectedQuotation.referenceArchitect.mobile}</div>}
+                    {selectedQuotation.referenceArchitect.email  && <div style={{ fontSize: "13px", color: "#7180A6", marginTop: "2px" }}>📧 {selectedQuotation.referenceArchitect.email}</div>}
                   </div>
                 )}
-                <div style={{ padding: "15px", backgroundColor: "#f9fafb", borderRadius: "10px", border: "1px solid #e5e7eb" }}>
-                  <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "5px", fontWeight: "500" }}>Billing Type</div>
-                  <div style={{ fontSize: "16px", color: "#1f2937", fontWeight: "600" }}>{selectedQuotation.billingType}</div>
+                <div style={{ padding: "15px", backgroundColor: "rgba(255,255,255,0.04)", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.08)" }}>
+                  <div style={{ fontSize: "12px", color: "#7180A6", marginBottom: "5px", fontWeight: "500" }}>Billing Type</div>
+                  <div style={{ fontSize: "16px", color: "#ffffff", fontWeight: "600" }}>{selectedQuotation.billingType}</div>
                 </div>
               </div>
 
               {/* Financial Summary */}
-              <div style={{ marginBottom: "25px", padding: "20px", backgroundColor: "#fef3c7", borderRadius: "12px", border: "2px solid #fbbf24" }}>
-                <h3 style={{ margin: "0 0 15px 0", color: "#92400e", fontSize: "18px", fontWeight: "600" }}>💰 Financial Summary</h3>
+              <div style={{ marginBottom: "25px", padding: "20px", backgroundColor: "rgba(255,185,94,0.1)", borderRadius: "12px", border: "2px solid rgba(255,185,94,0.4)" }}>
+                <h3 style={{ margin: "0 0 15px 0", color: "#FFB95E", fontSize: "18px", fontWeight: "600" }}>💰 Financial Summary</h3>
                 <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "15px" }}>
                   <div>
-                    <div style={{ fontSize: "13px", color: "#92400e", marginBottom: "5px" }}>Subtotal</div>
+                    <div style={{ fontSize: "13px", color: "#FFB95E", marginBottom: "5px" }}>Subtotal</div>
                     <div style={{ fontSize: "20px", color: "#78350f", fontWeight: "700" }}>₹{(parseFloat(selectedQuotation.subtotal) || 0).toFixed(2)}</div>
                   </div>
                   {(() => {
@@ -4060,12 +4061,12 @@ function QuotationManagement() {
                     if (!runningSummary || runningSummary.total <= 0) return null;
                     return (
                       <div>
-                        <div style={{ fontSize: "13px", color: "#92400e", marginBottom: "5px" }}>Running Ft</div>
+                        <div style={{ fontSize: "13px", color: "#FFB95E", marginBottom: "5px" }}>Running Ft</div>
                         <div style={{ fontSize: "20px", color: "#78350f", fontWeight: "700" }}>₹{runningSummary.total.toFixed(2)}</div>
                         {(runningSummary.polish > 0 ||
                           runningSummary.halfRound > 0 ||
                           runningSummary.beveling > 0) && (
-                          <div style={{ marginTop: "6px", fontSize: "12px", color: "#92400e" }}>
+                          <div style={{ marginTop: "6px", fontSize: "12px", color: "#FFB95E" }}>
                             {runningSummary.polish > 0 && (
                               <div>Polish: ₹{runningSummary.polish.toFixed(2)}</div>
                             )}
@@ -4082,13 +4083,13 @@ function QuotationManagement() {
                   })()}
                   {selectedQuotation.installationCharge > 0 && (
                     <div>
-                      <div style={{ fontSize: "13px", color: "#92400e", marginBottom: "5px" }}>Installation Charge</div>
+                      <div style={{ fontSize: "13px", color: "#FFB95E", marginBottom: "5px" }}>Installation Charge</div>
                       <div style={{ fontSize: "16px", color: "#78350f", fontWeight: "600" }}>₹{(parseFloat(selectedQuotation.installationCharge) || 0).toFixed(2)}</div>
                     </div>
                   )}
                   {selectedQuotation.transportCharge > 0 && (
                     <div>
-                      <div style={{ fontSize: "13px", color: "#92400e", marginBottom: "5px" }}>
+                      <div style={{ fontSize: "13px", color: "#FFB95E", marginBottom: "5px" }}>
                         Transport Charge {selectedQuotation.transportationRequired && "🚚"}
                       </div>
                       <div style={{ fontSize: "16px", color: "#78350f", fontWeight: "600" }}>₹{(parseFloat(selectedQuotation.transportCharge) || 0).toFixed(2)}</div>
@@ -4096,7 +4097,7 @@ function QuotationManagement() {
                   )}
                   {selectedQuotation.discount > 0 && (
                     <div>
-                      <div style={{ fontSize: "13px", color: "#92400e", marginBottom: "5px" }}>
+                      <div style={{ fontSize: "13px", color: "#FFB95E", marginBottom: "5px" }}>
                         Discount {selectedQuotation.discountType === "PERCENTAGE" && selectedQuotation.discountValue 
                           ? `(${selectedQuotation.discountValue}%)` 
                           : ""}
@@ -4107,12 +4108,12 @@ function QuotationManagement() {
                   {selectedQuotation.billingType === "GST" && selectedQuotation.gstAmount > 0 && (
                     <>
                       <div>
-                        <div style={{ fontSize: "13px", color: "#92400e", marginBottom: "5px" }}>GST ({selectedQuotation.gstPercentage}%)</div>
+                        <div style={{ fontSize: "13px", color: "#FFB95E", marginBottom: "5px" }}>GST ({selectedQuotation.gstPercentage}%)</div>
                         <div style={{ fontSize: "16px", color: "#78350f", fontWeight: "600" }}>₹{(parseFloat(selectedQuotation.gstAmount) || 0).toFixed(2)}</div>
                       </div>
                       {selectedQuotation.cgst > 0 && (
                         <div>
-                          <div style={{ fontSize: "13px", color: "#92400e", marginBottom: "5px" }}>CGST / SGST</div>
+                          <div style={{ fontSize: "13px", color: "#FFB95E", marginBottom: "5px" }}>CGST / SGST</div>
                           <div style={{ fontSize: "14px", color: "#78350f" }}>
                             ₹{(parseFloat(selectedQuotation.cgst) || 0).toFixed(2)} / ₹{(parseFloat(selectedQuotation.sgst) || 0).toFixed(2)}
                           </div>
@@ -4120,7 +4121,7 @@ function QuotationManagement() {
                       )}
                       {selectedQuotation.igst > 0 && (
                         <div>
-                          <div style={{ fontSize: "13px", color: "#92400e", marginBottom: "5px" }}>IGST</div>
+                          <div style={{ fontSize: "13px", color: "#FFB95E", marginBottom: "5px" }}>IGST</div>
                           <div style={{ fontSize: "16px", color: "#78350f", fontWeight: "600" }}>₹{(parseFloat(selectedQuotation.igst) || 0).toFixed(2)}</div>
                         </div>
                       )}
@@ -4179,7 +4180,7 @@ function QuotationManagement() {
                         paddingTop: "15px", 
                         borderTop: "2px solid #fbbf24" 
                       }}>
-                        <div style={{ fontSize: "13px", color: "#92400e", marginBottom: "5px", fontWeight: "600" }}>
+                        <div style={{ fontSize: "13px", color: "#FFB95E", marginBottom: "5px", fontWeight: "600" }}>
                           💰 Profit (Admin Only)
                         </div>
                         <div style={{ 
@@ -4192,7 +4193,7 @@ function QuotationManagement() {
                         <div style={{ 
                           marginTop: "6px", 
                           fontSize: "12px", 
-                          color: "#92400e" 
+                          color: "#FFB95E" 
                         }}>
                           Purchase Cost: ₹{totalPurchaseCost.toFixed(2)} | 
                           Selling Price: ₹{totalSellingPrice.toFixed(2)} | 
@@ -4202,7 +4203,7 @@ function QuotationManagement() {
                     );
                   })()}
                   <div style={{ gridColumn: isMobile ? "1" : "1 / -1", paddingTop: "15px", borderTop: "2px solid #fbbf24" }}>
-                    <div style={{ fontSize: "14px", color: "#92400e", marginBottom: "8px", fontWeight: "500" }}>Grand Total</div>
+                    <div style={{ fontSize: "14px", color: "#FFB95E", marginBottom: "8px", fontWeight: "500" }}>Grand Total</div>
                     <div style={{ fontSize: "28px", color: "#78350f", fontWeight: "800" }}>₹{(parseFloat(selectedQuotation.grandTotal) || 0).toFixed(2)}</div>
                   </div>
                 </div>
@@ -4210,20 +4211,20 @@ function QuotationManagement() {
 
               {/* Items Table */}
               <div style={{ marginBottom: "25px" }}>
-                <h3 style={{ margin: "0 0 15px 0", color: "#374151", fontSize: "18px", fontWeight: "600" }}>📦 Quotation Items</h3>
+                <h3 style={{ margin: "0 0 15px 0", color: "#A9B3D1", fontSize: "18px", fontWeight: "600" }}>📦 Quotation Items</h3>
                 <div style={{ overflowX: "auto" }}>
                   <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "600px" }}>
                     <thead>
-                      <tr style={{ backgroundColor: "#f3f4f6" }}>
-                        <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#374151" }}>#</th>
-                        <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#374151" }}>Glass Type</th>
-                        <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#374151" }}>Thickness</th>
-                        <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#374151" }}>Size</th>
-                        <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#374151" }}>Design</th>
-                        <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#374151" }}>Qty</th>
-                        <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#374151" }}>Selling Price</th>
-                        <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#374151" }}>Subtotal</th>
-                        <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#374151" }}>Running Ft</th>
+                      <tr style={{ backgroundColor: "rgba(17,27,53,0.7)" }}>
+                        <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#A9B3D1" }}>#</th>
+                        <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#A9B3D1" }}>Glass Type</th>
+                        <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#A9B3D1" }}>Thickness</th>
+                        <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#A9B3D1" }}>Size</th>
+                        <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#A9B3D1" }}>Design</th>
+                        <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#A9B3D1" }}>Qty</th>
+                        <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#A9B3D1" }}>Selling Price</th>
+                        <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#A9B3D1" }}>Subtotal</th>
+                        <th style={{ padding: "12px", textAlign: "left", fontSize: "13px", fontWeight: "600", color: "#A9B3D1" }}>Running Ft</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -4231,20 +4232,20 @@ function QuotationManagement() {
                         <tr
                           key={idx}
                           style={{
-                            borderTop: "1px solid #e5e7eb",
-                            backgroundColor: idx % 2 === 0 ? "#ffffff" : "#f9fafb",
+                            borderTop: "1px solid rgba(255,255,255,0.07)",
+                            backgroundColor: idx % 2 === 0 ? "rgba(17,27,53,0.5)" : "rgba(17,27,53,0.8)",
                             transition: "background-color 0.2s",
                           }}
-                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f3f4f6")}
-                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = idx % 2 === 0 ? "#ffffff" : "#f9fafb")}
+                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.08)")}
+                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = idx % 2 === 0 ? "rgba(17,27,53,0.5)" : "rgba(17,27,53,0.8)")}
                         >
-                          <td style={{ padding: "12px", fontWeight: "600", color: "#6366f1" }}>{idx + 1}</td>
+                          <td style={{ padding: "12px", fontWeight: "600", color: "#818CF8" }}>{idx + 1}</td>
                           <td style={{ padding: "12px", fontWeight: "500" }}>{item.glassType || "N/A"}</td>
                           <td style={{ padding: "12px" }}>{item.thickness || "N/A"}</td>
                           <td style={{ padding: "12px" }}>
                             {item.height} {item.heightUnit || "FEET"} × {item.width} {item.widthUnit || "FEET"}
                           </td>
-                          <td style={{ padding: "12px", color: "#6b7280" }}>
+                          <td style={{ padding: "12px", color: "#7180A6" }}>
                             {item.design
                               ? item.design === "POLISH"
                                 ? "Polish"
@@ -4257,8 +4258,8 @@ function QuotationManagement() {
                           </td>
                           <td style={{ padding: "12px" }}>{item.quantity}</td>
                           <td style={{ padding: "12px" }}>₹{(parseFloat(item.sellingPrice || item.ratePerSqft) || 0).toFixed(2)}</td>
-                          <td style={{ padding: "12px", fontWeight: "600", color: "#1f2937" }}>₹{(parseFloat(item.subtotal) || 0).toFixed(2)}</td>
-                          <td style={{ padding: "12px", fontWeight: "600", color: "#6366f1" }}>
+                          <td style={{ padding: "12px", fontWeight: "600", color: "#ffffff" }}>₹{(parseFloat(item.subtotal) || 0).toFixed(2)}</td>
+                          <td style={{ padding: "12px", fontWeight: "600", color: "#818CF8" }}>
                             {(() => {
                               const running = getRunningFtForItem(item);
                               return running > 0 ? `₹${running.toFixed(2)}` : "-";
@@ -4295,38 +4296,24 @@ function QuotationManagement() {
           >
             <div
               style={{
-                backgroundColor: "white",
+                backgroundColor: "rgba(17,27,53,0.98)",
+                border: "1px solid rgba(255,255,255,0.1)",
                 padding: isMobile ? "25px" : "35px",
                 borderRadius: "16px",
                 maxWidth: "500px",
                 width: "100%",
-                boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+                boxShadow: "0 20px 60px rgba(0,0,0,0.6)",
               }}
               onClick={(e) => e.stopPropagation()}
             >
               <div style={{ marginBottom: "20px", textAlign: "center" }}>
-                <div
-                  style={{
-                    fontSize: "48px",
-                    marginBottom: "15px",
-                    color:
-                      confirmAction.type === "CONFIRM"
-                        ? "#22c55e"
-                        : confirmAction.type === "REJECT"
-                        ? "#f59e0b"
-                        : "#ef4444",
-                  }}
-                >
-                  {confirmAction.type === "CONFIRM"
-                    ? "⚠️"
-                    : confirmAction.type === "REJECT"
-                    ? "⚠️"
-                    : "🗑️"}
+                <div style={{ fontSize: "48px", marginBottom: "15px" }}>
+                  {confirmAction.type === "CONFIRM" ? "⚠️" : confirmAction.type === "REJECT" ? "⚠️" : "🗑️"}
                 </div>
                 <h2
                   style={{
                     margin: 0,
-                    color: "#1f2937",
+                    color: "#E2E8F0",
                     fontSize: isMobile ? "20px" : "24px",
                     fontWeight: "700",
                     marginBottom: "10px",
@@ -4338,7 +4325,7 @@ function QuotationManagement() {
                     ? "Reject Quotation?"
                     : "Delete Quotation?"}
                 </h2>
-                <p style={{ margin: "8px 0 0 0", color: "#6b7280", fontSize: "14px", lineHeight: "1.6" }}>
+                <p style={{ margin: "8px 0 0 0", color: "#A9B3D1", fontSize: "14px", lineHeight: "1.6" }}>
                   {confirmAction.type === "CONFIRM"
                     ? `Are you sure you want to confirm quotation "${confirmAction.quotationNumber}"? This action will lock the quotation and enable invoice conversion.`
                     : confirmAction.type === "REJECT"
@@ -4349,16 +4336,17 @@ function QuotationManagement() {
                   style={{
                     marginTop: "15px",
                     padding: "12px",
-                    backgroundColor: "#f3f4f6",
+                    backgroundColor: "rgba(255,255,255,0.06)",
                     borderRadius: "8px",
                     textAlign: "left",
+                    border: "1px solid rgba(255,255,255,0.08)",
                   }}
                 >
-                  <div style={{ fontSize: "13px", color: "#6b7280", marginBottom: "4px" }}>Quotation Details:</div>
-                  <div style={{ fontSize: "14px", color: "#1f2937", fontWeight: "600" }}>
+                  <div style={{ fontSize: "13px", color: "#7180A6", marginBottom: "4px" }}>Quotation Details:</div>
+                  <div style={{ fontSize: "14px", color: "#E2E8F0", fontWeight: "600" }}>
                     #{confirmAction.quotationNumber}
                   </div>
-                  <div style={{ fontSize: "13px", color: "#6b7280", marginTop: "4px" }}>
+                  <div style={{ fontSize: "13px", color: "#A9B3D1", marginTop: "4px" }}>
                     Customer: {confirmAction.customerName}
                   </div>
                 </div>
@@ -4407,7 +4395,7 @@ function QuotationManagement() {
                     if (confirmAction.type === "CONFIRM") {
                       e.target.style.backgroundColor = "#22c55e";
                     } else if (confirmAction.type === "REJECT") {
-                      e.target.style.backgroundColor = "#f59e0b";
+                      e.target.style.backgroundColor = "#FFB95E";
                     } else {
                       e.target.style.backgroundColor = "#ef4444";
                     }
@@ -4424,7 +4412,7 @@ function QuotationManagement() {
                   style={{
                     flex: 1,
                     padding: "12px 24px",
-                    backgroundColor: "#6b7280",
+                    backgroundcolor: "#7180A6",
                     color: "white",
                     border: "none",
                     borderRadius: "8px",
@@ -4433,8 +4421,8 @@ function QuotationManagement() {
                     fontWeight: "500",
                     transition: "all 0.2s",
                   }}
-                  onMouseOver={(e) => (e.target.style.backgroundColor = "#4b5563")}
-                  onMouseOut={(e) => (e.target.style.backgroundColor = "#6b7280")}
+                  onMouseOver={(e) => (e.target.style.backgroundColor = "rgba(255,255,255,0.14)")}
+                  onMouseOut={(e) => (e.target.style.backgroundColor = "rgba(255,255,255,0.08)")}
                 >
                   ❌ Cancel
                 </button>
@@ -4468,13 +4456,13 @@ function QuotationManagement() {
           >
             <div
               style={{
-                background: "white",
+                background: "rgba(17,27,53,0.98)",
                 borderRadius: "16px",
                 padding: "32px",
                 maxWidth: "500px",
                 width: "90%",
-                boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-                border: "1px solid rgba(226, 232, 240, 0.8)",
+                boxShadow: "0 20px 60px rgba(0,0,0,0.6)",
+                border: "1px solid rgba(255,255,255,0.1)",
                 animation: "slideUp 0.3s ease-out",
               }}
               onClick={(e) => e.stopPropagation()}
@@ -4503,14 +4491,14 @@ function QuotationManagement() {
                     style={{
                       fontSize: "20px",
                       fontWeight: "700",
-                      color: "#0f172a",
+                      color: "#E2E8F0",
                       margin: 0,
                       marginBottom: "4px",
                     }}
                   >
                     Enter Rejection Reason
                   </h3>
-                  <p style={{ fontSize: "13px", color: "#64748b", margin: 0 }}>
+                  <p style={{ fontSize: "13px", color: "#7180A6", margin: 0 }}>
                     Please provide a reason for rejecting this quotation
                   </p>
                 </div>
@@ -4525,9 +4513,9 @@ function QuotationManagement() {
                   minHeight: "120px",
                   padding: "12px 16px",
                   borderRadius: "8px",
-                  border: "1px solid rgba(226, 232, 240, 0.8)",
-                  background: "#ffffff",
-                  color: "#0f172a",
+                  border: "1.5px solid rgba(255,255,255,0.1)",
+                  background: "rgba(255,255,255,0.06)",
+                  color: "#E2E8F0",
                   outline: "none",
                   fontSize: "14px",
                   fontFamily: "inherit",
@@ -4536,11 +4524,11 @@ function QuotationManagement() {
                   marginBottom: "24px",
                 }}
                 onFocus={(e) => {
-                  e.target.style.borderColor = "#6366f1";
-                  e.target.style.boxShadow = "0 0 0 3px rgba(99, 102, 241, 0.1)";
+                  e.target.style.borderColor = "rgba(79,93,255,0.6)";
+                  e.target.style.boxShadow = "0 0 0 3px rgba(79,93,255,0.15)";
                 }}
                 onBlur={(e) => {
-                  e.target.style.borderColor = "rgba(226, 232, 240, 0.8)";
+                  e.target.style.borderColor = "rgba(255,255,255,0.1)";
                   e.target.style.boxShadow = "none";
                 }}
                 autoFocus
@@ -4583,7 +4571,7 @@ function QuotationManagement() {
                     padding: "12px 24px",
                     background: rejectionReason.trim()
                       ? "linear-gradient(135deg, #f59e0b, #d97706)"
-                      : "#d1d5db",
+                      : "rgba(255,255,255,0.1)",
                     border: "none",
                     borderRadius: "8px",
                     cursor: rejectionReason.trim() ? "pointer" : "not-allowed",
@@ -4627,7 +4615,7 @@ function QuotationManagement() {
             onClick={() => navigate("/invoices")}
             style={{
               padding: "12px 32px",
-              backgroundColor: "#6366f1",
+              backgroundcolor: "#818CF8",
               color: "white",
               border: "none",
               borderRadius: "8px",
@@ -4641,12 +4629,12 @@ function QuotationManagement() {
               boxShadow: "0 4px 6px -1px rgba(99, 102, 241, 0.3)",
             }}
             onMouseOver={(e) => {
-              e.target.style.backgroundColor = "#4f46e5";
+              e.target.style.backgroundColor = "#3D4DE8";
               e.target.style.boxShadow = "0 6px 8px -1px rgba(99, 102, 241, 0.4)";
               e.target.style.transform = "translateY(-2px)";
             }}
             onMouseOut={(e) => {
-              e.target.style.backgroundColor = "#6366f1";
+              e.target.style.backgroundColor = "#4F5DFF";
               e.target.style.boxShadow = "0 4px 6px -1px rgba(99, 102, 241, 0.3)";
               e.target.style.transform = "translateY(0)";
             }}
@@ -4661,4 +4649,8 @@ function QuotationManagement() {
 }
 
 export default QuotationManagement;
+
+
+
+
 

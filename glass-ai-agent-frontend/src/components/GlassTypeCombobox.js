@@ -1,21 +1,21 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 
 /**
- * Premium searchable combobox for glass type selection.
+ * Premium searchable combobox for glass type selection — dark theme.
  * Props:
- *   options   – string[]   all available glass types
- *   value     – string     currently selected value (or "")
- *   onChange  – fn(string) called with new value ("" = cleared)
+ *   options     – string[]   all available glass types
+ *   value       – string     currently selected value (or "")
+ *   onChange    – fn(string) called with new value ("" = cleared)
  *   placeholder – string
  */
 function GlassTypeCombobox({ options = [], value = "", onChange, placeholder = "All glass types" }) {
-  const [inputText, setInputText]   = useState("");   // live search text
-  const [isOpen, setIsOpen]         = useState(false);
-  const [activeIdx, setActiveIdx]   = useState(-1);   // keyboard nav
+  const [inputText, setInputText] = useState("");   // live search text
+  const [isOpen, setIsOpen]       = useState(false);
+  const [activeIdx, setActiveIdx] = useState(-1);   // keyboard nav
 
-  const wrapperRef  = useRef(null);
-  const inputRef    = useRef(null);
-  const listRef     = useRef(null);
+  const wrapperRef = useRef(null);
+  const inputRef   = useRef(null);
+  const listRef    = useRef(null);
 
   /* Close on outside click */
   useEffect(() => {
@@ -121,7 +121,7 @@ function GlassTypeCombobox({ options = [], value = "", onChange, placeholder = "
     return (
       <>
         {text.slice(0, idx)}
-        <mark style={{ background: "#eef2ff", color: "#4f46e5", fontWeight: 700, borderRadius: 2 }}>
+        <mark style={{ background: "rgba(79,93,255,0.3)", color: "#fff", fontWeight: 700, borderRadius: 2 }}>
           {text.slice(idx, idx + q.length)}
         </mark>
         {text.slice(idx + q.length)}
@@ -200,6 +200,16 @@ function GlassTypeCombobox({ options = [], value = "", onChange, placeholder = "
           )}
         </div>
       )}
+
+      <style>{`
+        .glass-combobox-input::placeholder {
+          color: rgba(113,128,166,0.7);
+        }
+        @keyframes gtFadeIn {
+          from { opacity: 0; transform: translateY(-4px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }
@@ -227,22 +237,26 @@ const styles = {
   wrapper: {
     position: "relative",
     width: "100%",
-    fontFamily: "'Inter', -apple-system, sans-serif",
+    fontFamily: "'Inter',-apple-system,sans-serif",
   },
 
   trigger: (isOpen, hasValue) => ({
     display: "flex",
     alignItems: "center",
-    height: "38px",
-    borderRadius: isOpen ? "8px 8px 0 0" : "8px",
-    border: isOpen || hasValue ? "1.5px solid #6366f1" : "1.5px solid #e2e8f0",
-    background: "#fff",
+    height: "40px",
+    borderRadius: isOpen ? "10px 10px 0 0" : "10px",
+    border: isOpen || hasValue
+      ? "1.5px solid rgba(79,93,255,0.6)"
+      : "1.5px solid rgba(255,255,255,0.1)",
+    background: isOpen
+      ? "rgba(255,255,255,0.09)"
+      : "rgba(255,255,255,0.06)",
     boxShadow: isOpen
-      ? "0 0 0 3px rgba(99,102,241,0.10)"
-      : "0 1px 2px rgba(15,23,42,0.04)",
+      ? "0 0 0 3px rgba(79,93,255,0.15)"
+      : "none",
     cursor: "text",
     overflow: "hidden",
-    transition: "border-color 160ms ease, box-shadow 160ms ease",
+    transition: "border-color 150ms ease, box-shadow 150ms ease, background 150ms ease",
     paddingLeft: "12px",
     paddingRight: "4px",
     gap: "6px",
@@ -254,7 +268,7 @@ const styles = {
     outline: "none",
     background: "transparent",
     fontSize: "13.5px",
-    color: "#0f172a",
+    color: "#fff",
     fontFamily: "inherit",
     padding: "0",
     minWidth: 0,
@@ -265,7 +279,7 @@ const styles = {
   selectedPill: {
     flex: 1,
     fontSize: "13.5px",
-    color: "#0f172a",
+    color: "#fff",
     fontWeight: "500",
     whiteSpace: "nowrap",
     overflow: "hidden",
@@ -279,20 +293,20 @@ const styles = {
     alignItems: "center",
     paddingRight: "8px",
     flexShrink: 0,
-    color: "#94a3b8",
+    color: "rgba(113,128,166,0.7)",
   },
 
   clearBtn: {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    background: "#f1f5f9",
+    background: "rgba(255,255,255,0.1)",
     border: "none",
     borderRadius: "50%",
     width: "22px",
     height: "22px",
     cursor: "pointer",
-    color: "#64748b",
+    color: "#A9B3D1",
     padding: 0,
     transition: "background 120ms ease",
   },
@@ -302,26 +316,29 @@ const styles = {
     top: "100%",
     left: 0,
     right: 0,
-    background: "#fff",
-    border: "1.5px solid #6366f1",
-    borderTop: "1px solid #e8edf2",
-    borderRadius: "0 0 10px 10px",
-    boxShadow: "0 12px 32px rgba(15,23,42,0.12)",
-    zIndex: 9999,
+    background: "rgba(17,27,53,0.98)",
+    border: "1px solid rgba(255,255,255,0.1)",
+    borderRadius: "0 0 12px 12px",
+    boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+    zIndex: 1000,
     maxHeight: "232px",
     overflowY: "auto",
     animation: "gtFadeIn 0.12s ease-out",
   },
 
   option: (selected, highlighted) => ({
-    padding: "9px 13px",
-    fontSize: "13.5px",
+    padding: "9px 12px",
+    fontSize: "13px",
     cursor: "pointer",
     display: "flex",
     alignItems: "center",
     gap: "8px",
-    background: highlighted ? "#f5f3ff" : selected ? "#eef2ff" : "transparent",
-    color: selected ? "#4f46e5" : "#1e293b",
+    background: selected
+      ? "rgba(79,93,255,0.2)"
+      : highlighted
+        ? "rgba(255,255,255,0.07)"
+        : "transparent",
+    color: selected || highlighted ? "#fff" : "#A9B3D1",
     fontWeight: selected ? "600" : "400",
     fontFamily: "inherit",
     userSelect: "none",
@@ -330,22 +347,21 @@ const styles = {
 
   allIcon: {
     fontSize: "13px",
-    color: "#94a3b8",
+    color: "rgba(113,128,166,0.7)",
     flexShrink: 0,
   },
 
   divider: {
     height: "1px",
-    background: "#f1f5f9",
+    background: "rgba(255,255,255,0.06)",
     margin: "2px 0",
   },
 
   empty: {
-    padding: "14px 13px",
+    padding: "12px",
     fontSize: "13px",
-    color: "#94a3b8",
+    color: "#7180A6",
     textAlign: "center",
-    fontStyle: "italic",
   },
 };
 

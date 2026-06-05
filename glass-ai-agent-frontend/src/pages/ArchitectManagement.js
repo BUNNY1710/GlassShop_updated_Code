@@ -1,35 +1,63 @@
 import { useState, useEffect, useCallback } from "react";
 import PageWrapper from "../components/PageWrapper";
-import dashboardBg from "../assets/dashboard-bg.jpg";
 import {
   getArchitects, createArchitect, updateArchitect, deleteArchitect,
   searchArchitects, getArchitectById, getArchitectQuotations, getArchitectOrders,
 } from "../api/quotationApi";
 import { useResponsive } from "../hooks/useResponsive";
-import { Button, Badge } from "../components/ui";
 import "../styles/design-system.css";
 
 /* ─── helpers ───────────────────────────────────────────────────────────────── */
 const fmt  = n => `₹${(parseFloat(n) || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
 const fmtK = n => { const v = parseFloat(n) || 0; return v >= 1e5 ? `₹${(v/1e5).toFixed(2)}L` : v >= 1e3 ? `₹${(v/1e3).toFixed(1)}K` : fmt(v); };
 
-const inputStyle = { width: "100%", padding: "9px 12px", borderRadius: 8, border: "1.5px solid #e2e8f0", fontSize: 13.5, boxSizing: "border-box", transition: "border-color 150ms ease, box-shadow 150ms ease", outline: "none", fontFamily: "'Inter',-apple-system,sans-serif", color: "#0f172a", background: "#fff" };
-const labelSt = { display: "block", marginBottom: 5, color: "#475569", fontWeight: 600, fontSize: 12.5, fontFamily: "'Inter',-apple-system,sans-serif" };
+const inputStyle = {
+  width: "100%", padding: "9px 12px", borderRadius: 8,
+  border: "1.5px solid rgba(255,255,255,0.1)", fontSize: 13.5, boxSizing: "border-box",
+  transition: "border-color 150ms ease, box-shadow 150ms ease", outline: "none",
+  fontFamily: "'Inter',-apple-system,sans-serif", color: "#fff",
+  background: "rgba(255,255,255,0.06)",
+};
+const labelSt = {
+  display: "block", marginBottom: 5, color: "#7180A6", fontWeight: 700,
+  fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em",
+  fontFamily: "'Inter',-apple-system,sans-serif",
+};
 
 const TABS = ["Details", "Customers", "Quotations", "Orders", "Analytics"];
-const StatusBadge = ({ status }) => <Badge status={status} dot label={status} />;
+
+const StatusBadge = ({ status }) => {
+  const colors = {
+    CONFIRMED: { bg: "rgba(55,227,165,0.15)", color: "#37E3A5", border: "rgba(55,227,165,0.3)" },
+    APPROVED:  { bg: "rgba(55,227,165,0.15)", color: "#37E3A5", border: "rgba(55,227,165,0.3)" },
+    DRAFT:     { bg: "rgba(169,179,209,0.12)", color: "#A9B3D1", border: "rgba(169,179,209,0.2)" },
+    REJECTED:  { bg: "rgba(255,107,129,0.15)", color: "#FF6B81", border: "rgba(255,107,129,0.3)" },
+    PAID:      { bg: "rgba(55,227,165,0.15)", color: "#37E3A5", border: "rgba(55,227,165,0.3)" },
+    PENDING:   { bg: "rgba(255,185,94,0.15)", color: "#FFB95E", border: "rgba(255,185,94,0.3)" },
+    PARTIAL:   { bg: "rgba(255,185,94,0.15)", color: "#FFB95E", border: "rgba(255,185,94,0.3)" },
+  };
+  const c = colors[status] || { bg: "rgba(255,255,255,0.08)", color: "#A9B3D1", border: "rgba(255,255,255,0.12)" };
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center", padding: "2px 9px", borderRadius: 99,
+      fontSize: 11.5, fontWeight: 700, background: c.bg, color: c.color, border: `1px solid ${c.border}`,
+    }}>
+      {status}
+    </span>
+  );
+};
 
 /* ─── FocusInput ────────────────────────────────────────────────────────────── */
 function FI({ type = "text", value, onChange, placeholder, required, maxLength }) {
   const [f, setF] = useState(false);
   return <input type={type} value={value} onChange={onChange} placeholder={placeholder} required={required} maxLength={maxLength}
-    style={{ ...inputStyle, borderColor: f ? "#6366f1" : "#d1d5db" }}
+    style={{ ...inputStyle, borderColor: f ? "rgba(79,93,255,0.6)" : "rgba(255,255,255,0.1)" }}
     onFocus={() => setF(true)} onBlur={() => setF(false)} />;
 }
 function FTA({ value, onChange, placeholder, rows = 3 }) {
   const [f, setF] = useState(false);
   return <textarea value={value} onChange={onChange} placeholder={placeholder} rows={rows}
-    style={{ ...inputStyle, resize: "vertical", fontFamily: "inherit", minHeight: rows * 26, borderColor: f ? "#6366f1" : "#d1d5db" }}
+    style={{ ...inputStyle, resize: "vertical", fontFamily: "inherit", minHeight: rows * 26, borderColor: f ? "rgba(79,93,255,0.6)" : "rgba(255,255,255,0.1)" }}
     onFocus={() => setF(true)} onBlur={() => setF(false)} />;
 }
 
@@ -175,12 +203,13 @@ function ArchitectDetailModal({ id, onClose, onEdit, isMobile }) {
   const customers = detail?.referredCustomers || [];
 
   const tabBar = (
-    <div style={{ display: "flex", gap: 4, padding: "0 4px", borderBottom: "1px solid #e8edf2", overflowX: "auto", marginBottom: 0 }}>
+    <div style={{ display: "flex", gap: 4, padding: "0 4px", borderBottom: "1px solid rgba(255,255,255,0.08)", overflowX: "auto", marginBottom: 0 }}>
       {TABS.map(t => (
         <button key={t} onClick={() => setActiveTab(t)}
           style={{ padding: "10px 14px", border: "none", background: "none", cursor: "pointer",
-            fontWeight: activeTab === t ? 700 : 500, fontSize: 13, color: activeTab === t ? "#4f46e5" : "#64748b",
-            borderBottom: activeTab === t ? "2.5px solid #4f46e5" : "2.5px solid transparent",
+            fontWeight: activeTab === t ? 700 : 500, fontSize: 13,
+            color: activeTab === t ? "#4F5DFF" : "#7180A6",
+            borderBottom: activeTab === t ? "2.5px solid #4F5DFF" : "2.5px solid transparent",
             whiteSpace: "nowrap", transition: "all 0.15s" }}>
           {t}
         </button>
@@ -189,31 +218,42 @@ function ArchitectDetailModal({ id, onClose, onEdit, isMobile }) {
   );
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", display: "flex",
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex",
       alignItems: isMobile ? "flex-end" : "center", justifyContent: "center", zIndex: 10010,
       padding: isMobile ? 0 : "20px" }}
       onClick={onClose}>
-      <div style={{ background: "white", borderRadius: isMobile ? "20px 20px 0 0" : 16,
+      <div style={{
+        background: "rgba(17,27,53,0.98)", borderRadius: isMobile ? "20px 20px 0 0" : 16,
+        border: "1px solid rgba(255,255,255,0.1)",
         width: isMobile ? "100%" : "min(96vw,720px)", maxHeight: isMobile ? "94vh" : "90vh",
-        display: "flex", flexDirection: "column", boxShadow: "0 25px 60px rgba(0,0,0,0.2)" }}
+        display: "flex", flexDirection: "column", boxShadow: "0 25px 60px rgba(0,0,0,0.5)" }}
         onClick={e => e.stopPropagation()}>
 
         {/* Modal header */}
-        <div style={{ padding: "16px 20px 0", borderBottom: "1px solid #e8edf2", flexShrink: 0 }}>
+        <div style={{ padding: "16px 20px 0", borderBottom: "1px solid rgba(255,255,255,0.08)", flexShrink: 0 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <span style={{ fontSize: 28 }}>🏛️</span>
               <div>
-                <div style={{ fontSize: 17, fontWeight: 700, color: "#0f172a" }}>{detail?.name || "…"}</div>
-                <div style={{ fontSize: 12, color: "#64748b" }}>
+                <div style={{ fontSize: 17, fontWeight: 700, color: "#fff" }}>{detail?.name || "…"}</div>
+                <div style={{ fontSize: 12, color: "#7180A6" }}>
                   {detail?.mobile} {detail?.email ? `· ${detail.email}` : ""}
                 </div>
               </div>
             </div>
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              {detail && <Button variant="warning" size="sm" icon="✏️" onClick={() => onEdit(detail)}>Edit</Button>}
+              {detail && (
+                <button
+                  onClick={() => onEdit(detail)}
+                  style={{
+                    padding: "6px 14px", borderRadius: 8, border: "1px solid rgba(255,185,94,0.3)",
+                    background: "rgba(255,185,94,0.12)", color: "#FFB95E",
+                    fontSize: 13, fontWeight: 600, cursor: "pointer",
+                  }}
+                >✏️ Edit</button>
+              )}
               <button onClick={onClose}
-                style={{ background: "#f1f5f9", border: "none", borderRadius: "50%", width: 32, height: 32, cursor: "pointer", fontSize: 16, color: "#64748b" }}>✕</button>
+                style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "50%", width: 32, height: 32, cursor: "pointer", fontSize: 16, color: "#A9B3D1" }}>✕</button>
             </div>
           </div>
           {tabBar}
@@ -222,7 +262,7 @@ function ArchitectDetailModal({ id, onClose, onEdit, isMobile }) {
         {/* Tab content */}
         <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px" }}>
           {loading ? (
-            <div style={{ textAlign: "center", padding: 40, color: "#64748b" }}>⏳ Loading…</div>
+            <div style={{ textAlign: "center", padding: 40, color: "#7180A6" }}>⏳ Loading…</div>
           ) : (
             <>
               {/* ── Details ── */}
@@ -237,20 +277,20 @@ function ArchitectDetailModal({ id, onClose, onEdit, isMobile }) {
                     <IR icon="📮" label="Pincode" v={detail.pincode} />
                   </InfoCard>
                   {detail.notes && (
-                    <div style={{ background: "#fffbeb", borderRadius: 10, padding: "12px 16px", marginBottom: 14, border: "1px solid #fde68a" }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: "#92400e", marginBottom: 6 }}>📝 Notes</div>
-                      <div style={{ fontSize: 13, color: "#78350f", lineHeight: 1.6 }}>{detail.notes}</div>
+                    <div style={{ background: "rgba(255,185,94,0.08)", borderRadius: 10, padding: "12px 16px", marginBottom: 14, border: "1px solid rgba(255,185,94,0.2)" }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: "#FFB95E", marginBottom: 6 }}>📝 Notes</div>
+                      <div style={{ fontSize: 13, color: "#A9B3D1", lineHeight: 1.6 }}>{detail.notes}</div>
                     </div>
                   )}
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10, marginTop: 14 }}>
                     {[
-                      { label: "Customers", v: stats.totalCustomers ?? 0, color: "#6366f1" },
-                      { label: "Quotations", v: stats.totalQuotations ?? 0, color: "#f59e0b" },
-                      { label: "Orders", v: stats.totalOrders ?? 0, color: "#22c55e" },
+                      { label: "Customers", v: stats.totalCustomers ?? 0, color: "#818CF8" },
+                      { label: "Quotations", v: stats.totalQuotations ?? 0, color: "#FFB95E" },
+                      { label: "Orders", v: stats.totalOrders ?? 0, color: "#37E3A5" },
                     ].map(s => (
-                      <div key={s.label} style={{ background: "#f8fafc", borderRadius: 10, padding: "12px 8px", textAlign: "center", border: "1px solid #e8edf2" }}>
+                      <div key={s.label} style={{ background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: "12px 8px", textAlign: "center", border: "1px solid rgba(255,255,255,0.08)" }}>
                         <div style={{ fontSize: 22, fontWeight: 800, color: s.color }}>{s.v}</div>
-                        <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>{s.label}</div>
+                        <div style={{ fontSize: 11, color: "#7180A6", marginTop: 2 }}>{s.label}</div>
                       </div>
                     ))}
                   </div>
@@ -260,7 +300,7 @@ function ArchitectDetailModal({ id, onClose, onEdit, isMobile }) {
               {/* ── Customers ── */}
               {activeTab === "Customers" && (
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 12 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 12 }}>
                     👥 Referred Customers ({customers.length})
                   </div>
                   {customers.length === 0 ? (
@@ -269,19 +309,21 @@ function ArchitectDetailModal({ id, onClose, onEdit, isMobile }) {
                     <div style={{ overflowX: "auto" }}>
                       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
                         <thead>
-                          <tr style={{ background: "#f3f4f6" }}>
+                          <tr>
                             {["Customer", "Phone", "City", "Joined"].map(h => (
-                              <th key={h} style={{ padding: "10px 12px", textAlign: "left", fontWeight: 600, color: "#374151", whiteSpace: "nowrap" }}>{h}</th>
+                              <th key={h} style={{ padding: "10px 12px", textAlign: "left", fontWeight: 700, color: "#7180A6", whiteSpace: "nowrap", fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.08em", background: "rgba(255,255,255,0.04)", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>{h}</th>
                             ))}
                           </tr>
                         </thead>
                         <tbody>
-                          {customers.map((c, i) => (
-                            <tr key={c.id} style={{ borderTop: "1px solid #e5e7eb", background: i % 2 === 0 ? "#fff" : "#f9fafb" }}>
-                              <td style={{ padding: "10px 12px", fontWeight: 600, color: "#0f172a" }}>👤 {c.name}</td>
-                              <td style={{ padding: "10px 12px", color: "#4b5563" }}>{c.mobile || "—"}</td>
-                              <td style={{ padding: "10px 12px", color: "#4b5563" }}>{c.city || "—"}</td>
-                              <td style={{ padding: "10px 12px", color: "#94a3b8", whiteSpace: "nowrap" }}>
+                          {customers.map((c) => (
+                            <tr key={c.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}
+                              onMouseEnter={e => e.currentTarget.style.background = "#0A0F1E"}
+                              onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                              <td style={{ padding: "10px 12px", fontWeight: 600, color: "#fff" }}>👤 {c.name}</td>
+                              <td style={{ padding: "10px 12px", color: "#A9B3D1" }}>{c.mobile || "—"}</td>
+                              <td style={{ padding: "10px 12px", color: "#A9B3D1" }}>{c.city || "—"}</td>
+                              <td style={{ padding: "10px 12px", color: "#7180A6", whiteSpace: "nowrap" }}>
                                 {c.createdAt ? new Date(c.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric" }) : "—"}
                               </td>
                             </tr>
@@ -299,30 +341,32 @@ function ArchitectDetailModal({ id, onClose, onEdit, isMobile }) {
                   <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
                     <input placeholder="🔍 Search quotations…" value={qSearch}
                       onChange={e => setQSearch(e.target.value)}
-                      style={{ flex: 1, minWidth: 120, padding: "8px 12px", border: "1px solid #d1d5db", borderRadius: 7, fontSize: 13 }} />
+                      style={{ flex: 1, minWidth: 120, padding: "8px 12px", border: "1.5px solid rgba(255,255,255,0.1)", borderRadius: 7, fontSize: 13, background: "rgba(255,255,255,0.06)", color: "#fff", outline: "none" }} />
                     <select value={qStatus} onChange={e => setQStatus(e.target.value)}
-                      style={{ padding: "8px 12px", border: "1px solid #d1d5db", borderRadius: 7, fontSize: 13 }}>
-                      {["ALL", "DRAFT", "CONFIRMED", "REJECTED"].map(s => <option key={s}>{s}</option>)}
+                      style={{ padding: "8px 12px", border: "1.5px solid rgba(255,255,255,0.1)", borderRadius: 7, fontSize: 13, background: "rgba(17,27,53,0.9)", color: "#fff" }}>
+                      {["ALL", "DRAFT", "CONFIRMED", "REJECTED"].map(s => <option key={s} style={{ background: "#0b1226" }}>{s}</option>)}
                     </select>
-                    <Button variant="primary" size="sm" onClick={loadQuotations}>Search</Button>
+                    <button onClick={loadQuotations} style={{ padding: "8px 16px", borderRadius: 8, border: "none", background: "#4F5DFF", color: "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>Search</button>
                   </div>
                   {quotations.length === 0 ? <Empty icon="📄" msg="No quotations found" /> : (
                     <div style={{ overflowX: "auto" }}>
                       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
                         <thead>
-                          <tr style={{ background: "#f3f4f6" }}>
+                          <tr>
                             {["Quote #", "Customer", "Date", "Amount", "Status"].map(h => (
-                              <th key={h} style={{ padding: "10px 12px", textAlign: "left", fontWeight: 600, color: "#374151", whiteSpace: "nowrap" }}>{h}</th>
+                              <th key={h} style={{ padding: "10px 12px", textAlign: "left", fontWeight: 700, color: "#7180A6", whiteSpace: "nowrap", fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.08em", background: "rgba(255,255,255,0.04)", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>{h}</th>
                             ))}
                           </tr>
                         </thead>
                         <tbody>
-                          {quotations.map((q, i) => (
-                            <tr key={q.id} style={{ borderTop: "1px solid #e5e7eb", background: i % 2 === 0 ? "#fff" : "#f9fafb" }}>
-                              <td style={{ padding: "10px 12px", fontWeight: 600, color: "#4f46e5", whiteSpace: "nowrap" }}>{q.quotationNumber}</td>
-                              <td style={{ padding: "10px 12px", color: "#0f172a" }}>{q.customerName}</td>
-                              <td style={{ padding: "10px 12px", color: "#4b5563", whiteSpace: "nowrap" }}>{q.quotationDate}</td>
-                              <td style={{ padding: "10px 12px", fontWeight: 600, color: "#0f172a", whiteSpace: "nowrap" }}>₹{(parseFloat(q.grandTotal)||0).toFixed(0)}</td>
+                          {quotations.map((q) => (
+                            <tr key={q.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}
+                              onMouseEnter={e => e.currentTarget.style.background = "#0A0F1E"}
+                              onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                              <td style={{ padding: "10px 12px", fontWeight: 600, color: "#818CF8", whiteSpace: "nowrap" }}>{q.quotationNumber}</td>
+                              <td style={{ padding: "10px 12px", color: "#fff" }}>{q.customerName}</td>
+                              <td style={{ padding: "10px 12px", color: "#A9B3D1", whiteSpace: "nowrap" }}>{q.quotationDate}</td>
+                              <td style={{ padding: "10px 12px", fontWeight: 600, color: "#37E3A5", whiteSpace: "nowrap" }}>₹{(parseFloat(q.grandTotal)||0).toFixed(0)}</td>
                               <td style={{ padding: "10px 12px" }}><StatusBadge status={q.status} /></td>
                             </tr>
                           ))}
@@ -339,26 +383,28 @@ function ArchitectDetailModal({ id, onClose, onEdit, isMobile }) {
                   <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
                     <input placeholder="🔍 Search orders…" value={oSearch}
                       onChange={e => setOSearch(e.target.value)}
-                      style={{ flex: 1, padding: "8px 12px", border: "1px solid #d1d5db", borderRadius: 7, fontSize: 13 }} />
-                    <Button variant="primary" size="sm" onClick={loadOrders}>Search</Button>
+                      style={{ flex: 1, padding: "8px 12px", border: "1.5px solid rgba(255,255,255,0.1)", borderRadius: 7, fontSize: 13, background: "rgba(255,255,255,0.06)", color: "#fff", outline: "none" }} />
+                    <button onClick={loadOrders} style={{ padding: "8px 16px", borderRadius: 8, border: "none", background: "#4F5DFF", color: "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>Search</button>
                   </div>
                   {orders.length === 0 ? <Empty icon="📦" msg="No orders found" /> : (
                     <div style={{ overflowX: "auto" }}>
                       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
                         <thead>
-                          <tr style={{ background: "#f3f4f6" }}>
+                          <tr>
                             {["Order #", "Customer", "Date", "Amount", "Payment"].map(h => (
-                              <th key={h} style={{ padding: "10px 12px", textAlign: "left", fontWeight: 600, color: "#374151", whiteSpace: "nowrap" }}>{h}</th>
+                              <th key={h} style={{ padding: "10px 12px", textAlign: "left", fontWeight: 700, color: "#7180A6", whiteSpace: "nowrap", fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.08em", background: "rgba(255,255,255,0.04)", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>{h}</th>
                             ))}
                           </tr>
                         </thead>
                         <tbody>
-                          {orders.map((o, i) => (
-                            <tr key={o.id} style={{ borderTop: "1px solid #e5e7eb", background: i % 2 === 0 ? "#fff" : "#f9fafb" }}>
-                              <td style={{ padding: "10px 12px", fontWeight: 600, color: "#4f46e5", whiteSpace: "nowrap" }}>{o.invoiceNumber}</td>
-                              <td style={{ padding: "10px 12px", color: "#0f172a" }}>{o.customerName}</td>
-                              <td style={{ padding: "10px 12px", color: "#4b5563", whiteSpace: "nowrap" }}>{o.invoiceDate}</td>
-                              <td style={{ padding: "10px 12px", fontWeight: 600, color: "#0f172a", whiteSpace: "nowrap" }}>₹{(parseFloat(o.grandTotal)||0).toFixed(0)}</td>
+                          {orders.map((o) => (
+                            <tr key={o.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}
+                              onMouseEnter={e => e.currentTarget.style.background = "#0A0F1E"}
+                              onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                              <td style={{ padding: "10px 12px", fontWeight: 600, color: "#818CF8", whiteSpace: "nowrap" }}>{o.invoiceNumber}</td>
+                              <td style={{ padding: "10px 12px", color: "#fff" }}>{o.customerName}</td>
+                              <td style={{ padding: "10px 12px", color: "#A9B3D1", whiteSpace: "nowrap" }}>{o.invoiceDate}</td>
+                              <td style={{ padding: "10px 12px", fontWeight: 600, color: "#37E3A5", whiteSpace: "nowrap" }}>₹{(parseFloat(o.grandTotal)||0).toFixed(0)}</td>
                               <td style={{ padding: "10px 12px" }}><StatusBadge status={o.paymentStatus} /></td>
                             </tr>
                           ))}
@@ -374,26 +420,26 @@ function ArchitectDetailModal({ id, onClose, onEdit, isMobile }) {
                 <div>
                   <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4,1fr)", gap: 12, marginBottom: 20 }}>
                     {[
-                      { label: "Customers Referred", v: stats.totalCustomers      ?? 0,  color: "#6366f1", icon: "👥" },
-                      { label: "Total Quotations",   v: stats.totalQuotations     ?? 0,  color: "#f59e0b", icon: "📄" },
-                      { label: "Approved",           v: stats.approvedQuotations  ?? 0,  color: "#22c55e", icon: "✅" },
-                      { label: "Rejected",           v: stats.rejectedQuotations  ?? 0,  color: "#ef4444", icon: "❌" },
-                      { label: "Draft",              v: stats.draftQuotations     ?? 0,  color: "#94a3b8", icon: "📝" },
-                      { label: "Conversion Rate",    v: `${stats.conversionRate   ?? 0}%`, color: "#8b5cf6", icon: "📊" },
-                      { label: "Total Orders",       v: stats.totalOrders         ?? 0,  color: "#0ea5e9", icon: "📦" },
-                      { label: "Revenue Generated",  v: fmtK(stats.totalRevenue   ?? 0), color: "#16a34a", icon: "💰" },
+                      { label: "Customers Referred", v: stats.totalCustomers      ?? 0,  color: "#818CF8", icon: "👥" },
+                      { label: "Total Quotations",   v: stats.totalQuotations     ?? 0,  color: "#FFB95E", icon: "📄" },
+                      { label: "Approved",           v: stats.approvedQuotations  ?? 0,  color: "#37E3A5", icon: "✅" },
+                      { label: "Rejected",           v: stats.rejectedQuotations  ?? 0,  color: "#FF6B81", icon: "❌" },
+                      { label: "Draft",              v: stats.draftQuotations     ?? 0,  color: "#A9B3D1", icon: "📝" },
+                      { label: "Conversion Rate",    v: `${stats.conversionRate   ?? 0}%`, color: "#818CF8", icon: "📊" },
+                      { label: "Total Orders",       v: stats.totalOrders         ?? 0,  color: "#4F5DFF", icon: "📦" },
+                      { label: "Revenue Generated",  v: fmtK(stats.totalRevenue   ?? 0), color: "#37E3A5", icon: "💰" },
                     ].map(s => (
-                      <div key={s.label} style={{ background: "#f8fafc", borderRadius: 12, padding: "16px 12px", textAlign: "center", border: "1px solid #e8edf2" }}>
+                      <div key={s.label} style={{ background: "rgba(255,255,255,0.04)", borderRadius: 12, padding: "16px 12px", textAlign: "center", border: "1px solid rgba(255,255,255,0.08)" }}>
                         <div style={{ fontSize: 24, marginBottom: 4 }}>{s.icon}</div>
                         <div style={{ fontSize: 22, fontWeight: 800, color: s.color, letterSpacing: "-0.04em" }}>{s.v}</div>
-                        <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 3 }}>{s.label}</div>
+                        <div style={{ fontSize: 11, color: "#7180A6", marginTop: 3 }}>{s.label}</div>
                       </div>
                     ))}
                   </div>
 
                   {/* Print report section */}
-                  <div style={{ background: "#f8fafc", borderRadius: 12, padding: "14px 16px", border: "1px solid #e8edf2" }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 10 }}>🖨️ Print Report</div>
+                  <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: 12, padding: "14px 16px", border: "1px solid rgba(255,255,255,0.08)" }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#A9B3D1", marginBottom: 10 }}>🖨️ Print Report</div>
                     <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 14 }}>
                       {[
                         { key: "inclSummary",    label: "Summary" },
@@ -401,23 +447,25 @@ function ArchitectDetailModal({ id, onClose, onEdit, isMobile }) {
                         { key: "inclQuotations", label: "Quotations" },
                         { key: "inclOrders",     label: "Orders" },
                       ].map(({ key, label }) => (
-                        <label key={key} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, cursor: "pointer", color: "#374151" }}>
+                        <label key={key} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, cursor: "pointer", color: "#A9B3D1" }}>
                           <input type="checkbox" checked={printOpts[key]}
                             onChange={() => setPrintOpts(p => ({ ...p, [key]: !p[key] }))}
-                            style={{ width: 15, height: 15, accentColor: "#6366f1" }} />
+                            style={{ width: 15, height: 15, accentColor: "#4F5DFF" }} />
                           {label}
                         </label>
                       ))}
                     </div>
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                      <Button variant="primary" size="sm" icon="🖨️"
+                      <button
+                        style={{ padding: "7px 16px", borderRadius: 8, border: "none", background: "#4F5DFF", color: "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
                         onClick={() => printArchitectReport({ architect: detail, customers, quotations, orders, opts: printOpts, shopName })}>
-                        {isMobile ? "Print" : "Print Report"}
-                      </Button>
-                      <Button variant="secondary" size="sm" icon="📄"
+                        🖨️ {isMobile ? "Print" : "Print Report"}
+                      </button>
+                      <button
+                        style={{ padding: "7px 16px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.08)", color: "#A9B3D1", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
                         onClick={() => printArchitectReport({ architect: detail, customers, quotations, orders, opts: printOpts, shopName })}>
-                        {isMobile ? "PDF" : "Export PDF"}
-                      </Button>
+                        📄 {isMobile ? "PDF" : "Export PDF"}
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -432,8 +480,8 @@ function ArchitectDetailModal({ id, onClose, onEdit, isMobile }) {
 
 function InfoCard({ title, children }) {
   return (
-    <div style={{ background: "#f8fafc", borderRadius: 10, padding: "12px 16px", marginBottom: 14, border: "1px solid #e8edf2" }}>
-      {title && <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 8 }}>{title}</div>}
+    <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: "12px 16px", marginBottom: 14, border: "1px solid rgba(255,255,255,0.08)" }}>
+      {title && <div style={{ fontSize: 11, fontWeight: 700, color: "#7180A6", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 8 }}>{title}</div>}
       {children}
     </div>
   );
@@ -443,13 +491,13 @@ function IR({ icon, label, v }) {
   return (
     <div style={{ display: "flex", gap: 8, marginBottom: 6, fontSize: 13 }}>
       <span>{icon}</span>
-      <span style={{ color: "#64748b", minWidth: 80 }}>{label}:</span>
-      <span style={{ color: "#0f172a", fontWeight: 500, flex: 1, wordBreak: "break-word" }}>{v}</span>
+      <span style={{ color: "#7180A6", minWidth: 80 }}>{label}:</span>
+      <span style={{ color: "#fff", fontWeight: 500, flex: 1, wordBreak: "break-word" }}>{v}</span>
     </div>
   );
 }
 function Empty({ icon, msg }) {
-  return <div style={{ textAlign: "center", padding: "32px 0", color: "#94a3b8" }}>
+  return <div style={{ textAlign: "center", padding: "32px 0", color: "#7180A6" }}>
     <div style={{ fontSize: 40, marginBottom: 8 }}>{icon}</div>
     <div style={{ fontSize: 14, fontWeight: 500 }}>{msg}</div>
   </div>;
@@ -459,19 +507,19 @@ function Empty({ icon, msg }) {
 const ghostBtn = () => ({
   width: 30, height: 30, borderRadius: 6, padding: 0, flexShrink: 0,
   display: "inline-flex", alignItems: "center", justifyContent: "center",
-  border: "1px solid #e5e7eb", background: "transparent",
-  color: "#6b7280", cursor: "pointer", fontSize: 14,
+  border: "1px solid rgba(255,255,255,0.1)", background: "transparent",
+  color: "#7180A6", cursor: "pointer", fontSize: 14,
   transition: "all 120ms ease",
 });
 const applyGhostHover = (e, danger = false) => {
-  e.currentTarget.style.background    = danger ? "#fef2f2" : "#f9fafb";
-  e.currentTarget.style.borderColor   = danger ? "#fecaca" : "#d1d5db";
-  e.currentTarget.style.color         = danger ? "#ef4444" : "#111827";
+  e.currentTarget.style.background    = danger ? "rgba(255,107,129,0.15)" : "rgba(79,93,255,0.12)";
+  e.currentTarget.style.borderColor   = danger ? "rgba(255,107,129,0.3)" : "rgba(79,93,255,0.3)";
+  e.currentTarget.style.color         = danger ? "#FF6B81" : "#818CF8";
 };
 const resetGhostHover = (e) => {
   e.currentTarget.style.background  = "transparent";
-  e.currentTarget.style.borderColor = "#e5e7eb";
-  e.currentTarget.style.color       = "#6b7280";
+  e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
+  e.currentTarget.style.color       = "#7180A6";
 };
 
 /* ─── Main page ─────────────────────────────────────────────────────────────── */
@@ -570,66 +618,88 @@ export default function ArchitectManagement() {
   const grid2 = { display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 18 };
   const grid3 = { display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: 18 };
 
+  const darkCard = {
+    background: "rgba(17,27,53,0.9)", border: "1px solid rgba(255,255,255,0.08)",
+    borderRadius: 16, boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
+  };
+
   return (
-    <PageWrapper backgroundImage={dashboardBg}>
+    <PageWrapper>
       <div style={{ padding: isMobile ? "15px" : "20px", maxWidth: 1400, margin: "0 auto" }}>
 
         {/* Header */}
-        <div style={{ marginBottom: 25, padding: 20, backgroundColor: "rgba(0,0,0,0.5)", borderRadius: 12, backdropFilter: "blur(10px)" }}>
-          <h1 style={{ color: "#fff", marginBottom: 8, fontSize: isMobile ? 26 : 32, fontWeight: 800, textShadow: "2px 2px 4px rgba(0,0,0,0.5)" }}>
+        <div style={{ marginBottom: 25, padding: 20, ...darkCard }}>
+          <h1 style={{ color: "#fff", marginBottom: 8, fontSize: isMobile ? 26 : 32, fontWeight: 800 }}>
             🏛️ Architect Management
           </h1>
-          <p style={{ color: "#fff", fontSize: 15, margin: 0, fontWeight: 500 }}>
+          <p style={{ color: "#A9B3D1", fontSize: 15, margin: 0, fontWeight: 500 }}>
             Manage architects and track their referrals, quotations, and revenue
           </p>
         </div>
 
         {message && (
-          <div style={{ padding: "12px 16px", marginBottom: 20, backgroundColor: message.includes("✅") ? "#22c55e" : "#ef4444",
-            color: "white", borderRadius: 8, fontSize: 14, fontWeight: 500 }}>
+          <div style={{
+            padding: "12px 16px", marginBottom: 20,
+            background: message.includes("✅") ? "rgba(55,227,165,0.1)" : "rgba(255,107,129,0.1)",
+            color: message.includes("✅") ? "#37E3A5" : "#FF6B81",
+            border: `1px solid ${message.includes("✅") ? "rgba(55,227,165,0.3)" : "rgba(255,107,129,0.3)"}`,
+            borderRadius: 8, fontSize: 14, fontWeight: 500,
+          }}>
             {message}
           </div>
         )}
 
         {/* Toolbar */}
-        <div className="toolbar" style={{ marginBottom: 16 }}>
+        <div style={{ marginBottom: 16, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
           <div style={{ flex: 1, position: "relative", maxWidth: isMobile ? "100%" : 280 }}>
-            <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", fontSize: 14, pointerEvents: "none", color: "#94a3b8" }}>🔍</span>
-            <input type="text" placeholder="Search architects…" value={searchQuery}
-              onChange={e => setSearch(e.target.value)} className="search-input"
-              style={{ maxWidth: "100%", width: "100%" }} />
+            <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", fontSize: 14, pointerEvents: "none", color: "#7180A6" }}>🔍</span>
+            <input
+              type="text" placeholder="Search architects…" value={searchQuery}
+              onChange={e => setSearch(e.target.value)}
+              style={{
+                width: "100%", padding: "9px 12px 9px 34px", borderRadius: 10,
+                border: "1.5px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.06)",
+                color: "#fff", fontSize: 13, outline: "none", boxSizing: "border-box",
+              }}
+            />
           </div>
-          <Button size="sm" variant="success" icon="+" onClick={openCreate} style={{ marginLeft: "auto" }}>
-            Add Architect
-          </Button>
+          <button
+            onClick={openCreate}
+            style={{
+              marginLeft: "auto", padding: "9px 18px", borderRadius: 10, border: "none",
+              background: "#4F5DFF", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer",
+            }}
+          >
+            + Add Architect
+          </button>
         </div>
 
         {/* Form */}
         {showForm && (
-          <div style={{ backgroundColor: "white", padding: isMobile ? 20 : 30, borderRadius: 12, marginBottom: 20, boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)" }}>
-            <div style={{ marginBottom: 22, borderBottom: "2px solid #e5e7eb", paddingBottom: 14 }}>
-              <h2 style={{ margin: 0, color: "#1f2937", fontSize: isMobile ? 20 : 22, fontWeight: 600 }}>
+          <div style={{ ...darkCard, padding: isMobile ? 20 : 30, marginBottom: 20 }}>
+            <div style={{ marginBottom: 22, borderBottom: "1px solid rgba(255,255,255,0.08)", paddingBottom: 14 }}>
+              <h2 style={{ margin: 0, color: "#fff", fontSize: isMobile ? 20 : 22, fontWeight: 600 }}>
                 {editingId ? "✏️ Edit Architect" : "➕ Add New Architect"}
               </h2>
             </div>
             <form onSubmit={handleSubmit}>
               <div style={{ marginBottom: 24 }}>
-                <h3 style={{ color: "#374151", fontSize: 15, fontWeight: 600, marginBottom: 14 }}>🏛️ Basic Information</h3>
+                <h3 style={{ color: "#A9B3D1", fontSize: 13, fontWeight: 700, marginBottom: 14, textTransform: "uppercase", letterSpacing: "0.08em" }}>🏛️ Basic Information</h3>
                 <div style={grid2}>
                   <div>
                     <label style={labelSt}>Architect Name *</label>
                     <FI {...field("name")} placeholder="e.g., Patil Designs" required />
-                    {dupWarn && <p style={{ marginTop: 4, fontSize: 12, color: "#d97706", fontWeight: 500 }}>{dupWarn}</p>}
+                    {dupWarn && <p style={{ marginTop: 4, fontSize: 12, color: "#FFB95E", fontWeight: 500 }}>{dupWarn}</p>}
                   </div>
                   <div>
                     <label style={labelSt}>Mobile Number *</label>
                     <FI {...field("mobile")} placeholder="9876543210" required />
-                    {mobileErr && <p style={{ marginTop: 4, fontSize: 12, color: "#ef4444", fontWeight: 500 }}>⚠️ {mobileErr}</p>}
+                    {mobileErr && <p style={{ marginTop: 4, fontSize: 12, color: "#FF6B81", fontWeight: 500 }}>⚠️ {mobileErr}</p>}
                   </div>
                   <div>
                     <label style={labelSt}>Email Address</label>
                     <FI type="email" {...field("email")} placeholder="architect@example.com" />
-                    {emailErr && <p style={{ marginTop: 4, fontSize: 12, color: "#ef4444", fontWeight: 500 }}>⚠️ {emailErr}</p>}
+                    {emailErr && <p style={{ marginTop: 4, fontSize: 12, color: "#FF6B81", fontWeight: 500 }}>⚠️ {emailErr}</p>}
                   </div>
                   <div>
                     <label style={labelSt}>Date of Birth</label>
@@ -638,7 +708,7 @@ export default function ArchitectManagement() {
                 </div>
               </div>
               <div style={{ marginBottom: 24 }}>
-                <h3 style={{ color: "#374151", fontSize: 15, fontWeight: 600, marginBottom: 14 }}>📍 Address</h3>
+                <h3 style={{ color: "#A9B3D1", fontSize: 13, fontWeight: 700, marginBottom: 14, textTransform: "uppercase", letterSpacing: "0.08em" }}>📍 Address</h3>
                 <div style={{ marginBottom: 16 }}>
                   <label style={labelSt}>Full Address</label>
                   <FTA {...field("address")} placeholder="Street, Building, Area…" />
@@ -653,12 +723,14 @@ export default function ArchitectManagement() {
                 <label style={labelSt}>📝 Notes (Optional)</label>
                 <FTA {...field("notes")} placeholder="Any notes about this architect…" />
               </div>
-              <div style={{ display: "flex", gap: 8, flexDirection: isMobile ? "column" : "row", paddingTop: 14, borderTop: "1px solid #f1f5f9", justifyContent: "flex-end" }}>
-                <Button type="button" variant="secondary" size="md" fullWidth={isMobile}
-                  onClick={() => { setShowForm(false); setEditingId(null); resetForm(); }}>Cancel</Button>
-                <Button type="submit" variant="success" size="md" fullWidth={isMobile}>
+              <div style={{ display: "flex", gap: 8, flexDirection: isMobile ? "column" : "row", paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.08)", justifyContent: "flex-end" }}>
+                <button type="button"
+                  style={{ padding: "9px 18px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.08)", color: "#A9B3D1", fontSize: 13, fontWeight: 500, cursor: "pointer" }}
+                  onClick={() => { setShowForm(false); setEditingId(null); resetForm(); }}>Cancel</button>
+                <button type="submit"
+                  style={{ padding: "9px 18px", borderRadius: 10, border: "none", background: "#4F5DFF", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
                   {editingId ? "Update Architect" : "Save Architect"}
-                </Button>
+                </button>
               </div>
             </form>
           </div>
@@ -666,85 +738,85 @@ export default function ArchitectManagement() {
 
         {/* List */}
         {loading ? (
-          <div style={{ textAlign: "center", color: "#64748b", padding: 40, backgroundColor: "#f8fafc", borderRadius: 12 }}>⏳ Loading architects…</div>
+          <div style={{ textAlign: "center", color: "#7180A6", padding: 40, ...darkCard }}>⏳ Loading architects…</div>
         ) : (
-          <div style={{ backgroundColor: "white", borderRadius: 12, overflow: "hidden", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)" }}>
-            <div style={{ padding: 20, borderBottom: "2px solid #e5e7eb", backgroundColor: "#f9fafb" }}>
-              <h3 style={{ margin: 0, color: "#1f2937", fontSize: 18, fontWeight: 600 }}>
+          <div style={{ ...darkCard, background: "#111B35", overflow: "hidden" }}>
+            <div style={{ padding: 20, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+              <h3 style={{ margin: 0, color: "#fff", fontSize: 18, fontWeight: 600 }}>
                 🏛️ Architect List ({architects.length})
               </h3>
             </div>
             {architects.length === 0 ? (
-              <div style={{ padding: "60px 20px", textAlign: "center", color: "#6b7280" }}>
+              <div style={{ padding: "60px 20px", textAlign: "center", color: "#7180A6" }}>
                 <div style={{ fontSize: 48, marginBottom: 16, opacity: 0.5 }}>🏛️</div>
-                <p style={{ fontSize: 16, fontWeight: 500 }}>{searchQuery ? "No architects match your search" : "No architects yet"}</p>
+                <p style={{ fontSize: 16, fontWeight: 500, color: "#A9B3D1" }}>{searchQuery ? "No architects match your search" : "No architects yet"}</p>
               </div>
             ) : isMobile ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: 12 }}>
                 {architects.map(a => (
-                  <div key={a.id} style={{ backgroundColor: "#fff", borderRadius: 12, padding: 12, boxShadow: "0 1px 3px rgba(0,0,0,0.08)", border: "1px solid #e5e7eb" }}>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: "#1f2937", marginBottom: 6, paddingBottom: 6, borderBottom: "1px solid #e5e7eb" }}>🏛️ {a.name}</div>
+                  <div key={a.id} style={{ background: "rgba(255,255,255,0.04)", borderRadius: 12, padding: 12, border: "1px solid rgba(255,255,255,0.08)" }}>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: "#E2E8F0", marginBottom: 6, paddingBottom: 6, borderBottom: "1px solid rgba(255,255,255,0.07)" }}>🏛️ {a.name || <span style={{ color: "#7180A6", fontWeight: 400, fontStyle: "italic" }}>Unnamed</span>}</div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 8, fontSize: 13 }}>
-                      {a.mobile && <span style={{ color: "#4b5563" }}>📱 {a.mobile}</span>}
-                      {a.email  && <span style={{ color: "#4b5563", wordBreak: "break-word" }}>📧 {a.email}</span>}
-                      {(a.city || a.state) && <span style={{ color: "#4b5563" }}>📍 {[a.city, a.state].filter(Boolean).join(", ")}</span>}
+                      {a.mobile && <span style={{ color: "#A9B3D1" }}>📱 {a.mobile}</span>}
+                      {a.email  && <span style={{ color: "#A9B3D1", wordBreak: "break-word" }}>📧 {a.email}</span>}
+                      {(a.city || a.state) && <span style={{ color: "#A9B3D1" }}>📍 {[a.city, a.state].filter(Boolean).join(", ")}</span>}
                     </div>
                     {/* Compact icon-only action row — mobile only */}
-                    <div style={{ display: "flex", gap: 8, paddingTop: 8, borderTop: "1px solid #f1f5f9" }}>
+                    <div style={{ display: "flex", gap: 8, paddingTop: 8, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
                       <button
                         title="View"
                         onClick={() => setViewId(a.id)}
-                        style={{ width: 34, height: 34, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", border: "1.5px solid #bfdbfe", background: "#eff6ff", color: "#2563eb", cursor: "pointer", fontSize: 16, padding: 0, flexShrink: 0, transition: "all 200ms ease" }}
-                        onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.08)"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(37,99,235,0.18)"; }}
-                        onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = "none"; }}
+                        style={{ width: 34, height: 34, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", border: "1.5px solid rgba(79,93,255,0.3)", background: "rgba(79,93,255,0.12)", color: "#818CF8", cursor: "pointer", fontSize: 16, padding: 0, flexShrink: 0, transition: "all 200ms ease" }}
+                        onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.08)"; }}
+                        onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; }}
                       >👁️</button>
                       <button
                         title="Edit"
                         onClick={() => openEdit(a)}
-                        style={{ width: 34, height: 34, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", border: "1.5px solid #fde68a", background: "#fffbeb", color: "#d97706", cursor: "pointer", fontSize: 16, padding: 0, flexShrink: 0, transition: "all 200ms ease" }}
-                        onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.08)"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(217,119,6,0.18)"; }}
-                        onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = "none"; }}
+                        style={{ width: 34, height: 34, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", border: "1.5px solid rgba(255,185,94,0.3)", background: "rgba(255,185,94,0.12)", color: "#FFB95E", cursor: "pointer", fontSize: 16, padding: 0, flexShrink: 0, transition: "all 200ms ease" }}
+                        onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.08)"; }}
+                        onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; }}
                       >✏️</button>
                       <button
                         title="Delete"
                         onClick={() => setConfirmDel({ id: a.id, name: a.name })}
-                        style={{ width: 34, height: 34, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", border: "1.5px solid #fecaca", background: "#fef2f2", color: "#dc2626", cursor: "pointer", fontSize: 16, padding: 0, flexShrink: 0, transition: "all 200ms ease" }}
-                        onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.08)"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(220,38,38,0.18)"; }}
-                        onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = "none"; }}
+                        style={{ width: 34, height: 34, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", border: "1.5px solid rgba(255,107,129,0.3)", background: "rgba(255,107,129,0.12)", color: "#FF6B81", cursor: "pointer", fontSize: 16, padding: 0, flexShrink: 0, transition: "all 200ms ease" }}
+                        onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.08)"; }}
+                        onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; }}
                       >🗑️</button>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+              <div style={{ overflowX: "auto", background: "#111B35" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14, background: "#111B35" }}>
                   <thead>
-                    <tr style={{ backgroundColor: "#f3f4f6" }}>
+                    <tr>
                       {["#", "Name", "Mobile", "Email", "City", "Actions"].map(h => (
-                        <th key={h} style={{ padding: "10px 12px", textAlign: h === "Actions" ? "center" : "left", color: "#374151", fontWeight: 600, fontSize: 12, textTransform: "uppercase", letterSpacing: "0.5px" }}>{h}</th>
+                        <th key={h} style={{ padding: "10px 14px", textAlign: h === "Actions" ? "center" : "left", color: "#7180A6", fontWeight: 700, fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.08em", background: "rgba(255,255,255,0.04)", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {architects.map((a, idx) => (
-                      <tr key={a.id} style={{ borderTop: "1px solid #e5e7eb", backgroundColor: idx % 2 === 0 ? "#ffffff" : "#f9fafb" }}
-                        onMouseEnter={e => e.currentTarget.style.backgroundColor = "#f3f4f6"}
-                        onMouseLeave={e => e.currentTarget.style.backgroundColor = idx % 2 === 0 ? "#ffffff" : "#f9fafb"}>
-                        <td style={{ padding: "9px 12px", color: "#94a3b8", fontSize: 13 }}>{String(a.id).padStart(3, "0")}</td>
-                        <td style={{ padding: "9px 12px", fontWeight: 600, color: "#0f172a" }}>🏛️ {a.name}</td>
-                        <td style={{ padding: "9px 12px", color: "#4b5563" }}>{a.mobile || "—"}</td>
-                        <td style={{ padding: "9px 12px", color: "#4b5563" }}>{a.email || "—"}</td>
-                        <td style={{ padding: "9px 12px", color: "#4b5563" }}>{a.city || "—"}</td>
-                        <td style={{ padding: "7px 12px" }}>
-                          <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                      <tr key={a.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", background: "#111B35" }}
+                        onMouseEnter={e => e.currentTarget.style.background = "#0A0F1E"}
+                        onMouseLeave={e => e.currentTarget.style.background = "#111B35"}>
+                        <td style={{ padding: "11px 14px", color: "#7180A6", fontSize: 13 }}>{String(a.id).padStart(3, "0")}</td>
+                        <td style={{ padding: "11px 14px", fontWeight: 700, color: "#E2E8F0" }}>🏛️ {a.name || <span style={{ color: "#7180A6", fontWeight: 400, fontStyle: "italic" }}>Unnamed</span>}</td>
+                        <td style={{ padding: "11px 14px", color: "#A9B3D1" }}>{a.mobile || "—"}</td>
+                        <td style={{ padding: "11px 14px", color: "#A9B3D1" }}>{a.email || "—"}</td>
+                        <td style={{ padding: "11px 14px", color: "#A9B3D1" }}>{a.city || "—"}</td>
+                        <td style={{ padding: "7px 14px" }}>
+                          <div style={{ display: "flex", gap: 4, alignItems: "center", justifyContent: "center" }}>
                             <button title="View"   onClick={() => setViewId(a.id)}
                               style={ghostBtn()}
                               onMouseEnter={e => applyGhostHover(e, false)}
                               onMouseLeave={e => resetGhostHover(e)}>👁️</button>
                             <button title="Edit"   onClick={() => openEdit(a)}
                               style={ghostBtn()}
-                              onMouseEnter={e => applyGhostHover(e, false)}
+                              onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,185,94,0.12)"; e.currentTarget.style.borderColor = "rgba(255,185,94,0.3)"; e.currentTarget.style.color = "#FFB95E"; }}
                               onMouseLeave={e => resetGhostHover(e)}>✏️</button>
                             <button title="Delete" onClick={() => setConfirmDel({ id: a.id, name: a.name })}
                               style={ghostBtn()}
@@ -773,22 +845,26 @@ export default function ArchitectManagement() {
 
         {/* Delete confirmation */}
         {confirmDelete && (
-          <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.7)", display: "flex",
+          <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.75)", display: "flex",
             alignItems: isMobile ? "flex-end" : "center", justifyContent: "center", zIndex: 10010, padding: isMobile ? 0 : "20px" }}
             onClick={() => setConfirmDel(null)}>
-            <div style={{ backgroundColor: "white", padding: isMobile ? "20px 16px" : 35, borderRadius: isMobile ? "20px 20px 0 0" : 16,
-              maxWidth: isMobile ? "100%" : 480, width: "100%", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)" }}
+            <div style={{ background: "rgba(17,27,53,0.98)", border: "1px solid rgba(255,255,255,0.1)", padding: isMobile ? "20px 16px" : 35, borderRadius: isMobile ? "20px 20px 0 0" : 16,
+              maxWidth: isMobile ? "100%" : 480, width: "100%", boxShadow: "0 20px 60px rgba(0,0,0,0.6)" }}
               onClick={e => e.stopPropagation()}>
               <div style={{ textAlign: "center", marginBottom: 24 }}>
                 <div style={{ fontSize: 48, marginBottom: 12 }}>🗑️</div>
-                <h2 style={{ margin: "0 0 10px", color: "#1f2937", fontSize: 22, fontWeight: 700 }}>Delete Architect?</h2>
-                <p style={{ margin: 0, color: "#6b7280", fontSize: 14, lineHeight: 1.6 }}>
-                  Delete <strong>"{confirmDelete.name}"</strong>? All related quotations and orders will lose this architect reference. This cannot be undone.
+                <h2 style={{ margin: "0 0 10px", color: "#fff", fontSize: 22, fontWeight: 700 }}>Delete Architect?</h2>
+                <p style={{ margin: 0, color: "#A9B3D1", fontSize: 14, lineHeight: 1.6 }}>
+                  Delete <strong style={{ color: "#FF6B81" }}>"{confirmDelete.name}"</strong>? All related quotations and orders will lose this architect reference. This cannot be undone.
                 </p>
               </div>
               <div style={{ display: "flex", gap: 8, flexDirection: isMobile ? "column" : "row" }}>
-                <Button variant="danger"    size="md" fullWidth onClick={() => handleDelete(confirmDelete.id)}>Delete</Button>
-                <Button variant="secondary" size="md" fullWidth onClick={() => setConfirmDel(null)}>Cancel</Button>
+                <button
+                  style={{ flex: 1, padding: "10px 18px", borderRadius: 10, background: "rgba(255,107,129,0.15)", color: "#FF6B81", border: "1px solid rgba(255,107,129,0.3)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+                  onClick={() => handleDelete(confirmDelete.id)}>Delete</button>
+                <button
+                  style={{ flex: 1, padding: "10px 18px", borderRadius: 10, background: "rgba(255,255,255,0.08)", color: "#A9B3D1", border: "1px solid rgba(255,255,255,0.12)", fontSize: 13, fontWeight: 500, cursor: "pointer" }}
+                  onClick={() => setConfirmDel(null)}>Cancel</button>
               </div>
             </div>
           </div>
@@ -797,4 +873,3 @@ export default function ArchitectManagement() {
     </PageWrapper>
   );
 }
-

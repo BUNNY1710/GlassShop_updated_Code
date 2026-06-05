@@ -12,18 +12,21 @@ function Layout() {
   }, []);
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "#f8fafc" }}>
+    <div style={{
+      display: "flex",
+      minHeight: "100vh",
+      background: "linear-gradient(180deg, #07122D 0%, #040A18 100%)",
+      backgroundAttachment: "fixed",
+    }}>
       <Navbar />
-      {/* Content area — offset by sidebar on desktop, offset by top bar on mobile */}
-      <div
-        style={{
-          flex: 1,
-          minWidth: 0,
-          marginLeft: isDesktop ? SIDEBAR_W : 0,
-          paddingTop: isDesktop ? 0 : 52,
-          overflowX: "hidden",
-        }}
-      >
+      <div style={{
+        flex: 1,
+        minWidth: 0,
+        marginLeft: isDesktop ? SIDEBAR_W : 0,
+        paddingTop: isDesktop ? 0 : 56,
+        paddingBottom: 0,
+        overflowX: "hidden",
+      }}>
         <Outlet />
       </div>
     </div>
