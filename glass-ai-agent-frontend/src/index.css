@@ -3,7 +3,13 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
-html { scroll-behavior: smooth; }
+html {
+  scroll-behavior: smooth;
+  margin: 0;
+  padding: 0;
+  background: #040A18;
+  overflow-x: hidden;
+}
 
 body {
   margin: 0; padding: 0;
