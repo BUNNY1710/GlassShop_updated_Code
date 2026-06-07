@@ -109,28 +109,33 @@ function KpiCard({ label, value, iconPaths, color, compact }) {
   }
   return (
     <div style={{
-      minWidth: 140,
+      minWidth: 150,
       background: "rgba(17,27,53,0.9)",
       border: "1px solid rgba(255,255,255,0.08)",
-      borderRadius: 16,
-      padding: "14px 16px",
+      borderRadius: 12,
+      padding: "11px 14px",
       flexShrink: 0,
+      display: "flex",
+      alignItems: "center",
+      gap: 12,
     }}>
       <div style={{
-        width: 36, height: 36, borderRadius: 10,
+        width: 32, height: 32, borderRadius: 9, flexShrink: 0,
         background: `${color}26`,
         display: "flex", alignItems: "center", justifyContent: "center",
-        color: color, marginBottom: 10,
+        color,
       }}>
-        <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
           {(Array.isArray(iconPaths) ? iconPaths : [iconPaths]).map((p, i) => <path key={i} d={p} />)}
         </svg>
       </div>
-      <div style={{ fontSize: 10.5, fontWeight: 700, color: "#7180A6", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 4 }}>
-        {label}
-      </div>
-      <div style={{ fontSize: 22, fontWeight: 800, color: "#ffffff", letterSpacing: "-0.03em", lineHeight: 1 }}>
-        {(value ?? 0).toLocaleString()}
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: 10, fontWeight: 700, color: "#7180A6", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          {label}
+        </div>
+        <div style={{ fontSize: 21, fontWeight: 800, color: "#ffffff", letterSpacing: "-0.03em", lineHeight: 1 }}>
+          {(value ?? 0).toLocaleString()}
+        </div>
       </div>
     </div>
   );
@@ -148,8 +153,8 @@ function QuickCard({ iconPaths, title, subtitle, to, color }) {
       style={{
         background: hov ? "rgba(22,36,69,0.95)" : "rgba(17,27,53,0.9)",
         border: `1px solid ${hov ? "rgba(79,93,255,0.3)" : "rgba(255,255,255,0.08)"}`,
-        borderRadius: 14,
-        padding: 16,
+        borderRadius: 12,
+        padding: "12px 14px",
         cursor: "pointer",
         boxShadow: hov ? "0 8px 24px rgba(0,0,0,0.4), 0 0 0 1px rgba(79,93,255,0.15)" : "0 2px 8px rgba(0,0,0,0.3)",
         transform: hov ? "translateY(-2px)" : "none",
@@ -158,11 +163,11 @@ function QuickCard({ iconPaths, title, subtitle, to, color }) {
       }}
     >
       <div style={{
-        width: 40, height: 40, borderRadius: 12, flexShrink: 0,
+        width: 36, height: 36, borderRadius: 10, flexShrink: 0,
         display: "flex", alignItems: "center", justifyContent: "center",
-        background: `${color}22`, color, marginBottom: 10,
+        background: `${color}22`, color, marginBottom: 8,
       }}>
-        <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
           {(Array.isArray(iconPaths) ? iconPaths : [iconPaths]).map((p, i) => <path key={i} d={p} />)}
         </svg>
       </div>
@@ -306,7 +311,7 @@ function Dashboard() {
     }}>
 
       {/* ── Greeting ──────────────────────────────────────────────────────── */}
-      <div style={{ marginBottom: 24 }}>
+      <div style={{ marginBottom: 14 }}>
         <h1 style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, color: "#ffffff", margin: "0 0 4px", letterSpacing: "-0.02em" }}>
           Good {getTimeGreeting()}, {username} 👋
         </h1>
@@ -319,21 +324,21 @@ function Dashboard() {
       <div style={isMobile ? {
         display: "grid",
         gridTemplateColumns: "1fr 1fr",
-        gap: 10,
-        marginBottom: 20,
+        gap: 8,
+        marginBottom: 14,
       } : {
         display: "flex",
-        gap: 12,
+        gap: 10,
         overflowX: "auto",
-        paddingBottom: 4,
-        marginBottom: 20,
+        paddingBottom: 2,
+        marginBottom: 14,
         scrollbarWidth: "none",
         msOverflowStyle: "none",
       }}>
         {loading ? (
           [1,2,3,4].map(i => isMobile
-            ? <Skeleton key={i} h={64} r={12} />
-            : <div key={i} style={{ minWidth: 140, flexShrink: 0 }}><Skeleton h={108} r={16} /></div>
+            ? <Skeleton key={i} h={60} r={12} />
+            : <div key={i} style={{ minWidth: 150, flexShrink: 0 }}><Skeleton h={72} r={12} /></div>
           )
         ) : (
           <>
@@ -388,10 +393,10 @@ function Dashboard() {
       </div>
 
       {/* ── Main layout ───────────────────────────────────────────────────── */}
-      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 320px", gap: 16, alignItems: "start" }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 300px", gap: 14, alignItems: "start" }}>
 
         {/* LEFT column */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
 
           {/* Stock Overview card */}
           <div style={{
@@ -666,7 +671,7 @@ function Dashboard() {
         </div>
 
         {/* RIGHT column */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
 
           {/* Quick Actions */}
           <div style={{

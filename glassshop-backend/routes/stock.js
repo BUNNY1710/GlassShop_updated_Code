@@ -42,6 +42,39 @@ router.get('/all', async (req, res) => {
   }
 });
 
+// GET /api/stock/thicknesses?glassType=Mirror
+// Returns distinct numeric thickness values available for a glass type in this shop.
+// Used by the quotation form to populate the thickness dropdown based on selected glass type.
+router.get('/thicknesses', async (req, res) => {
+  try {
+    const { glassType } = req.query;
+    const user = await User.findOne({
+      where: { userName: req.user.username },
+      include: [{ model: Shop, as: 'shop' }]
+    });
+    if (!user || !user.shopId) {
+      return res.status(404).json({ error: 'User not found or not linked to a shop' });
+    }
+
+    const glassWhere = {};
+    if (glassType) glassWhere.type = glassType;
+
+    const stocks = await Stock.findAll({
+      where: { shopId: user.shopId, quantity: { [Op.gt]: 0 } },
+      include: [{ model: Glass, as: 'glass', where: Object.keys(glassWhere).length ? glassWhere : undefined, required: true }],
+      attributes: [],
+    });
+
+    const thicknesses = [
+      ...new Set(stocks.map(s => s.glass?.thickness).filter(t => t != null))
+    ].sort((a, b) => a - b);
+
+    res.json({ thicknesses });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Get recent stock activity
 router.get('/recent', async (req, res) => {
   try {

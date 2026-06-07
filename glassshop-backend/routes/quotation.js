@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { Quotation, QuotationItem, Customer, Architect, User, Shop } = require('../models');
+const { Quotation, QuotationItem, Customer, Architect, User, Shop, Stock, Glass } = require('../models');
 const { requireAdmin } = require('../middleware/auth');
 const pdfService = require('../services/pdfService');
 
@@ -106,6 +106,33 @@ router.post('/', requireAdmin, async (req, res) => {
     // Auto-link customer to architect when quotation specifies one
     if (quotation.referenceArchitectId && !customer.referenceArchitectId) {
       await customer.update({ referenceArchitectId: quotation.referenceArchitectId });
+    }
+
+    // Validate: thickness must belong to the selected glass type in stock
+    if (items && items.length > 0) {
+      for (const item of items) {
+        if (item.glassType && item.thickness) {
+          const numericThickness = parseFloat(String(item.thickness).replace(/[^0-9.]/g, ''));
+          if (!isNaN(numericThickness) && numericThickness > 0) {
+            const match = await Stock.findOne({
+              where: { shopId: user.shopId, quantity: { [require('sequelize').Op.gt]: 0 } },
+              include: [{
+                model: Glass,
+                as: 'glass',
+                where: { type: item.glassType, thickness: numericThickness },
+                required: true,
+              }],
+            });
+            if (!match) {
+              // Roll back the quotation that was just created
+              await quotation.destroy();
+              return res.status(422).json({
+                error: `No stock available for Glass Type "${item.glassType}" with thickness "${item.thickness}". Please check your inventory before saving.`
+              });
+            }
+          }
+        }
+      }
     }
 
     // Create quotation items

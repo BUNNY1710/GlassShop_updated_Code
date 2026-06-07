@@ -58,6 +58,37 @@ export const fmtThickness = (raw) => {
   return isNaN(n) ? null : `${fmtNum(n)} mm`;
 };
 
+// ── Mirror-glass remnant rule ────────────────────────────────────────────────
+//
+// When glass type is "Mirror", the shop requires that the remaining scrap piece
+// after each cut retains at least 12 inches in every non-zero linear dimension.
+// A scrap strip narrower than 12 inches cannot be re-used for another Mirror order.
+//
+// Rule summary:
+//   - After cutting, check remnantH = stockH − reqH  and  remnantW = stockW − reqW.
+//   - If a dimension is essentially zero (exact fit, < 0.01 mm), it is fine — no waste.
+//   - If a dimension is > 0 but < 304.8 mm (12 in), the result is "undesirable".
+//   - Prefer a combination where both non-zero remnant dimensions ≥ 304.8 mm.
+//   - If NO combination satisfies this, fall back to the best overall result.
+//   - This rule applies ONLY to Mirror glass; all other types are unchanged.
+
+/** 12 inches expressed in millimetres — Mirror minimum remnant threshold. */
+const MIRROR_MIN_REMNANT_MM = 12 * 25.4; // 304.8 mm
+
+/**
+ * Mirror-only: returns true when every non-zero remnant dimension is ≥ 12 in.
+ * An exact-fit axis (remnant < 0.01 mm) is always acceptable.
+ */
+const mirrorRemnantOk = (remnantHmm, remnantWmm) => {
+  const hOk = remnantHmm < 0.01 || remnantHmm >= MIRROR_MIN_REMNANT_MM;
+  const wOk = remnantWmm < 0.01 || remnantWmm >= MIRROR_MIN_REMNANT_MM;
+  return hOk && wOk;
+};
+
+/** Returns true when glassType string equals "Mirror" (case-insensitive). */
+const isMirrorGlass = (glassType) =>
+  (glassType || "").trim().toLowerCase() === "mirror";
+
 // ── Single-order matching ────────────────────────────────────────────────────
 
 /**
@@ -87,6 +118,12 @@ const scoreCandidate = (stock, orderItem) => {
   const sameUnit   = (stockUnit).toUpperCase() === (orderUnit).toUpperCase();
   const isExact    = wasteArea < 0.01; // float tolerance
 
+  // Strict glass-type enforcement: when the order specifies a glass type, only
+  // stock of that exact type is eligible. Cross-type matches (e.g. Mirror order
+  // consuming Plain Glass stock) are never allowed, regardless of dimensions.
+  // Orders with no glassType specified are unrestricted (legacy behaviour).
+  if (orderItem.glassType && !sameType) return null;
+
   return {
     stock,
     stockUnit,
@@ -98,8 +135,11 @@ const scoreCandidate = (stock, orderItem) => {
     sameType,
     sameUnit,
     isExact,
-    // Same unit is highest priority, then same type, then lowest waste
-    score: (sameUnit ? 0 : 2_000_000) + (sameType ? 0 : 1_000_000) + wasteArea,
+    // Remaining linear dimensions after this single-piece cut (used by Mirror rule)
+    remnantHmm: Math.max(0, stockHmm - reqHmm),
+    remnantWmm: Math.max(0, stockWmm - reqWmm),
+    // Same unit is highest priority, then lowest waste (sameType always true here)
+    score: (sameUnit ? 0 : 2_000_000) + wasteArea,
   };
 };
 
@@ -142,18 +182,34 @@ const findCombinedPlans = (results, allStock) => {
     const totalWaste = stockArea - totalReq;
 
     if (totalWaste >= 0) {
+      // Mirror rule: estimate the height of the remaining bottom strip.
+      // Approximation: wasteArea / stockWidth ≈ height of a full-width waste strip.
+      // If this estimated height < 12 in (304.8 mm) the scrap is not reusable —
+      // mark as mirrorUndesirable so it sorts after acceptable plans.
+      const isMirror = isMirrorGlass(stock.glass?.type);
+      const estWasteHeightMM = stockWmm > 0 ? totalWaste / stockWmm : 0;
+      const mirrorUndesirable = isMirror &&
+        estWasteHeightMM > 0.01 &&
+        estWasteHeightMM < MIRROR_MIN_REMNANT_MM;
+
       plans.push({
         stock,
         orders: fitting.map(r => r.order),
-        totalRequired: Math.round(totalReq * 100) / 100,
-        stockArea:     Math.round(stockArea * 100) / 100,
-        totalWaste:    Math.round(totalWaste * 100) / 100,
-        efficiency:    Math.round((totalReq / stockArea) * 10000) / 100,
+        totalRequired:    Math.round(totalReq * 100) / 100,
+        stockArea:        Math.round(stockArea * 100) / 100,
+        totalWaste:       Math.round(totalWaste * 100) / 100,
+        efficiency:       Math.round((totalReq / stockArea) * 10000) / 100,
+        mirrorUndesirable,
       });
     }
   });
 
-  return plans.sort((a, b) => a.totalWaste - b.totalWaste);
+  // Sort: Mirror-preferred plans first (undesirable last), then by least waste
+  return plans.sort((a, b) => {
+    if (a.mirrorUndesirable !== b.mirrorUndesirable)
+      return a.mirrorUndesirable ? 1 : -1;
+    return a.totalWaste - b.totalWaste;
+  });
 };
 
 // ── Smart Cutting Planner ────────────────────────────────────────────────────
@@ -308,7 +364,21 @@ export const planCuts = (orderItems, stock) => {
 export const optimizeOrders = (selectedOrders, allStock) => {
   const results = selectedOrders.map(order => {
     const matches = findMatches(order, allStock);
-    const best    = matches[0] || null;
+
+    let best = matches[0] || null;
+
+    // Mirror-specific remnant rule: among all viable stock matches (already sorted
+    // by area-waste score), prefer the first one that leaves ≥ 12 in (304.8 mm)
+    // in every non-zero remnant dimension.  If none qualifies, keep the original
+    // best (fallback — requirement §5).  Non-Mirror glass is unaffected.
+    if (isMirrorGlass(order.glassType) && matches.length > 0) {
+      const preferred = matches.find(m =>
+        mirrorRemnantOk(m.remnantHmm, m.remnantWmm)
+      );
+      if (preferred) best = preferred;
+      // If preferred is null, best stays as matches[0] (fallback)
+    }
+
     const matchType = !best
       ? "none"
       : best.isExact && best.sameType ? "exact"

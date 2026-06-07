@@ -504,12 +504,18 @@ function QuotationManagement() {
       }
     } else {
       item[field] = value;
+      // When glass type changes, reset thickness so the user picks from the
+      // new filtered list rather than keeping a value that may not exist for
+      // the newly selected type.
+      if (field === "glassType") {
+        item.thickness = "";
+      }
     }
 
     // Handle height/width input - parse fraction and auto-select table value
     if (field === "height" || field === "width") {
       let decimalValue;
-      
+
       // If sizeInMM is checked, store the MM value directly.
       // Convert to INCH only for the cutting-table lookup (decimalValue), not for storage.
       if (item.sizeInMM) {
@@ -1436,6 +1442,24 @@ function QuotationManagement() {
     return allStock.filter((stock) => stock.glass?.type === glassType);
   };
 
+  // Returns distinct sorted numeric thickness values for the selected glass type.
+  // Only considers in-stock items (quantity > 0) so the dropdown never shows
+  // thicknesses that cannot be fulfilled.
+  const getThicknessesForGlassType = (glassType) => {
+    if (!glassType) return [];
+    const seen = new Set();
+    allStock.forEach((stock) => {
+      if (
+        stock.glass?.type === glassType &&
+        stock.glass?.thickness != null &&
+        stock.quantity > 0
+      ) {
+        seen.add(Number(stock.glass.thickness));
+      }
+    });
+    return Array.from(seen).sort((a, b) => a - b);
+  };
+
   const handleGlassTypeSelect = (index, glassType, stockItem) => {
     const newItems = [...formData.items];
     newItems[index].glassType = glassType; // Set glass type (Plan, Extra Clear, etc.)
@@ -2294,7 +2318,7 @@ function QuotationManagement() {
                         </select>
                       </div>
 
-                      {/* Thickness Input */}
+                      {/* Thickness — stock-item picker filtered to selected Glass Type */}
                       <div style={{ position: "relative" }}>
                         <label style={{ display: "block", marginBottom: "8px", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
                           Thickness * <span style={{ color: "#ef4444" }}>●</span>
@@ -2304,166 +2328,112 @@ function QuotationManagement() {
                             type="text"
                             required
                             value={item.thickness}
+                            disabled={!item.glassType}
                             onChange={(e) => {
                               let inputVal = e.target.value;
-                              // If user types just a number, automatically append "MM"
                               const numberMatch = inputVal.match(/^(\d+)$/);
-                              if (numberMatch) {
-                                inputVal = numberMatch[1] + "MM";
-                              }
-                              // If user types number followed by "mm" (lowercase), convert to "MM"
+                              if (numberMatch) inputVal = numberMatch[1] + "MM";
                               const numberMmMatch = inputVal.match(/^(\d+)\s*mm$/i);
-                              if (numberMmMatch) {
-                                inputVal = numberMmMatch[1] + "MM";
-                              }
+                              if (numberMmMatch) inputVal = numberMmMatch[1] + "MM";
                               handleItemChange(index, "thickness", inputVal);
                             }}
                             onBlur={(e) => {
                               let inputVal = e.target.value.trim();
-                              // On blur, ensure "MM" suffix if it's just a number
-                              if (inputVal && /^\d+$/.test(inputVal)) {
-                                inputVal = inputVal + "MM";
-                                handleItemChange(index, "thickness", inputVal);
-                              }
-                              // Convert lowercase "mm" to "MM"
-                              if (inputVal && /^\d+\s*mm$/i.test(inputVal)) {
-                                const number = inputVal.match(/^(\d+)/i)[1];
-                                handleItemChange(index, "thickness", number + "MM");
-                              }
-                            }}
-                            placeholder="e.g., 5MM or 5 (auto-converts to 5MM)"
-                            style={{
-                              width: "100%",
-                              padding: isMobile ? "14px 40px 14px 12px" : "12px 40px 12px 12px",
-                              borderRadius: "8px",
-                              border: "1px solid rgba(255,255,255,0.1)",
-                              fontSize: "16px", // Prevent iOS zoom
-                              transition: "all 0.2s",
-                              boxSizing: "border-box",
-                              minHeight: "44px", // Touch target
-                            }}
-                            onFocus={(e) => {
-                              e.target.style.borderColor = "#4F5DFF";
-                              setShowStockDropdown({ ...showStockDropdown, [index]: true });
-                              setStockDropdownType({ ...stockDropdownType, [index]: "thickness" });
-                            }}
-                            onBlur={(e) => {
+                              if (inputVal && /^\d+$/.test(inputVal)) { inputVal += "MM"; handleItemChange(index, "thickness", inputVal); }
+                              if (inputVal && /^\d+\s*mm$/i.test(inputVal)) { handleItemChange(index, "thickness", inputVal.match(/^(\d+)/i)[1] + "MM"); }
                               setTimeout(() => {
                                 e.target.style.borderColor = "rgba(255,255,255,0.1)";
                                 setShowStockDropdown({ ...showStockDropdown, [index]: false });
                               }, 200);
                             }}
+                            placeholder={!item.glassType ? "Select glass type first" : "e.g., 5MM — or click 📦 to pick"}
+                            style={{
+                              width: "100%",
+                              padding: isMobile ? "14px 40px 14px 12px" : "12px 40px 12px 12px",
+                              borderRadius: "8px",
+                              border: "1px solid rgba(255,255,255,0.1)",
+                              fontSize: "16px",
+                              transition: "all 0.2s",
+                              boxSizing: "border-box",
+                              minHeight: "44px",
+                              opacity: !item.glassType ? 0.55 : 1,
+                              cursor: !item.glassType ? "not-allowed" : "text",
+                            }}
+                            onFocus={(e) => {
+                              if (!item.glassType) return;
+                              e.target.style.borderColor = "#4F5DFF";
+                              setShowStockDropdown({ ...showStockDropdown, [index]: true });
+                              setStockDropdownType({ ...stockDropdownType, [index]: "thickness" });
+                            }}
                           />
                           <span
-                            style={{
-                              position: "absolute",
-                              right: "12px",
-                              top: "50%",
-                              transform: "translateY(-50%)",
-                              fontSize: "18px",
-                              cursor: "pointer",
-                            }}
+                            style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", fontSize: "18px", cursor: item.glassType ? "pointer" : "not-allowed", opacity: item.glassType ? 1 : 0.35 }}
                             onClick={() => {
+                              if (!item.glassType) return;
                               const isOpen = showStockDropdown[index];
                               setShowStockDropdown({ ...showStockDropdown, [index]: !isOpen });
-                              if (!isOpen) {
-                                setStockDropdownType({ ...stockDropdownType, [index]: "thickness" });
-                              }
+                              if (!isOpen) setStockDropdownType({ ...stockDropdownType, [index]: "thickness" });
                             }}
-                          >
-                            📦
-                          </span>
+                          >📦</span>
                         </div>
+
                         {showStockDropdown[index] && (
-                          <div
-                            style={{
-                              position: "absolute",
-                              top: "100%",
-                              left: 0,
-                              right: 0,
-                              zIndex: 1000,
-                              backgroundColor: "rgba(17,27,53,0.95)",
-                              border: "2px solid rgba(79,93,255,0.6)",
-                              borderRadius: "8px",
-                              marginTop: "4px",
-                              maxHeight: "400px",
-                              overflowY: "auto",
-                              boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
-                            }}
-                          >
-                            <div style={{ padding: "8px 12px", backgroundColor: "rgba(17,27,53,0.7)", borderBottom: "1px solid rgba(255,255,255,0.07)", fontWeight: "600", fontSize: "12px", color: "#7180A6" }}>
-                              Available Stock ({allStock.filter(s => s.quantity > 0).length} items)
-                            </div>
-                            {allStock.filter(s => s.quantity > 0).length === 0 ? (
-                              <div style={{ padding: "16px", textAlign: "center", color: "#7180A6", fontSize: "14px" }}>
-                                No stock available
-                              </div>
-                            ) : (
-                              allStock
-                                .filter(s => s.quantity > 0)
-                                .map((stockItem, stockIndex) => {
-                                  const glassType = stockItem.glass?.type || "Unknown";
-                                  const thickness = stockItem.glass?.thickness || "";
-                                  // Always display thickness in MM, regardless of stock item's unit
-                                  const thicknessDisplay = thickness ? `${thickness}MM` : "";
-                                  const size = stockItem.height && stockItem.width 
-                                    ? `${stockItem.height} × ${stockItem.width}` 
-                                    : "N/A";
-                                  return (
-                                    <div
-                                      key={`${stockItem.id}-${stockIndex}`}
-                                      style={{
-                                        padding: "12px",
-                                        borderBottom: "1px solid rgba(255,255,255,0.07)",
-                                        cursor: "pointer",
-                                        transition: "background-color 0.2s",
-                                      }}
-                                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.08)")}
-                                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.08)")}
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        // Check which field triggered the dropdown
-                                        const dropdownType = stockDropdownType[index];
-                                        // Explicitly check for thickness - if not thickness, default to glassType
-                                        if (dropdownType === "thickness") {
-                                          // Thickness field dropdown - ONLY set thickness, do NOT change glass type, height, or width
-                                          handleThicknessSelect(index, stockItem);
-                                          // Close dropdown immediately
-                                          setShowStockDropdown({ ...showStockDropdown, [index]: false });
-                                          setStockDropdownType({ ...stockDropdownType, [index]: null });
-                                        } else {
-                                          // Glass type field dropdown - set glass type
-                                          handleGlassTypeSelect(index, glassType, stockItem);
-                                        }
-                                      }}
-                                    >
-                                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                                        <div style={{ flex: 1 }}>
-                                          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
-                                            <div style={{ fontWeight: "600", color: "#ffffff", fontSize: "14px" }}>
-                                              {glassType}
+                          <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 1000, backgroundColor: "rgba(17,27,53,0.97)", border: "2px solid rgba(79,93,255,0.6)", borderRadius: "8px", marginTop: "4px", maxHeight: "400px", overflowY: "auto", boxShadow: "0 10px 24px rgba(0,0,0,0.5)" }}>
+                            {(() => {
+                              const filtered = allStock.filter(s =>
+                                s.quantity > 0 &&
+                                (s.glass?.type || "").toLowerCase() === (item.glassType || "").toLowerCase()
+                              );
+                              return (
+                                <>
+                                  <div style={{ padding: "8px 12px", backgroundColor: "rgba(17,27,53,0.7)", borderBottom: "1px solid rgba(255,255,255,0.07)", fontWeight: "600", fontSize: "12px", color: "#7180A6" }}>
+                                    {item.glassType} Stock ({filtered.length} item{filtered.length !== 1 ? "s" : ""})
+                                  </div>
+                                  {filtered.length === 0 ? (
+                                    <div style={{ padding: "16px", textAlign: "center", color: "#FF6B81", fontSize: "13px", fontWeight: "500" }}>
+                                      No stock available for the selected Glass Type.
+                                    </div>
+                                  ) : (
+                                    filtered.map((stockItem, si) => {
+                                      const thickness = stockItem.glass?.thickness || "";
+                                      const thicknessDisplay = thickness ? `${thickness}MM` : "—";
+                                      const size = stockItem.height && stockItem.width ? `${stockItem.height} × ${stockItem.width}` : "N/A";
+                                      return (
+                                        <div
+                                          key={`${stockItem.id}-${si}`}
+                                          style={{ padding: "12px", borderBottom: "1px solid rgba(255,255,255,0.07)", cursor: "pointer", transition: "background-color 0.15s" }}
+                                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.06)")}
+                                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "")}
+                                          onClick={(e) => {
+                                            e.preventDefault(); e.stopPropagation();
+                                            handleThicknessSelect(index, stockItem);
+                                            setShowStockDropdown({ ...showStockDropdown, [index]: false });
+                                            setStockDropdownType({ ...stockDropdownType, [index]: null });
+                                          }}
+                                        >
+                                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                                            <div style={{ flex: 1 }}>
+                                              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+                                                <div style={{ fontWeight: "700", color: "#ffffff", fontSize: "15px" }}>{thicknessDisplay}</div>
+                                                <span style={{ fontSize: "11px", color: "#4F5DFF", backgroundColor: "rgba(79,93,255,0.15)", padding: "2px 7px", borderRadius: "4px", fontWeight: "600" }}>{stockItem.glass?.type || "—"}</span>
+                                              </div>
+                                              <div style={{ fontSize: "12px", color: "#7180A6", display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                                                <span>📏 {size} {(stockItem.glass?.unit || "MM").toUpperCase()}</span>
+                                                <span>📍 Stand #{stockItem.standNo}</span>
+                                                <span>📦 Qty: {stockItem.quantity}</span>
+                                                {stockItem.sellingPrice && <span>💵 ₹{parseFloat(stockItem.sellingPrice).toFixed(2)}/SqFt</span>}
+                                                {stockItem.hsnNo && <span>🏷️ {stockItem.hsnNo}</span>}
+                                              </div>
                                             </div>
-                                            {thicknessDisplay && (
-                                              <span style={{ fontSize: "12px", color: "#7180A6", backgroundColor: "rgba(255,255,255,0.08)", padding: "2px 6px", borderRadius: "4px" }}>
-                                                {thicknessDisplay}
-                                              </span>
-                                            )}
-                                          </div>
-                                          <div style={{ fontSize: "12px", color: "#7180A6", display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "4px" }}>
-                                            <span>📏 Size: {size}</span>
-                                            <span>📍 Stand: {stockItem.standNo}</span>
-                                            <span>📦 Qty: {stockItem.quantity}</span>
-                                            {stockItem.sellingPrice && <span>💵 Price: ₹{parseFloat(stockItem.sellingPrice).toFixed(2)}</span>}
-                                            {stockItem.hsnNo && <span>🏷️ HSN: {stockItem.hsnNo}</span>}
+                                            <span style={{ fontSize: "18px", color: "#37E3A5", marginLeft: "8px", flexShrink: 0 }}>✓</span>
                                           </div>
                                         </div>
-                                        <span style={{ fontSize: "20px", color: "#22c55e", marginLeft: "8px" }}>✓</span>
-                                      </div>
-                                    </div>
-                                  );
-                                })
-                            )}
+                                      );
+                                    })
+                                  )}
+                                </>
+                              );
+                            })()}
                           </div>
                         )}
                       </div>

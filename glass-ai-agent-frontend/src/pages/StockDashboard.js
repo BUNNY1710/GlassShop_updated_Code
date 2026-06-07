@@ -72,6 +72,7 @@ const convertFromMM = (valueInMM, targetUnit) => {
 
 function StockDashboard() {
   const [allStock, setAllStock] = useState([]);
+  const [globalSearch, setGlobalSearch] = useState("");
   const [filterThickness, setFilterThickness] = useState("");
   const [filterHeight, setFilterHeight] = useState("");
   const [filterWidth, setFilterWidth] = useState("");
@@ -365,11 +366,74 @@ function StockDashboard() {
     }
   };
 
+  // Parse globalSearch into structured parts: dimension pair, thickness, and type text
+  const parseGlobalSearch = (query) => {
+    let q = query.trim().toLowerCase();
+    if (!q) return null;
+
+    // Extract dimension pair: two numbers separated by x, ×, *
+    const dimRegex = /(\d+(?:\.\d+)?)\s*[x×*]\s*(\d+(?:\.\d+)?)/i;
+    const dimMatch = q.match(dimRegex);
+    let dim1 = null, dim2 = null;
+    if (dimMatch) {
+      dim1 = parseFloat(dimMatch[1]);
+      dim2 = parseFloat(dimMatch[2]);
+      q = q.replace(dimRegex, "").trim();
+    }
+
+    // Extract thickness: number followed by mm
+    const thicknessRegex = /(\d+(?:\.\d+)?)\s*mm\b/i;
+    const thicknessMatch = q.match(thicknessRegex);
+    let thickness = null;
+    if (thicknessMatch) {
+      thickness = parseFloat(thicknessMatch[1]);
+      q = q.replace(thicknessRegex, "").trim();
+    } else if (!dimMatch) {
+      // bare number with no dimension context → treat as thickness
+      const bareNum = q.match(/^(\d+(?:\.\d+)?)$/);
+      if (bareNum) {
+        thickness = parseFloat(bareNum[1]);
+        q = "";
+      }
+    }
+
+    const typeText = q.trim();
+    return { dim1, dim2, thickness, typeText };
+  };
+
   const filteredStock = useMemo(() => {
     const stockWithQuantity = allStock.filter(s =>
       s.quantity != null && s.quantity > 0
     );
 
+    // ── Global search bar ────────────────────────────────────────────
+    const parsed = globalSearch.trim() ? parseGlobalSearch(globalSearch) : null;
+
+    const afterGlobal = parsed ? stockWithQuantity.filter(s => {
+      const glassType = (s.glass?.type || "").toLowerCase();
+      const thickness = s.glass?.thickness != null ? String(s.glass.thickness) : "";
+      const sH = parseFloat(s.height) || 0;
+      const sW = parseFloat(s.width) || 0;
+
+      // Glass type text
+      if (parsed.typeText && !glassType.includes(parsed.typeText)) return false;
+
+      // Thickness
+      if (parsed.thickness !== null) {
+        if (!thickness || parseFloat(thickness) !== parsed.thickness) return false;
+      }
+
+      // Dimension pair — exact match in either orientation
+      if (parsed.dim1 !== null && parsed.dim2 !== null) {
+        const normalDim = (sH === parsed.dim1 && sW === parsed.dim2);
+        const reverseDim = (sH === parsed.dim2 && sW === parsed.dim1);
+        if (!normalDim && !reverseDim) return false;
+      }
+
+      return true;
+    }) : stockWithQuantity;
+
+    // ── Separate chip filters (thickness, height, width) ─────────────
     const searchHeightValue = parseDimension(filterHeight);
     const searchWidthValue = parseDimension(filterWidth);
 
@@ -380,16 +444,12 @@ function StockDashboard() {
       ? convertToMM(searchWidthValue, searchUnit)
       : null;
 
-    const filtered = stockWithQuantity.map(s => {
-      // Live search by thickness
+    const filtered = afterGlobal.map(s => {
       let matchThickness = true;
       if (filterThickness && filterThickness.trim() !== "") {
         const searchValue = filterThickness.trim().toLowerCase();
         const stockThickness = s.glass?.thickness;
-
         if (stockThickness) {
-          // Match exact number or contains match for instant results
-          // e.g., typing "5" will immediately show all items with thickness 5mm
           const stockThicknessStr = String(stockThickness).toLowerCase();
           matchThickness = stockThicknessStr === searchValue ||
                           stockThicknessStr.includes(searchValue) ||
@@ -398,10 +458,8 @@ function StockDashboard() {
           matchThickness = false;
         }
       }
+      if (!matchThickness) return null;
 
-      if (!matchThickness) return null; // Return null for proper filtering
-
-      // Normal search: height matches height, width matches width
       let matchHeight = true;
       let matchWidth = true;
 
@@ -434,19 +492,12 @@ function StockDashboard() {
       }
 
       const normalMatch = matchHeight && matchWidth;
-      let isReverseMatch = false;
+      if (normalMatch) return { ...s, isReverseMatch: false };
 
-      // Reverse search: height matches width, width matches height (only if both height and width are searched)
-      if (normalMatch) {
-        return { ...s, isReverseMatch: false }; // Normal match found
-      }
-
-      // If normal match not found, try reverse search
       if (searchHeightMM !== null && searchWidthMM !== null) {
         let reverseMatchHeight = true;
         let reverseMatchWidth = true;
 
-        // Check if searched height matches stock width
         const stockWidthValue = parseDimension(s.width);
         if (stockWidthValue !== null) {
           const stockWidthMM = convertToMM(stockWidthValue, s.glass?.unit);
@@ -459,7 +510,6 @@ function StockDashboard() {
           reverseMatchHeight = false;
         }
 
-        // Check if searched width matches stock height
         const stockHeightValue = parseDimension(s.height);
         if (stockHeightValue !== null) {
           const stockHeightMM = convertToMM(stockHeightValue, s.glass?.unit);
@@ -472,41 +522,24 @@ function StockDashboard() {
           reverseMatchWidth = false;
         }
 
-        isReverseMatch = reverseMatchHeight && reverseMatchWidth;
-        if (isReverseMatch) {
-          return { ...s, isReverseMatch: true };
-        }
+        if (reverseMatchHeight && reverseMatchWidth) return { ...s, isReverseMatch: true };
       }
 
-      if (normalMatch) {
-        return { ...s, isReverseMatch: false };
-      }
-
-      return null; // No match
+      return null;
     }).filter(s => s !== null);
 
     return filtered.sort((a, b) => {
-      // Prioritize reverse matches over normal matches (show reverse matches at top)
-      if (a.isReverseMatch !== b.isReverseMatch) {
-        return a.isReverseMatch ? -1 : 1; // Reverse matches first
-      }
+      if (a.isReverseMatch !== b.isReverseMatch) return a.isReverseMatch ? -1 : 1;
 
-      const aHeightValue = parseDimension(a.height);
-      const bHeightValue = parseDimension(b.height);
-      const aWidthValue = parseDimension(a.width);
-      const bWidthValue = parseDimension(b.width);
+      const aHeightMM = parseDimension(a.height) !== null ? convertToMM(parseDimension(a.height), a.glass?.unit) : 0;
+      const bHeightMM = parseDimension(b.height) !== null ? convertToMM(parseDimension(b.height), b.glass?.unit) : 0;
+      const aWidthMM = parseDimension(a.width) !== null ? convertToMM(parseDimension(a.width), a.glass?.unit) : 0;
+      const bWidthMM = parseDimension(b.width) !== null ? convertToMM(parseDimension(b.width), b.glass?.unit) : 0;
 
-      const aHeightMM = aHeightValue !== null ? convertToMM(aHeightValue, a.glass?.unit) : 0;
-      const bHeightMM = bHeightValue !== null ? convertToMM(bHeightValue, b.glass?.unit) : 0;
-      const aWidthMM = aWidthValue !== null ? convertToMM(aWidthValue, a.glass?.unit) : 0;
-      const bWidthMM = bWidthValue !== null ? convertToMM(bWidthValue, b.glass?.unit) : 0;
-
-      if (aHeightMM !== bHeightMM) {
-        return aHeightMM - bHeightMM;
-      }
+      if (aHeightMM !== bHeightMM) return aHeightMM - bHeightMM;
       return aWidthMM - bWidthMM;
     });
-  }, [allStock, filterThickness, filterHeight, filterWidth, searchUnit]);
+  }, [allStock, globalSearch, filterThickness, filterHeight, filterWidth, searchUnit]);
 
   // Calculate stats
   const totalStock = filteredStock.length;
@@ -697,9 +730,9 @@ function StockDashboard() {
         <input
           className="app-input"
           style={{ paddingLeft: 42 }}
-          placeholder="Search by type or dimensions..."
-          value={filterThickness}
-          onChange={e => setFilterThickness(e.target.value)}
+          placeholder="Search: Mirror, 5mm, 96x48, Mirror 5mm, Plain 96x48…"
+          value={globalSearch}
+          onChange={e => setGlobalSearch(e.target.value)}
         />
       </div>
 
@@ -753,9 +786,9 @@ function StockDashboard() {
           <option value="FEET">FT</option>
         </select>
         {/* Clear */}
-        {(filterThickness || filterHeight || filterWidth) && (
+        {(globalSearch || filterThickness || filterHeight || filterWidth) && (
           <button
-            onClick={() => { setFilterThickness(""); setFilterHeight(""); setFilterWidth(""); setSearchUnit("MM"); }}
+            onClick={() => { setGlobalSearch(""); setFilterThickness(""); setFilterHeight(""); setFilterWidth(""); setSearchUnit("MM"); }}
             style={isMobile
               ? { width: 38, height: 38, borderRadius: 8, background: "rgba(255,107,129,0.15)", border: "1px solid rgba(255,107,129,0.3)", color: "#FF6B81", fontSize: 16, fontWeight: 700, cursor: "pointer", flexShrink: 0, outline: "none", display: "flex", alignItems: "center", justifyContent: "center" }
               : { padding: "8px 14px", borderRadius: 999, background: "rgba(255,107,129,0.15)", border: "1px solid rgba(255,107,129,0.3)", color: "#FF6B81", fontSize: 13, fontWeight: 600, cursor: "pointer", flexShrink: 0, outline: "none" }
@@ -777,7 +810,7 @@ function StockDashboard() {
         <div style={{ textAlign: "center", padding: "60px 24px", background: "rgba(17,27,53,0.9)", borderRadius: 16, border: "1px solid rgba(255,255,255,0.08)" }}>
           <div style={{ fontSize: 40, marginBottom: 12, opacity: 0.3 }}>📦</div>
           <p style={{ fontSize: 15, fontWeight: 600, color: "#fff", margin: "0 0 6px" }}>No stock found</p>
-          <p style={{ fontSize: 13, color: "#7180A6", margin: 0 }}>{filterThickness || filterHeight || filterWidth ? "Try adjusting your filters" : "Add stock to get started"}</p>
+          <p style={{ fontSize: 13, color: "#7180A6", margin: 0 }}>{globalSearch || filterThickness || filterHeight || filterWidth ? `No stock found matching "${globalSearch || [filterThickness, filterHeight, filterWidth].filter(Boolean).join(' ')}"` : "Add stock to get started"}</p>
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 8 : 12 }}>

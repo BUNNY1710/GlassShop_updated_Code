@@ -152,9 +152,6 @@ const CuttingLayoutSVG = ({ plan, canvasW = 420, canvasH = 300 }) => {
                 <text x={px+pw/2} y={py+ph/2+4} textAnchor="middle" fontSize={8} fill="rgba(255,255,255,0.9)">
                   {fmtNum(r2(p.piece.ow))} × {fmtNum(r2(p.piece.oh))} {stockUnit}
                 </text>
-                <text x={px+pw/2} y={py+ph/2+15} textAnchor="middle" fontSize={7.5} fill="rgba(255,255,255,0.75)">
-                  {fmtNum(r2(p.w*p.h))} sq.{ul}
-                </text>
               </>
             )}
             {small && <text x={px+pw/2} y={py+ph/2+4} textAnchor="middle" fontSize={7.5} fontWeight={700} fill="white">{fmtNum(r2(p.w))}×{fmtNum(r2(p.h))}</text>}
@@ -859,7 +856,14 @@ export default function OptimizationPage() {
                       <MatchBadge type={matchType}/>
                     </div>
 
-                    {!best&&<div style={{ background:"rgba(255,107,129,0.1)",border:"1px solid rgba(255,107,129,0.3)",borderRadius:8,padding:"10px 14px",fontSize:13,color:"#FF6B81",fontWeight:500 }}>⚠️ No suitable stock found.</div>}
+                    {!best&&(
+                      <div style={{ background:"rgba(255,107,129,0.1)",border:"1px solid rgba(255,107,129,0.3)",borderRadius:8,padding:"10px 14px",fontSize:13,color:"#FF6B81",fontWeight:500 }}>
+                        ⚠️ {order.glassType
+                          ? `No stock available for Glass Type: ${order.glassType}. This order cannot be optimized.`
+                          : "No suitable stock found for this order."
+                        }
+                      </div>
+                    )}
 
                     {best&&plan&&(
                       <div style={{ display:"grid",gridTemplateColumns:mobile?"1fr":"1fr 1fr",gap:12 }}>
@@ -890,7 +894,6 @@ export default function OptimizationPage() {
                           <MetricRow label="Remnant Piece"   value={plan.remnant?`${fmtNum(r2(plan.remnant.w))} × ${fmtNum(r2(plan.remnant.h))} ${su}`:"none"}   highlight={plan.remnant?"green":undefined}/>
                           <MetricRow label="Waste"           value={`${fmtNum(r2(plan.wasteArea))} sq.${ul}`}  highlight={plan.wasteArea<1?"green":plan.wasteArea<plan.usedArea?"yellow":"red"}/>
                           <MetricRow label="Utilization"     value={`${plan.utilization}%`}                   highlight={plan.utilization>=70?"green":plan.utilization>=40?"yellow":"red"}/>
-                          {!best.sameType&&<MetricRow label="⚠️ Glass Type" value="Type mismatch" highlight="red"/>}
                         </div>
                       </div>
                     )}
