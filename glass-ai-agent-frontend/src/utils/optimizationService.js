@@ -162,8 +162,8 @@ const findCombinedPlans = (results, allStock) => {
     const stockUnit  = stock.glass?.unit || "MM";
     const stockHmm   = toMM(stock.height, stockUnit);
     const stockWmm   = toMM(stock.width,  stockUnit);
-    const stockArea  = stockHmm * stockWmm;
 
+    // Pre-filter: each order must at least fit dimensionally inside the stock
     const fitting = results.filter(r => {
       const orderUnit = r.order.unit || "MM";
       const reqHmm = toMM(r.order.height, orderUnit);
@@ -175,33 +175,33 @@ const findCombinedPlans = (results, allStock) => {
 
     if (fitting.length < 2) return;
 
-    const totalReq  = fitting.reduce((s, r) => {
-      const u = r.order.unit || "MM";
-      return s + toMM(r.order.height, u) * toMM(r.order.width, u);
-    }, 0);
-    const totalWaste = stockArea - totalReq;
+    // Run actual shelf packing — only pieces that planCuts places are real
+    const cut = planCuts(fitting.map(r => r.order), stock);
+    if (!cut || cut.placed.length < 2) return;
 
-    if (totalWaste >= 0) {
-      // Mirror rule: estimate the height of the remaining bottom strip.
-      // Approximation: wasteArea / stockWidth ≈ height of a full-width waste strip.
-      // If this estimated height < 12 in (304.8 mm) the scrap is not reusable —
-      // mark as mirrorUndesirable so it sorts after acceptable plans.
-      const isMirror = isMirrorGlass(stock.glass?.type);
-      const estWasteHeightMM = stockWmm > 0 ? totalWaste / stockWmm : 0;
-      const mirrorUndesirable = isMirror &&
-        estWasteHeightMM > 0.01 &&
-        estWasteHeightMM < MIRROR_MIN_REMNANT_MM;
+    // plan.orders = only the placed pieces (single source of truth for summary + modal)
+    const placedOrders = cut.placed.map(p => p.piece);
 
-      plans.push({
-        stock,
-        orders: fitting.map(r => r.order),
-        totalRequired:    Math.round(totalReq * 100) / 100,
-        stockArea:        Math.round(stockArea * 100) / 100,
-        totalWaste:       Math.round(totalWaste * 100) / 100,
-        efficiency:       Math.round((totalReq / stockArea) * 10000) / 100,
-        mirrorUndesirable,
-      });
-    }
+    const isMirror = isMirrorGlass(stock.glass?.type);
+    const su = (stock.glass?.unit || "MM").toUpperCase();
+    // Mirror remnant check using the actual computed remnant height
+    const remnantHmm = cut.remnant ? toMM(cut.remnant.h, su) : 0;
+    const mirrorUndesirable = isMirror &&
+      remnantHmm > 0.01 &&
+      remnantHmm < MIRROR_MIN_REMNANT_MM;
+
+    plans.push({
+      stock,
+      orders:      placedOrders,
+      cuttingPlan: cut,           // precomputed — reused by summary card + modal
+      totalRequired: Math.round(cut.usedArea  * 100) / 100,
+      stockArea:     Math.round(cut.stockArea * 100) / 100,
+      totalWaste:    Math.round(cut.wasteArea * 100) / 100,
+      efficiency:    cut.stockArea > 0
+        ? Math.round((cut.usedArea / cut.stockArea) * 10000) / 100
+        : 0,
+      mirrorUndesirable,
+    });
   });
 
   // Sort: Mirror-preferred plans first (undesirable last), then by least waste
@@ -215,130 +215,121 @@ const findCombinedPlans = (results, allStock) => {
 // ── Smart Cutting Planner ────────────────────────────────────────────────────
 
 /**
- * Shelf (guillotine) bin-packing.
- * Returns placed pieces, remnant, waste, and cut instructions.
- * Everything expressed in the stock's own unit so labels are never wrong.
+ * Guillotine bin-packing with rotation.
+ * Tracks a list of free rectangles and places each piece in the smallest
+ * free rect that fits (trying both orientations). After placement the used
+ * rect is split into two new free rects (right strip + bottom strip).
+ * This lets pieces from different orders share leftover space that the old
+ * shelf algorithm would leave unused.
  *
  * @param {object[]} orderItems  – array of order objects with { height, width, unit, customerName, quotationNo, glassType }
  * @param {object}   stock       – stock record with glass.unit, height, width
  */
 export const planCuts = (orderItems, stock) => {
-  const su    = (stock.glass?.unit || "MM").toUpperCase();  // display unit
+  const su    = (stock.glass?.unit || "MM").toUpperCase();
   const stockH = fromMM(toMM(stock.height, su), su);
   const stockW = fromMM(toMM(stock.width,  su), su);
   if (!stockH || !stockW) return null;
 
   const ul = unitLabel(su);
+  const r2 = v => Math.round(v * 100) / 100;
 
-  // Convert every order to stock unit
+  // Convert every order to stock unit; keep both orientations viable
   const pieces = orderItems
     .map((o, i) => {
       const oh = fromMM(toMM(parseDim(o.height), o.unit || su), su);
       const ow = fromMM(toMM(parseDim(o.width),  o.unit || su), su);
       return { ...o, oh, ow, idx: i };
     })
-    .filter(p => p.oh > 0 && p.ow > 0 && p.oh <= stockH && p.ow <= stockW);
+    .filter(p => {
+      if (p.oh <= 0 || p.ow <= 0) return false;
+      // Accept if piece fits in at least one orientation
+      return (p.oh <= stockH && p.ow <= stockW) ||
+             (p.ow <= stockH && p.oh <= stockW);
+    });
 
-  // Sort largest area first (guillotine best-fit priority)
   pieces.sort((a, b) => b.oh * b.ow - a.oh * a.ow);
 
-  // ── Shelf packing ────────────────────────────────────────────────────────
-  const shelves  = [];   // { y, shelfH, usedW, items: [{x, w, h, piece}] }
-  const placed   = [];   // final placed piece list
+  // ── Guillotine packing ───────────────────────────────────────────────────
+  let freeRects = [{ x: 0, y: 0, w: stockW, h: stockH }];
+  const placed   = [];
   const unplaced = [];
 
   for (const piece of pieces) {
-    let fitted = false;
+    const ph0 = piece.oh, pw0 = piece.ow;
+    let bestIdx = -1, bestArea = Infinity, bestRotated = false;
 
-    for (const shelf of shelves) {
-      if (piece.oh <= shelf.shelfH && shelf.usedW + piece.ow <= stockW + 0.001) {
-        const entry = { x: shelf.usedW, y: shelf.y, w: piece.ow, h: piece.oh, piece };
-        shelf.items.push(entry);
-        placed.push(entry);
-        shelf.usedW += piece.ow;
-        fitted = true;
-        break;
+    for (let i = 0; i < freeRects.length; i++) {
+      const fr = freeRects[i];
+      const area = fr.w * fr.h;
+      if (area >= bestArea) continue; // can't improve
+      // Normal orientation
+      if (pw0 <= fr.w + 0.001 && ph0 <= fr.h + 0.001) {
+        bestArea = area; bestIdx = i; bestRotated = false;
+      }
+      // Rotated (only when piece is non-square and rotation is different)
+      if (ph0 !== pw0 && ph0 <= fr.w + 0.001 && pw0 <= fr.h + 0.001) {
+        if (area < bestArea) { bestArea = area; bestIdx = i; bestRotated = true; }
       }
     }
 
-    if (!fitted) {
-      const shelfY = shelves.reduce((s, sh) => s + sh.shelfH, 0);
-      if (shelfY + piece.oh > stockH + 0.001) { unplaced.push(piece); continue; }
-      const shelf = { y: shelfY, shelfH: piece.oh, usedW: piece.ow, items: [] };
-      const entry = { x: 0, y: shelfY, w: piece.ow, h: piece.oh, piece };
-      shelf.items.push(entry);
-      shelves.push(shelf);
-      placed.push(entry);
-    }
+    if (bestIdx === -1) { unplaced.push(piece); continue; }
+
+    const fr = freeRects[bestIdx];
+    const pw = bestRotated ? ph0 : pw0;
+    const ph = bestRotated ? pw0 : ph0;
+
+    placed.push({ x: fr.x, y: fr.y, w: r2(pw), h: r2(ph), piece });
+
+    // Split used rect: right strip (full height of fr) + bottom strip (piece width)
+    const rightW  = r2(fr.w - pw);
+    const bottomH = r2(fr.h - ph);
+    const newRects = [];
+    if (rightW  > 0.01) newRects.push({ x: r2(fr.x + pw), y: fr.y,          w: rightW,      h: fr.h   });
+    if (bottomH > 0.01) newRects.push({ x: fr.x,          y: r2(fr.y + ph), w: r2(pw),      h: bottomH });
+    freeRects.splice(bestIdx, 1, ...newRects);
   }
 
   // ── Areas ────────────────────────────────────────────────────────────────
-  const r2      = v => Math.round(v * 100) / 100;
-  const usedH   = r2(shelves.reduce((s, sh) => s + sh.shelfH, 0));
-  const usedArea = r2(placed.reduce((s, p) => s + p.w * p.h, 0));
+  const usedArea  = r2(placed.reduce((s, p) => s + p.w * p.h, 0));
   const stockArea = r2(stockW * stockH);
 
-  // Remnant = largest contiguous rectangle remaining
-  //   Option A: bottom strip (full-width × remaining height)
-  const bottomH  = r2(stockH - usedH);
-  const bottomW  = stockW;
-  const bottomArea = r2(bottomH * bottomW);
-
-  //   Option B: right-side gaps per shelf (collect largest)
-  let bestSideArea = 0, bestSideRemnant = null;
-  shelves.forEach(sh => {
-    const gapW = r2(stockW - sh.usedW);
-    if (gapW > 0.01) {
-      const area = r2(gapW * sh.shelfH);
-      if (area > bestSideArea) {
-        bestSideArea = area;
-        bestSideRemnant = { x: sh.usedW, y: sh.y, w: gapW, h: sh.shelfH };
-      }
-    }
-  });
-
-  const remnant = bottomArea >= bestSideArea
-    ? (bottomH > 0.01 ? { x: 0, y: usedH, w: bottomW, h: bottomH, area: bottomArea, isBottom: true } : null)
-    : { ...bestSideRemnant, area: bestSideArea, isBottom: false };
+  // Remnant = largest remaining free rectangle
+  const remnant = (() => {
+    if (!freeRects.length) return null;
+    const best = freeRects.reduce((b, fr) => {
+      const a = r2(fr.w * fr.h);
+      return (!b || a > b.area) ? { x: r2(fr.x), y: r2(fr.y), w: r2(fr.w), h: r2(fr.h), area: a } : b;
+    }, null);
+    if (!best || best.area < 0.01) return null;
+    best.isBottom = best.y > 0.01 && best.x < 0.01;
+    return best;
+  })();
 
   const wasteArea = r2(stockArea - usedArea - (remnant?.area || 0));
 
-  // ── Cutting instructions ─────────────────────────────────────────────────
+  // ── Cutting instructions (top-left → bottom-right order for the cutter) ──
   const steps = [];
   let stepNo  = 1;
+  const seenH = new Set();
+  const sortedPlaced = [...placed].sort((a, b) => a.y - b.y || a.x - b.x);
 
-  shelves.forEach((shelf, si) => {
-    // Horizontal cut to separate this shelf from the rest (skip first cut if starts at 0 and is the only row)
-    if (si < shelves.length - 1 || shelves.length > 1) {
-      const cutY = r2(shelf.y + shelf.shelfH);
-      if (cutY < stockH - 0.01) {
-        steps.push({
-          step: stepNo++,
-          type: "H",
-          value: r2(shelf.y + shelf.shelfH),
-          label: `Cut horizontally at ${r2(shelf.y + shelf.shelfH)} ${su} — separates Row ${si + 1}`,
-        });
-      }
+  sortedPlaced.forEach(entry => {
+    const cutX = r2(entry.x + entry.w);
+    const cutY = r2(entry.y + entry.h);
+    // Horizontal cut below piece (deduplicated across rows)
+    if (cutY < stockH - 0.01 && !seenH.has(cutY)) {
+      seenH.add(cutY);
+      steps.push({ step: stepNo++, type: "H", value: cutY, label: `Cut horizontally at ${cutY} ${su}` });
     }
-
-    // Vertical cuts within this shelf
-    shelf.items.forEach((item, ii) => {
-      const cutX = r2(item.x + item.w);
-      if (ii < shelf.items.length - 1) {
-        steps.push({
-          step: stepNo++,
-          type: "V",
-          value: cutX,
-          label: `Cut vertically at ${cutX} ${su} in Row ${si + 1}`,
-        });
-      }
-      steps.push({
-        step: stepNo++,
-        type: "PIECE",
-        label: `Piece #${item.piece.idx + 1}: ${item.piece.customerName || "Order"} — ${r2(item.piece.ow)} × ${r2(item.piece.oh)} ${su}`,
-        piece: item.piece,
-        x: item.x, y: item.y, w: item.w, h: item.h,
-      });
+    // Vertical cut right of piece
+    if (cutX < stockW - 0.01) {
+      steps.push({ step: stepNo++, type: "V", value: cutX, label: `Cut vertically at ${cutX} ${su}` });
+    }
+    steps.push({
+      step: stepNo++, type: "PIECE",
+      label: `${entry.piece.customerName || "Order"} — ${r2(entry.w)} × ${r2(entry.h)} ${su}`,
+      piece: entry.piece, x: entry.x, y: entry.y, w: entry.w, h: entry.h,
     });
   });
 
@@ -352,14 +343,99 @@ export const planCuts = (orderItems, stock) => {
 
   return {
     stockW, stockH, stockUnit: su, stockArea, ul,
-    shelves, placed, unplaced, remnant,
+    placed, unplaced, remnant,
     usedArea, wasteArea,
     utilization: stockArea > 0 ? r2((usedArea / stockArea) * 100) : 0,
     steps,
   };
 };
 
-// ── Main entry point ─────────────────────────────────────────────────────────
+// ── Global cross-order bin packing ───────────────────────────────────────────
+//
+// Groups all pieces by glass type, then greedily packs them onto the fewest
+// stock sheets possible (largest stock first within each type group).
+// A piece not placed on any available sheet is returned in unplacedPieces.
+
+export const optimizeGlobal = (pieces, allStock) => {
+  // Group pieces by glass type (case-insensitive key)
+  const byType = {};
+  pieces.forEach(p => {
+    const type = (p.glassType || '').toLowerCase();
+    if (!byType[type]) byType[type] = [];
+    byType[type].push(p);
+  });
+
+  const sheetPlans     = [];
+  const unplacedPieces = [];
+
+  Object.entries(byType).forEach(([glassType, typePieces]) => {
+    // Eligible stock for this type, sorted largest area first
+    const eligibleStock = allStock
+      .filter(s => {
+        if (!s.quantity || s.quantity <= 0) return false;
+        const sType = (s.glass?.type || '').toLowerCase();
+        return glassType === '' || sType === glassType;
+      })
+      .sort((a, b) => {
+        const aArea = toMM(a.height, a.glass?.unit || 'MM') * toMM(a.width, a.glass?.unit || 'MM');
+        const bArea = toMM(b.height, b.glass?.unit || 'MM') * toMM(b.width, b.glass?.unit || 'MM');
+        return bArea - aArea;
+      });
+
+    let remaining   = [...typePieces];
+    const usedCounts = {};
+
+    for (const stock of eligibleStock) {
+      if (remaining.length === 0) break;
+
+      const stockId = stock.id != null
+        ? `id-${stock.id}`
+        : `stand-${stock.standNo}-${stock.glassId}`;
+      const used = usedCounts[stockId] || 0;
+      if (used >= (stock.quantity || 1)) continue;
+
+      const cut = planCuts(remaining, stock);
+      if (!cut || cut.placed.length === 0) continue;
+
+      const placedPieces = cut.placed.map(p => p.piece);
+      const placedKeys   = new Set(placedPieces.map(p => p.key));
+
+      const isMirror     = isMirrorGlass(stock.glass?.type);
+      const su           = (stock.glass?.unit || 'MM').toUpperCase();
+      const remnantHmm   = cut.remnant ? toMM(cut.remnant.h, su) : 0;
+      const mirrorUndesirable = isMirror &&
+        remnantHmm > 0.01 && remnantHmm < MIRROR_MIN_REMNANT_MM;
+
+      sheetPlans.push({
+        stock,
+        orders: placedPieces,
+        cuttingPlan: cut,
+        efficiency: cut.stockArea > 0
+          ? Math.round((cut.usedArea / cut.stockArea) * 10000) / 100
+          : 0,
+        mirrorUndesirable,
+      });
+
+      usedCounts[stockId] = used + 1;
+      remaining = remaining.filter(p => !placedKeys.has(p.key));
+    }
+
+    unplacedPieces.push(...remaining);
+  });
+
+  return {
+    sheetPlans,
+    unplacedPieces,
+    summary: {
+      total:   pieces.length,
+      placed:  pieces.length - unplacedPieces.length,
+      sheets:  sheetPlans.length,
+      noMatch: unplacedPieces.length,
+    },
+  };
+};
+
+// ── Legacy per-order entry point (kept for reference) ─────────────────────────
 
 export const optimizeOrders = (selectedOrders, allStock) => {
   const results = selectedOrders.map(order => {

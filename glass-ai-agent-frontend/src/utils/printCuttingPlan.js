@@ -45,7 +45,7 @@ const niceInterval = (range) => {
 
 function buildSVG(plan, W = 560, H = 340) {
   if (!plan) return "";
-  const { stockW, stockH, stockUnit, placed, shelves, remnant } = plan;
+  const { stockW, stockH, stockUnit, placed, remnant } = plan;
   const ul = unitLabel(stockUnit);
 
   const ML = 44, MT = 28, MR = 12, MB = 30;
@@ -63,16 +63,11 @@ function buildSVG(plan, W = 560, H = 340) {
   for (let t = 0; t <= stockW + 0.001; t += xInt) xTicks.push(r2(t));
   for (let t = 0; t <= stockH + 0.001; t += yInt) yTicks.push(r2(t));
 
-  // Cut lines
-  const hCuts = [...new Set(shelves.slice(0, -1).map(sh => r2(sh.y + sh.shelfH)))];
-  const vCuts = [];
-  shelves.forEach(sh => {
-    let cx = 0;
-    sh.items.slice(0, -1).forEach(item => {
-      cx += item.w;
-      vCuts.push({ x: r2(cx), y: sh.y, h: sh.shelfH });
-    });
-  });
+  // Cut lines derived from placed piece boundaries
+  const hCuts = [...new Set(placed.map(p => r2(p.y + p.h)).filter(y => y < stockH - 0.01))];
+  const vCuts = placed
+    .filter(p => r2(p.x + p.w) < stockW - 0.01)
+    .map(p => ({ x: r2(p.x + p.w), y: p.y, h: p.h }));
 
   const patDefs = [...BW_PATTERNS, REMNANT_PATTERN].join("\n");
 
@@ -81,7 +76,7 @@ function buildSVG(plan, W = 560, H = 340) {
     const cx = px + pw / 2, cy = py + ph / 2;
     const small = pw < 50 || ph < 30;
     const name = (p.piece.customerName || "Order").substring(0, 12);
-    const dim  = `${fmtNum(r2(p.piece.ow))}×${fmtNum(r2(p.piece.oh))}`;
+    const dim  = `${fmtNum(r2(p.w))}×${fmtNum(r2(p.h))}`;
     return `
       <rect x="${px}" y="${py}" width="${pw}" height="${ph}" fill="url(#bp${i % 8})" stroke="black" stroke-width="1.2"/>
       ${!small ? `

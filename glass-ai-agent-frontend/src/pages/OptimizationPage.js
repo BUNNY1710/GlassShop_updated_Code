@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import PageWrapper from "../components/PageWrapper";
 import api from "../api/api";
 import {
-  optimizeOrders, planCuts,
+  optimizeGlobal, planCuts, findMatches,
   fmtNum, fmtThickness,
   parseDim, toMM, fromMM, unitLabel,
 } from "../utils/optimizationService";
@@ -65,7 +65,7 @@ const MetricRow = ({ label, value, highlight }) => {
 
 const CuttingLayoutSVG = ({ plan, canvasW = 420, canvasH = 300 }) => {
   if (!plan) return null;
-  const { stockW, stockH, stockUnit, placed, shelves, remnant, steps } = plan;
+  const { stockW, stockH, stockUnit, placed, remnant, steps } = plan;
   const ul = unitLabel(stockUnit);
 
   const ML=44, MT=30, MR=12, MB=34;
@@ -83,16 +83,11 @@ const CuttingLayoutSVG = ({ plan, canvasW = 420, canvasH = 300 }) => {
   for (let t=0; t<=stockW+0.001; t+=xInt) xTicks.push(r2(t));
   for (let t=0; t<=stockH+0.001; t+=yInt) yTicks.push(r2(t));
 
-  // Cut lines: unique H and V positions
-  const hCuts = [...new Set(shelves.slice(0,-1).map(sh => r2(sh.y + sh.shelfH)))];
-  const vCuts = [];
-  shelves.forEach(sh => {
-    let cx = 0;
-    sh.items.slice(0,-1).forEach(item => {
-      cx += item.w;
-      vCuts.push({ x: r2(cx), y: sh.y, h: sh.shelfH });
-    });
-  });
+  // Cut lines derived from placed piece boundaries
+  const hCuts = [...new Set(placed.map(p => r2(p.y + p.h)).filter(y => y < stockH - 0.01))];
+  const vCuts = placed
+    .filter(p => r2(p.x + p.w) < stockW - 0.01)
+    .map(p => ({ x: r2(p.x + p.w), y: p.y, h: p.h }));
 
   // Step number for each placed piece
   const pieceStep = {};
@@ -150,7 +145,7 @@ const CuttingLayoutSVG = ({ plan, canvasW = 420, canvasH = 300 }) => {
                   {(p.piece.customerName||"Order").slice(0,14)}
                 </text>
                 <text x={px+pw/2} y={py+ph/2+4} textAnchor="middle" fontSize={8} fill="rgba(255,255,255,0.9)">
-                  {fmtNum(r2(p.piece.ow))} × {fmtNum(r2(p.piece.oh))} {stockUnit}
+                  {fmtNum(r2(p.w))} × {fmtNum(r2(p.h))} {stockUnit}
                 </text>
               </>
             )}
@@ -383,7 +378,7 @@ const AddRemnantButton = ({ plan, stock }) => {
 
 const SIDEBAR_W = 240;
 
-const StickyActionBar = ({ selected, total, allSelected, onSelectAll, onOptimize, running, mobile, isDesktop }) => {
+const StickyActionBar = ({ selected, total, allSelected, onSelectAll, onOptimize, running, mobile, isDesktop, mode }) => {
   const [isStuck, setIsStuck] = useState(false);
   const sentinelRef = useRef(null);
   const enabled = selected > 0 && !running;
@@ -417,11 +412,13 @@ const StickyActionBar = ({ selected, total, allSelected, onSelectAll, onOptimize
         <span style={{ color: "#7180A6" }}>/{total} </span>
         Selected
       </span>
-      <button onClick={onSelectAll} style={{ padding: "6px 14px", background: "rgba(255,255,255,0.07)", color: "#A9B3D1", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>
-        {allSelected ? "Deselect All" : "Select All"}
-      </button>
+      {mode !== "single" && (
+        <button onClick={onSelectAll} style={{ padding: "6px 14px", background: "rgba(255,255,255,0.07)", color: "#A9B3D1", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>
+          {allSelected ? "Deselect All" : "Select All"}
+        </button>
+      )}
       <button onClick={onOptimize} disabled={!enabled} style={{ padding: "7px 18px", background: enabled ? "linear-gradient(135deg,#4F5DFF 0%,#7C3AED 100%)" : "rgba(79,93,255,0.2)", color: "#fff", border: "none", borderRadius: 7, fontSize: 12, fontWeight: 700, cursor: enabled ? "pointer" : "not-allowed", opacity: enabled ? 1 : 0.45, transition: "all 0.2s", whiteSpace: "nowrap", flexShrink: 0, boxShadow: enabled ? "0 3px 12px rgba(79,93,255,0.4)" : "none" }}>
-        {running ? "Planning…" : `Optimize${selected > 0 ? ` (${selected})` : ""} ▶`}
+        {running ? "Planning…" : mode === "single" ? "Single Optimize ▶" : `Multi Optimize (${selected}) ▶`}
       </button>
     </>
   );
@@ -461,8 +458,14 @@ const StickyActionBar = ({ selected, total, allSelected, onSelectAll, onOptimize
 
 /* ─── Cutting Planner Modal ───────────────────────────────────────────────── */
 
-const PlannerModal = ({ open, onClose, stock, orders, best, alternatives, mobile, shopName, userName }) => {
-  const plan = useMemo(() => (open && stock) ? planCuts(orders, stock) : null, [open, stock, orders]);
+const PlannerModal = ({ open, onClose, stock, orders, best, alternatives, precomputedPlan, mobile, shopName, userName }) => {
+  // Use the precomputed plan from findCombinedPlans when available (single source of truth)
+  // so summary + modal always show identical pieces. Fall back to planCuts for single-order modals.
+  const plan = useMemo(() => {
+    if (!open || !stock) return null;
+    if (precomputedPlan?.placed) return precomputedPlan;
+    return planCuts(orders, stock);
+  }, [open, stock, orders, precomputedPlan]);
   const [printOpts, setPrintOpts] = useState({ diagram: true, summary: true, remnant: true });
   if (!open || !stock) return null;
   const su = (stock.glass?.unit||"MM").toUpperCase();
@@ -593,6 +596,7 @@ export default function OptimizationPage() {
   const [error,     setError]    = useState("");
   const [selected,  setSel]      = useState(new Set());
   const [status,    setStatus]   = useState("ALL");
+  const [mode,      setMode]     = useState("multi"); // "single" | "multi"
   const [results,   setResults]  = useState(null);
   const [running,   setRunning]  = useState(false);
   const [showRes,   setShowRes]  = useState(false);
@@ -649,16 +653,40 @@ export default function OptimizationPage() {
     return rows;
   }, [filteredQ]);
 
-  const toggle    = key => setSel(p=>{const n=new Set(p);n.has(key)?n.delete(key):n.add(key);return n;});
-  const toggleAll = ()  => setSel(selected.size===allItems.length?new Set():new Set(allItems.map(i=>i.key)));
+  const toggle = key => {
+    if (mode === "single") {
+      // Single mode: only one item selectable at a time
+      setSel(p => p.has(key) ? new Set() : new Set([key]));
+    } else {
+      setSel(p => { const n = new Set(p); n.has(key) ? n.delete(key) : n.add(key); return n; });
+    }
+  };
+  const toggleAll = () => {
+    if (mode === "single") return; // no-op in single mode
+    setSel(selected.size === allItems.length ? new Set() : new Set(allItems.map(i => i.key)));
+  };
 
   const runOpt = () => {
     const chosen = allItems.filter(i => selected.has(i.key));
     if (!chosen.length) return;
 
-    // Expand each order line by its quantity so the cutter receives N individual
-    // pieces instead of one piece with a quantity label.
-    // e.g. { size: 10×10, qty: 2 } → two separate 10×10 entries.
+    if (mode === "single") {
+      const order = chosen[0];
+      setRunning(true);
+      setTimeout(() => {
+        const matches = findMatches(order, allStock);
+        const best = matches[0] || null;
+        const qty = Math.max(1, parseInt(order.quantity) || 1);
+        const expanded = Array.from({ length: qty }, (_, q) => ({ ...order, quantity: 1, key: `${order.key}-${q}` }));
+        const plan = best ? planCuts(expanded, best.stock) : null;
+        setResults({ mode: "single", order, best, plan, alternatives: matches.slice(1, 3) });
+        setShowRes(true);
+        setRunning(false);
+      }, 300);
+      return;
+    }
+
+    // Multi-order: expand all quantities and pack globally
     const expanded = [];
     chosen.forEach(item => {
       const qty = Math.max(1, parseInt(item.quantity) || 1);
@@ -666,12 +694,11 @@ export default function OptimizationPage() {
         expanded.push({ ...item, quantity: 1, key: `${item.key}-${q}` });
       }
     });
-
     setRunning(true);
-    setTimeout(() => { setResults(optimizeOrders(expanded, allStock)); setShowRes(true); setRunning(false); }, 300);
+    setTimeout(() => { setResults({ ...optimizeGlobal(expanded, allStock), mode: "multi" }); setShowRes(true); setRunning(false); }, 300);
   };
 
-  const openModal = (stock, orders, best, alts) => setModal({ open:true, stock, orders, best, alternatives:alts||[], shopName, userName });
+  const openModal = (stock, orders, best, alts, precomputedPlan) => setModal({ open:true, stock, orders, best, alternatives:alts||[], shopName, userName, precomputedPlan });
   const reset = () => { setShowRes(false); setResults(null); setSel(new Set()); };
 
   if (loading) return (
@@ -708,11 +735,31 @@ export default function OptimizationPage() {
         {/* ── SELECTION ── */}
         {!showRes&&(
           <>
-            <div style={{ display:"flex",alignItems:"center",flexWrap:"wrap",gap:10,marginBottom:12,padding:"10px 14px",background:"rgba(17,27,53,0.9)",borderRadius:10,border:"1px solid rgba(255,255,255,0.08)",boxShadow:"0 1px 3px rgba(0,0,0,0.3)" }}>
+            {/* Status filter + Mode selector row */}
+            <div style={{ display:"flex",alignItems:"center",flexWrap:"wrap",gap:10,marginBottom:10,padding:"10px 14px",background:"rgba(17,27,53,0.9)",borderRadius:10,border:"1px solid rgba(255,255,255,0.08)",boxShadow:"0 1px 3px rgba(0,0,0,0.3)" }}>
               <span style={{ fontSize:11,fontWeight:700,color:"#7180A6",textTransform:"uppercase",letterSpacing:"0.5px" }}>STATUS:</span>
               {["ALL","DRAFT","PENDING","CONFIRMED"].map(st=>(
                 <button key={st} onClick={()=>{setStatus(st);setSel(new Set());}} style={{ padding:"4px 12px",borderRadius:99,cursor:"pointer",border:status===st?"1.5px solid rgba(79,93,255,0.5)":"1.5px solid rgba(255,255,255,0.08)",background:status===st?"rgba(79,93,255,0.15)":"transparent",color:status===st?"#4F5DFF":"#7180A6",fontSize:12,fontWeight:600 }}>{st}</button>
               ))}
+            </div>
+
+            {/* Optimization mode selector */}
+            <div style={{ display:"flex",alignItems:"center",gap:8,marginBottom:10,padding:"10px 14px",background:"rgba(17,27,53,0.9)",borderRadius:10,border:"1px solid rgba(255,255,255,0.08)" }}>
+              <span style={{ fontSize:11,fontWeight:700,color:"#7180A6",textTransform:"uppercase",letterSpacing:"0.5px",marginRight:4 }}>MODE:</span>
+              {[
+                { key:"single", label:"Single Order", desc:"One order at a time" },
+                { key:"multi",  label:"Multi-Order",  desc:"Combine compatible orders" },
+              ].map(m=>(
+                <button key={m.key} onClick={()=>{setMode(m.key);setSel(new Set());}}
+                  style={{ display:"flex",flexDirection:"column",alignItems:"flex-start",padding:"6px 14px",borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:600,transition:"all 120ms",
+                    border:mode===m.key?"1.5px solid rgba(79,93,255,0.5)":"1.5px solid rgba(255,255,255,0.08)",
+                    background:mode===m.key?"rgba(79,93,255,0.15)":"transparent",
+                    color:mode===m.key?"#4F5DFF":"#7180A6" }}>
+                  <span>{m.label}</span>
+                  <span style={{ fontSize:10,fontWeight:400,opacity:0.7,marginTop:1 }}>{m.desc}</span>
+                </button>
+              ))}
+              {mode==="single"&&<span style={{ fontSize:11,color:"#7180A6",marginLeft:4 }}>— tap one order below</span>}
             </div>
 
             {allItems.length > 0 && (
@@ -725,6 +772,7 @@ export default function OptimizationPage() {
                 running={running}
                 mobile={mobile}
                 isDesktop={isDesktop}
+                mode={mode}
               />
             )}
 
@@ -768,19 +816,118 @@ export default function OptimizationPage() {
         )}
 
         {/* ── RESULTS ── */}
-        {showRes&&results&&(
+
+        {/* ── Single Optimization Result ── */}
+        {showRes&&results&&results.mode==="single"&&(
+          <>
+            <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14 }}>
+              <h3 style={{ fontSize:15,fontWeight:700,color:"#ffffff",margin:0 }}>Single Optimization Result</h3>
+            </div>
+
+            {/* Order summary chip */}
+            <div style={{ background:"rgba(17,27,53,0.9)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:10,padding:"10px 14px",marginBottom:14,display:"flex",alignItems:"center",gap:8,flexWrap:"wrap" }}>
+              <span style={{ fontSize:13,fontWeight:700,color:"#ffffff" }}>{results.order.customerName}</span>
+              <span style={{ fontSize:11,color:"#7180A6",background:"rgba(255,255,255,0.06)",borderRadius:4,padding:"1px 6px" }}>#{results.order.quotationNo}</span>
+              <span style={{ fontSize:12,color:"#A9B3D1" }}>
+                {fmtSize(results.order.height,results.order.width,results.order.unit)}
+                {results.order.glassType&&` · ${results.order.glassType}`}
+                {` · Qty ${results.order.quantity}`}
+              </span>
+            </div>
+
+            {!results.best?(
+              <div style={{ background:"rgba(255,107,129,0.1)",border:"1px solid rgba(255,107,129,0.3)",borderRadius:10,padding:"16px 18px",fontSize:13,color:"#FF6B81",fontWeight:500 }}>
+                ⚠️ {results.order.glassType
+                  ?`No stock available for Glass Type: ${results.order.glassType}. This order cannot be optimized.`
+                  :"No suitable stock found for this order."
+                }
+              </div>
+            ):(
+              <div style={{ background:"rgba(17,27,53,0.9)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,overflow:"hidden" }}>
+                {/* Stock info bar */}
+                <div style={{ display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",padding:"12px 16px",borderBottom:"1px solid rgba(255,255,255,0.08)",background:"rgba(79,93,255,0.06)" }}>
+                  <span style={{ fontSize:13,fontWeight:800,color:"#4F5DFF",background:"rgba(79,93,255,0.15)",borderRadius:6,padding:"3px 10px" }}>Stand #{results.best.stock.standNo}</span>
+                  <span style={{ fontSize:13,fontWeight:600,color:"#ffffff" }}>{fmtSize(results.best.stock.height,results.best.stock.width,results.best.stock.glass?.unit)}</span>
+                  {results.best.stock.glass?.type&&<span style={{ fontSize:11,background:"rgba(255,255,255,0.08)",color:"#A9B3D1",borderRadius:4,padding:"2px 8px" }}>{results.best.stock.glass.type}</span>}
+                  {results.best.stock.glass?.thickness&&<span style={{ fontSize:11,background:"rgba(255,255,255,0.08)",color:"#A9B3D1",borderRadius:4,padding:"2px 8px" }}>{fmtThickness(results.best.stock.glass.thickness)}</span>}
+                  <span style={{ fontSize:11,background:"rgba(255,255,255,0.08)",color:"#A9B3D1",borderRadius:4,padding:"2px 8px" }}>{results.best.stock.quantity} pcs</span>
+                  {!results.best.sameUnit&&<span style={{ fontSize:11,color:"#FFB95E",background:"rgba(255,185,94,0.1)",borderRadius:4,padding:"2px 8px" }}>⚠️ Unit mismatch</span>}
+                </div>
+
+                {/* Cutting layout SVG + metrics */}
+                <div style={{ padding:"12px 16px 0" }}>
+                  <CuttingLayoutSVG plan={results.plan} canvasW={mobile?310:520} canvasH={mobile?220:320}/>
+                  <WasteBar plan={results.plan}/>
+                </div>
+
+                {/* Cutting instructions */}
+                <div style={{ padding:"0 16px" }}>
+                  <CuttingInstructions plan={results.plan}/>
+                </div>
+
+                {/* Add remnant to inventory */}
+                <div style={{ padding:"0 16px" }}>
+                  <AddRemnantButton plan={results.plan} stock={results.best.stock}/>
+                </div>
+
+                {/* Print / Export */}
+                <div style={{ margin:"8px 16px 16px",paddingTop:12,borderTop:"1px solid rgba(255,255,255,0.08)",display:"flex",gap:8,flexWrap:"wrap" }}>
+                  <button style={{ padding:"7px 16px",background:"#4F5DFF",color:"#fff",border:"none",borderRadius:7,fontSize:12,fontWeight:700,cursor:"pointer" }}
+                    onClick={()=>printCuttingPlan({ plan:results.plan, stock:results.best.stock, orders:[{...results.order,label:results.order.customerName}], options:{diagram:true,summary:true,remnant:true}, shopName, userName })}>
+                    {mobile?"Print":"Print Cutting Plan"}
+                  </button>
+                  <button style={{ padding:"7px 16px",background:"rgba(255,255,255,0.08)",color:"#A9B3D1",border:"1px solid rgba(255,255,255,0.12)",borderRadius:7,fontSize:12,fontWeight:600,cursor:"pointer" }}
+                    onClick={()=>printCuttingPlan({ plan:results.plan, stock:results.best.stock, orders:[{...results.order,label:results.order.customerName}], options:{diagram:true,summary:true,remnant:true}, shopName, userName })}>
+                    {mobile?"PDF":"Export PDF"}
+                  </button>
+                </div>
+
+                {/* Alternative stocks */}
+                {results.alternatives?.length>0&&(
+                  <div style={{ margin:"0 16px 16px",background:"rgba(255,255,255,0.03)",borderRadius:8,padding:"10px 12px" }}>
+                    <div style={{ fontSize:11,fontWeight:700,color:"#7180A6",textTransform:"uppercase",letterSpacing:"0.5px",marginBottom:8 }}>
+                      {results.alternatives.length} Alternative{results.alternatives.length>1?"s":""}
+                    </div>
+                    <div style={{ display:"flex",gap:8,flexWrap:"wrap" }}>
+                      {results.alternatives.map((alt,j)=>{
+                        const asu=(alt.stock.glass?.unit||"MM").toUpperCase();
+                        const aul=unitLabel(asu);
+                        const ap=planCuts([results.order],alt.stock);
+                        return (
+                          <div key={j} style={{ background:"rgba(255,255,255,0.04)",borderRadius:8,padding:"8px 12px",fontSize:12,border:"1px solid rgba(255,255,255,0.08)",display:"flex",flexDirection:"column",gap:3 }}>
+                            <strong style={{ color:"#ffffff" }}>Stand #{alt.stock.standNo}</strong>
+                            <span style={{ color:"#A9B3D1" }}>{fmtSize(alt.stock.height,alt.stock.width,alt.stock.glass?.unit)}</span>
+                            {ap&&<span style={{ color:"#7180A6" }}>
+                              Remnant: {ap.remnant?`${fmtNum(r2(ap.remnant.w))}×${fmtNum(r2(ap.remnant.h))} ${asu}`:"none"}
+                              {" · "}{ap.utilization}% util
+                            </span>}
+                            <button style={{ marginTop:4,padding:"4px 10px",background:"rgba(79,93,255,0.15)",color:"#4F5DFF",border:"1px solid rgba(79,93,255,0.3)",borderRadius:6,fontSize:11,fontWeight:600,cursor:"pointer" }}
+                              onClick={()=>openModal(alt.stock,[{...results.order,label:results.order.customerName}],alt,[],null)}>
+                              View Plan
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ── Multi-Order Optimization Result ── */}
+        {showRes&&results&&results.mode==="multi"&&(
           <>
             {/* Summary */}
             <div style={{ background:"rgba(17,27,53,0.9)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:12, padding:"16px 18px", marginBottom:16 }}>
               <h3 style={{ fontSize:15,fontWeight:700,color:"#ffffff",margin:"0 0 8px",letterSpacing:"-0.02em" }}>Plan Summary</h3>
-              <div style={{ display:"grid",gridTemplateColumns:mobile?"repeat(3,1fr)":"repeat(6,1fr)",gap:10,marginTop:10 }}>
+              <div style={{ display:"grid",gridTemplateColumns:mobile?"repeat(2,1fr)":"repeat(4,1fr)",gap:10,marginTop:10 }}>
                 {[
-                  {label:"Orders",      val:results.summary.total,         col:"#4F5DFF"},
-                  {label:"Exact Match", val:results.summary.exact,         col:"#37E3A5"},
-                  {label:"Good Match",  val:results.summary.good,          col:"#FFB95E"},
-                  {label:"Partial",     val:results.summary.partial,       col:"#FFB95E"},
-                  {label:"No Match",    val:results.summary.none,          col:"#FF6B81"},
-                  {label:"Multi-Order", val:results.summary.combinedPlans, col:"#8B5CF6"},
+                  {label:"Total Pieces", val:results.summary.total,   col:"#4F5DFF"},
+                  {label:"Placed",       val:results.summary.placed,  col:"#37E3A5"},
+                  {label:"Sheets Used",  val:results.summary.sheets,  col:"#FFB95E"},
+                  {label:"No Match",     val:results.summary.noMatch, col:"#FF6B81"},
                 ].map(({label,val,col})=>(
                   <div key={label} style={{ textAlign:"center",padding:"8px 4px",background:"rgba(255,255,255,0.04)",borderRadius:8 }}>
                     <div style={{ fontSize:24,fontWeight:800,color:col,letterSpacing:"-0.04em" }}>{val}</div>
@@ -790,139 +937,83 @@ export default function OptimizationPage() {
               </div>
             </div>
 
-            {/* Combined plans */}
-            {results.combinedPlans.length>0&&(
-              <div style={{ background:"rgba(17,27,53,0.9)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:12, padding:"16px 18px", marginBottom:16 }}>
-                <h3 style={{ fontSize:15,fontWeight:700,color:"#ffffff",margin:"0 0 8px" }}>💡 Multi-Order Plans</h3>
-                {results.combinedPlans.map((plan,i)=>{
-                  const su=(plan.stock.glass?.unit||"MM").toUpperCase();
-                  const ul=unitLabel(su);
-                  const cPlan=planCuts(plan.orders,plan.stock);
-                  return (
-                    <div key={i} style={{ background:"rgba(79,93,255,0.08)",border:"1px solid rgba(79,93,255,0.2)",borderRadius:10,padding:"12px 14px",marginBottom:10 }}>
-                      <div style={{ display:"flex",alignItems:"center",gap:10,flexWrap:"wrap",marginBottom:8 }}>
-                        <strong style={{ color:"#ffffff" }}>Stand #{plan.stock.standNo}</strong>
-                        <span style={{ fontSize:12,color:"#A9B3D1" }}>{fmtSize(plan.stock.height,plan.stock.width,su)}</span>
-                        <span style={{ marginLeft:"auto",fontSize:11,fontWeight:700,padding:"3px 10px",borderRadius:99,background:cPlan?.utilization>=70?"rgba(55,227,165,0.15)":"rgba(255,185,94,0.15)",color:cPlan?.utilization>=70?"#37E3A5":"#FFB95E" }}>
-                          {cPlan?.utilization||0}% utilization
-                        </span>
-                      </div>
-                      <div style={{ display:"flex",flexWrap:"wrap",gap:6,marginBottom:8 }}>
-                        {plan.orders.map((o,j)=>(
-                          <span key={j} style={{ fontSize:11,padding:"3px 10px",borderRadius:99,background:"rgba(79,93,255,0.15)",color:"#818CF8" }}>
-                            {o.customerName} · {fmtSize(o.height,o.width,o.unit)}
+            {/* Sheet-based cutting plans */}
+            {results.sheetPlans.length>0&&(
+              <>
+                <h3 style={{ fontSize:15,fontWeight:700,color:"#ffffff",margin:"0 0 12px" }}>✂️ Cutting Sheets</h3>
+                <div style={{ display:"flex",flexDirection:"column",gap:10,marginBottom:16 }}>
+                  {results.sheetPlans.map((plan,i)=>{
+                    const su=(plan.stock.glass?.unit||"MM").toUpperCase();
+                    const ul=unitLabel(su);
+                    const cPlan=plan.cuttingPlan;
+                    const eff=plan.efficiency;
+                    return (
+                      <div key={i} style={{ background:"rgba(17,27,53,0.9)",border:"1px solid rgba(255,255,255,0.08)",borderLeft:`4px solid ${eff>=70?"rgba(55,227,165,0.5)":eff>=40?"rgba(255,185,94,0.5)":"rgba(79,93,255,0.4)"}`,borderRadius:12,padding:"16px 18px" }}>
+                        {/* Header */}
+                        <div style={{ display:"flex",alignItems:"center",gap:10,flexWrap:"wrap",marginBottom:8 }}>
+                          <strong style={{ fontSize:14,color:"#ffffff" }}>Sheet {i+1} — Stand #{plan.stock.standNo}</strong>
+                          <span style={{ fontSize:12,color:"#A9B3D1" }}>{fmtSize(plan.stock.height,plan.stock.width,su)}</span>
+                          {plan.stock.glass?.type&&<span style={{ fontSize:11,padding:"2px 8px",borderRadius:4,background:"rgba(79,93,255,0.15)",color:"#4F5DFF",fontWeight:500 }}>{plan.stock.glass.type}</span>}
+                          <span style={{ marginLeft:"auto",fontSize:11,fontWeight:700,padding:"3px 10px",borderRadius:99,background:eff>=70?"rgba(55,227,165,0.15)":"rgba(255,185,94,0.15)",color:eff>=70?"#37E3A5":"#FFB95E" }}>
+                            {eff}% utilization
                           </span>
-                        ))}
+                        </div>
+                        {/* Piece tags */}
+                        <div style={{ display:"flex",flexWrap:"wrap",gap:6,marginBottom:10 }}>
+                          {plan.orders.map((o,j)=>(
+                            <span key={j} style={{ fontSize:11,padding:"3px 10px",borderRadius:99,background:"rgba(255,255,255,0.06)",color:"#A9B3D1",border:"1px solid rgba(255,255,255,0.08)" }}>
+                              <span style={{ color:"#ffffff",fontWeight:600 }}>{o.customerName}</span>
+                              {" · "}{fmtSize(o.height,o.width,o.unit)}
+                              {o.glassType&&<span style={{ marginLeft:5,color:"#818CF8" }}>{o.glassType}</span>}
+                            </span>
+                          ))}
+                        </div>
+                        {/* Metrics + View Plan */}
+                        <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8 }}>
+                          <span style={{ fontSize:12,color:"#7180A6" }}>
+                            Pieces: <strong style={{ color:"#ffffff" }}>{plan.orders.length}</strong>
+                            {"  ·  "}Remnant: <strong style={{ color:"#37E3A5" }}>{cPlan?.remnant?`${fmtNum(r2(cPlan.remnant.w))} × ${fmtNum(r2(cPlan.remnant.h))} ${su}`:"none"}</strong>
+                            {"  ·  "}Waste: <strong style={{ color:"#ffffff" }}>{fmtNum(r2(cPlan?.wasteArea||0))} sq.{ul}</strong>
+                            {plan.mirrorUndesirable&&<span style={{ marginLeft:8,color:"#FFB95E",fontSize:11 }}>⚠️ Mirror remnant {"<"} 12 in</span>}
+                          </span>
+                          <button
+                            style={{ padding:"6px 14px",background:"#4F5DFF",color:"#fff",border:"none",borderRadius:7,fontSize:12,fontWeight:700,cursor:"pointer" }}
+                            onClick={()=>openModal(plan.stock,plan.orders.map(o=>({...o,label:o.customerName})),null,[],plan.cuttingPlan)}>
+                            ✂️ View Plan
+                          </button>
+                        </div>
                       </div>
-                      <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",fontSize:12,color:"#A9B3D1" }}>
-                        <span>
-                          Remnant: <strong style={{ color:"#37E3A5" }}>{cPlan?.remnant?`${fmtNum(r2(cPlan.remnant.w))} × ${fmtNum(r2(cPlan.remnant.h))} ${su}`:"none"}</strong>
-                          {" · "}Waste: <strong style={{ color:"#ffffff" }}>{fmtNum(r2(cPlan?.wasteArea||0))} sq.{ul}</strong>
-                        </span>
-                        <button
-                          style={{ padding:"6px 14px", background:"rgba(255,255,255,0.08)", color:"#A9B3D1", border:"1px solid rgba(255,255,255,0.12)", borderRadius:7, fontSize:12, fontWeight:600, cursor:"pointer" }}
-                          onClick={()=>openModal(plan.stock,plan.orders.map(o=>({...o,label:o.customerName})),null,[])}>
-                          ✂️ View Plan
-                        </button>
-                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
+            {/* Unplaced pieces */}
+            {results.unplacedPieces.length>0&&(
+              <div style={{ background:"rgba(255,107,129,0.06)",border:"1px solid rgba(255,107,129,0.25)",borderRadius:12,padding:"16px 18px",marginBottom:16 }}>
+                <h3 style={{ fontSize:14,fontWeight:700,color:"#FF6B81",margin:"0 0 10px" }}>⚠️ No Matching Stock</h3>
+                <div style={{ display:"flex",flexDirection:"column",gap:6 }}>
+                  {results.unplacedPieces.map((p,i)=>(
+                    <div key={i} style={{ display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",padding:"7px 10px",background:"rgba(255,107,129,0.06)",borderRadius:7 }}>
+                      <span style={{ fontWeight:600,color:"#ffffff",fontSize:13 }}>{p.customerName}</span>
+                      <span style={{ fontSize:11,color:"#7180A6" }}>#{p.quotationNo}</span>
+                      <span style={{ fontSize:11,padding:"2px 8px",borderRadius:4,background:"rgba(255,107,129,0.15)",color:"#FF6B81" }}>{fmtSize(p.height,p.width,p.unit)}</span>
+                      {p.glassType&&<span style={{ fontSize:11,padding:"2px 8px",borderRadius:4,background:"rgba(79,93,255,0.15)",color:"#4F5DFF" }}>{p.glassType}</span>}
                     </div>
-                  );
-                })}
+                  ))}
+                </div>
               </div>
             )}
 
-            {/* Per-order results */}
-            <h3 style={{ fontSize:15,fontWeight:700,color:"#ffffff",margin:"0 0 12px" }}>Per-Order Cutting Plans</h3>
-            <div style={{ display:"flex",flexDirection:"column",gap:12 }}>
-              {results.results.map(({order,best,alternatives,matchType},i)=>{
-                const c=matchColors[matchType]||matchColors.none;
-                const su=best?(best.stock.glass?.unit||"MM").toUpperCase():"MM";
-                const ul=unitLabel(su);
-                const plan=best?planCuts([order],best.stock):null;
-                return (
-                  <div key={i} style={{ background:"rgba(17,27,53,0.9)", border:`1px solid rgba(255,255,255,0.08)`, borderLeft:`4px solid ${c.border}`, borderRadius:12, padding:"16px 18px" }}>
-                    <div style={{ display:"flex",alignItems:"flex-start",gap:10,flexWrap:"wrap",marginBottom:12 }}>
-                      <div style={{ flex:1 }}>
-                        <div style={{ fontSize:14,fontWeight:700,color:"#ffffff",display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",marginBottom:3 }}>
-                          {order.customerName}
-                          <span style={{ fontSize:11,color:"#7180A6",background:"rgba(255,255,255,0.06)",borderRadius:4,padding:"1px 6px" }}>#{order.quotationNo}</span>
-                        </div>
-                        <div style={{ fontSize:12,color:"#A9B3D1" }}>
-                          Required: {fmtSize(order.height,order.width,order.unit)}
-                          {order.glassType?` · ${order.glassType}`:""}
-                          {` · Qty ${order.quantity}`}
-                        </div>
-                      </div>
-                      <MatchBadge type={matchType}/>
-                    </div>
-
-                    {!best&&(
-                      <div style={{ background:"rgba(255,107,129,0.1)",border:"1px solid rgba(255,107,129,0.3)",borderRadius:8,padding:"10px 14px",fontSize:13,color:"#FF6B81",fontWeight:500 }}>
-                        ⚠️ {order.glassType
-                          ? `No stock available for Glass Type: ${order.glassType}. This order cannot be optimized.`
-                          : "No suitable stock found for this order."
-                        }
-                      </div>
-                    )}
-
-                    {best&&plan&&(
-                      <div style={{ display:"grid",gridTemplateColumns:mobile?"1fr":"1fr 1fr",gap:12 }}>
-                        {/* Recommended */}
-                        <div style={{ background:"rgba(255,255,255,0.04)",borderRadius:9,padding:"12px 14px",border:"1px solid rgba(255,255,255,0.08)" }}>
-                          <div style={{ fontSize:11,fontWeight:700,color:"#7180A6",textTransform:"uppercase",letterSpacing:"0.5px",marginBottom:6 }}>Recommended Stock</div>
-                          <div style={{ fontSize:20,fontWeight:800,color:"#4F5DFF",letterSpacing:"-0.04em" }}>Stand #{best.stock.standNo}</div>
-                          <div style={{ fontSize:13,fontWeight:500,color:"#ffffff",marginTop:4,display:"flex",alignItems:"center",gap:6,flexWrap:"wrap" }}>
-                            {fmtSize(best.stock.height,best.stock.width,best.stock.glass?.unit)}
-                            {best.stock.glass?.type&&<span style={{ fontSize:11,padding:"2px 8px",borderRadius:4,background:"rgba(79,93,255,0.15)",color:"#4F5DFF",fontWeight:500 }}>{best.stock.glass.type}</span>}
-                          </div>
-                          <div style={{ fontSize:12,color:"#37E3A5",fontWeight:600,marginTop:6 }}>
-                            Remnant: {plan.remnant ? `${fmtNum(r2(plan.remnant.w))} × ${fmtNum(r2(plan.remnant.h))} ${su}` : "none"}
-                          </div>
-                          {!best.sameUnit&&<div style={{ fontSize:11,color:"#FFB95E",marginTop:4,background:"rgba(255,185,94,0.1)",borderRadius:5,padding:"3px 8px" }}>⚠️ Unit mismatch</div>}
-                          <div style={{ marginTop:10 }}>
-                            <button
-                              style={{ padding:"7px 14px", background:"#4F5DFF", color:"#fff", border:"none", borderRadius:7, fontSize:12, fontWeight:700, cursor:"pointer" }}
-                              onClick={()=>openModal(best.stock,[{...order,label:order.customerName}],best,alternatives)}>
-                              ✂️ Open Cutting Plan
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Metrics */}
-                        <div style={{ background:"rgba(255,255,255,0.04)",borderRadius:9,padding:10,border:"1px solid rgba(255,255,255,0.08)" }}>
-                          <MetricRow label="Used Area"       value={`${fmtNum(r2(plan.usedArea))} sq.${ul}`}/>
-                          <MetricRow label="Remnant Piece"   value={plan.remnant?`${fmtNum(r2(plan.remnant.w))} × ${fmtNum(r2(plan.remnant.h))} ${su}`:"none"}   highlight={plan.remnant?"green":undefined}/>
-                          <MetricRow label="Waste"           value={`${fmtNum(r2(plan.wasteArea))} sq.${ul}`}  highlight={plan.wasteArea<1?"green":plan.wasteArea<plan.usedArea?"yellow":"red"}/>
-                          <MetricRow label="Utilization"     value={`${plan.utilization}%`}                   highlight={plan.utilization>=70?"green":plan.utilization>=40?"yellow":"red"}/>
-                        </div>
-                      </div>
-                    )}
-
-                    {alternatives.length>0&&(
-                      <details style={{ marginTop:10 }}>
-                        <summary style={{ fontSize:12,color:"#4F5DFF",fontWeight:600,cursor:"pointer",userSelect:"none" }}>{alternatives.length} alternative{alternatives.length>1?"s":""}</summary>
-                        <div style={{ display:"flex",gap:8,flexWrap:"wrap",marginTop:8 }}>
-                          {alternatives.map((alt,j)=>{
-                            const asu=(alt.stock.glass?.unit||"MM").toUpperCase();
-                            const aul=unitLabel(asu);
-                            const ap=planCuts([order],alt.stock);
-                            return (
-                              <div key={j} style={{ background:"rgba(255,255,255,0.04)",borderRadius:8,padding:"8px 12px",fontSize:12,border:"1px solid rgba(255,255,255,0.08)",display:"flex",flexDirection:"column",gap:2 }}>
-                                <strong style={{ color:"#ffffff" }}>Stand #{alt.stock.standNo}</strong>
-                                <span style={{ color:"#A9B3D1" }}>{fmtSize(alt.stock.height,alt.stock.width,alt.stock.glass?.unit)}</span>
-                                <span style={{ color:"#7180A6" }}>
-                                  Remnant: {ap?.remnant?`${fmtNum(r2(ap.remnant.w))}×${fmtNum(r2(ap.remnant.h))} ${asu}`:"none"}
-                                </span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </details>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+            {/* Nothing placed at all */}
+            {results.sheetPlans.length===0&&(
+              <div style={{ background:"rgba(17,27,53,0.9)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,padding:"40px 20px",textAlign:"center" }}>
+                <div style={{ fontSize:36,marginBottom:10 }}>🔍</div>
+                <p style={{ color:"#A9B3D1",fontWeight:600,margin:"0 0 6px" }}>No matching stock found</p>
+                <p style={{ color:"#7180A6",fontSize:13,margin:0 }}>Add more stock or check glass type filters.</p>
+              </div>
+            )}
           </>
         )}
       </div>
@@ -934,6 +1025,7 @@ export default function OptimizationPage() {
         orders={modal.orders||[]}
         best={modal.best}
         alternatives={modal.alternatives||[]}
+        precomputedPlan={modal.precomputedPlan}
         mobile={mobile}
         shopName={modal.shopName || "Glass Shop"}
         userName={modal.userName || ""}
