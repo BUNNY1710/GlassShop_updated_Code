@@ -109,15 +109,14 @@ function KpiCard({ label, value, iconPaths, color, compact }) {
   }
   return (
     <div style={{
-      minWidth: 150,
       background: "rgba(17,27,53,0.9)",
       border: "1px solid rgba(255,255,255,0.08)",
       borderRadius: 12,
       padding: "11px 14px",
-      flexShrink: 0,
       display: "flex",
       alignItems: "center",
       gap: 12,
+      minWidth: 0,
     }}>
       <div style={{
         width: 32, height: 32, borderRadius: 9, flexShrink: 0,
@@ -181,7 +180,7 @@ function QuickCard({ iconPaths, title, subtitle, to, color }) {
 function Dashboard() {
   const navigate  = useNavigate();
   const role      = sessionStorage.getItem("role");
-  const { isMobile } = useResponsive();
+  const { isMobile, isTablet } = useResponsive();
 
   const [auditLogs, setAuditLogs]  = useState([]);
   const [stockData, setStockData]  = useState([]);
@@ -321,25 +320,18 @@ function Dashboard() {
       </div>
 
       {/* ── KPI Cards ─────────────────────────────────────────────────────── */}
-      <div style={isMobile ? {
+      <div style={{
         display: "grid",
-        gridTemplateColumns: "1fr 1fr",
-        gap: 8,
+        gridTemplateColumns: isMobile
+          ? "1fr 1fr"
+          : isTablet
+            ? `repeat(${role === "ROLE_ADMIN" ? 3 : 2}, 1fr)`
+            : `repeat(${role === "ROLE_ADMIN" ? 6 : 4}, 1fr)`,
+        gap: isMobile ? 8 : 10,
         marginBottom: 14,
-      } : {
-        display: "flex",
-        gap: 10,
-        overflowX: "auto",
-        paddingBottom: 2,
-        marginBottom: 14,
-        scrollbarWidth: "none",
-        msOverflowStyle: "none",
       }}>
         {loading ? (
-          [1,2,3,4].map(i => isMobile
-            ? <Skeleton key={i} h={60} r={12} />
-            : <div key={i} style={{ minWidth: 150, flexShrink: 0 }}><Skeleton h={72} r={12} /></div>
-          )
+          [1,2,3,4].map(i => <Skeleton key={i} h={isMobile ? 60 : 72} r={12} />)
         ) : (
           <>
             <KpiCard
