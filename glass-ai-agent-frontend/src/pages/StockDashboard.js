@@ -77,7 +77,12 @@ function StockDashboard() {
   const [filterHeight, setFilterHeight] = useState("");
   const [filterWidth, setFilterWidth] = useState("");
   const [searchUnit, setSearchUnit] = useState("MM");
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const isMobile  = windowWidth < 768;
+  const gridCols  = windowWidth < 768  ? "1fr"
+                  : windowWidth < 1024 ? "repeat(2, 1fr)"
+                  : windowWidth < 1400 ? "repeat(3, 1fr)"
+                  :                      "repeat(4, 1fr)";
   const [loading, setLoading] = useState(true);
   const userRole = getUserRole();
   const isAdmin = userRole === "ROLE_ADMIN";
@@ -111,7 +116,7 @@ function StockDashboard() {
   const [editMessage, setEditMessage] = useState("");
 
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -642,158 +647,96 @@ function StockDashboard() {
         </p>
       </div>
 
-      {/* KPI CARDS — desktop: scrollable row | mobile: 3-column mini strip */}
-      {isMobile ? (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, marginBottom: 12 }}>
-          {/* STOCK */}
-          <div style={{ background: "rgba(17,27,53,0.9)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, padding: "8px 6px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, minHeight: 68 }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4F5DFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-            {loading
-              ? <div style={{ height: 22, width: 36, borderRadius: 4, background: "rgba(255,255,255,0.06)" }} />
-              : <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: "-0.04em", lineHeight: 1 }}>{totalQuantity.toLocaleString()}</div>
-            }
-            <div style={{ fontSize: 10, fontWeight: 600, color: "#7180A6", textTransform: "uppercase", letterSpacing: "0.06em" }}>Stock</div>
-          </div>
+      {/* KPI CARDS — compact strip, ~1/3 screen on desktop */}
+      <div style={{ display: "flex", gap: isMobile ? 6 : 8, marginBottom: isMobile ? 10 : 12, maxWidth: isMobile ? "100%" : "34%" }}>
 
-          {/* LOW */}
-          <div style={{ background: lowStockCount > 0 ? "rgba(255,107,129,0.1)" : "rgba(17,27,53,0.9)", border: lowStockCount > 0 ? "1px solid rgba(255,107,129,0.3)" : "1px solid rgba(255,255,255,0.08)", borderRadius: 10, padding: "8px 6px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, minHeight: 68 }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF6B81" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            {loading
-              ? <div style={{ height: 22, width: 24, borderRadius: 4, background: "rgba(255,255,255,0.06)" }} />
-              : <div style={{ fontSize: 22, fontWeight: 800, color: lowStockCount > 0 ? "#FF6B81" : "#fff", letterSpacing: "-0.04em", lineHeight: 1 }}>{lowStockCount}</div>
-            }
-            <div style={{ fontSize: 10, fontWeight: 600, color: "#7180A6", textTransform: "uppercase", letterSpacing: "0.06em" }}>Low</div>
+        {/* TOTAL STOCK */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: isMobile ? "7px 10px" : "8px 12px", background: "rgba(17,27,53,0.9)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, flex: 1 }}>
+          <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(79,93,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#4F5DFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
           </div>
-
-          {/* ITEMS */}
-          <div style={{ background: "rgba(17,27,53,0.9)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, padding: "8px 6px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, minHeight: 68 }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#37E3A5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 10.5, fontWeight: 700, color: "#A9B3D1", textTransform: "uppercase", letterSpacing: "0.06em", lineHeight: 1, marginBottom: 4, whiteSpace: "nowrap" }}>Total Stock</div>
             {loading
-              ? <div style={{ height: 22, width: 28, borderRadius: 4, background: "rgba(255,255,255,0.06)" }} />
-              : <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: "-0.04em", lineHeight: 1 }}>{totalStock}</div>
+              ? <div style={{ height: 16, width: 48, borderRadius: 4, background: "rgba(255,255,255,0.06)" }} />
+              : <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 800, color: "#fff", letterSpacing: "-0.03em", lineHeight: 1, whiteSpace: "nowrap" }}>{totalQuantity.toLocaleString()} <span style={{ fontSize: 11, fontWeight: 500, color: "#A9B3D1" }}>units</span></div>
             }
-            <div style={{ fontSize: 10, fontWeight: 600, color: "#7180A6", textTransform: "uppercase", letterSpacing: "0.06em" }}>Items</div>
           </div>
         </div>
-      ) : (
-        <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 4, marginBottom: 20, scrollbarWidth: "none" }}>
-          {/* TOTAL STOCK card — desktop */}
-          <div style={{ minWidth: 150, background: "rgba(17,27,53,0.9)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "14px 16px", flexShrink: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-              <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(79,93,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4F5DFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-              </div>
-              <div style={{ fontSize: 10, fontWeight: 700, color: "#7180A6", textTransform: "uppercase", letterSpacing: "0.08em" }}>TOTAL STOCK</div>
-            </div>
-            {loading ? (
-              <div style={{ height: 22, width: 80, borderRadius: 6, background: "rgba(255,255,255,0.06)" }} />
-            ) : (
-              <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: "-0.03em" }}>{totalQuantity.toLocaleString()} <span style={{ fontSize: 12, fontWeight: 500, color: "#A9B3D1" }}>Units</span></div>
-            )}
-          </div>
 
-          {/* LOW STOCK card — desktop */}
-          <div style={{ minWidth: 150, background: lowStockCount > 0 ? "rgba(255,107,129,0.1)" : "rgba(17,27,53,0.9)", border: lowStockCount > 0 ? "1px solid rgba(255,107,129,0.3)" : "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "14px 16px", flexShrink: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-              <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(255,107,129,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF6B81" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-              </div>
-              <div style={{ fontSize: 10, fontWeight: 700, color: "#7180A6", textTransform: "uppercase", letterSpacing: "0.08em" }}>LOW STOCK</div>
-            </div>
-            {loading ? (
-              <div style={{ height: 22, width: 60, borderRadius: 6, background: "rgba(255,255,255,0.06)" }} />
-            ) : (
-              <div style={{ fontSize: 20, fontWeight: 800, color: lowStockCount > 0 ? "#FF6B81" : "#fff", letterSpacing: "-0.03em" }}>{lowStockCount} <span style={{ fontSize: 12, fontWeight: 500, color: "#A9B3D1" }}>Stands</span></div>
-            )}
+        {/* LOW STOCK */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: isMobile ? "7px 10px" : "8px 12px", background: lowStockCount > 0 ? "rgba(255,107,129,0.08)" : "rgba(17,27,53,0.9)", border: lowStockCount > 0 ? "1px solid rgba(255,107,129,0.3)" : "1px solid rgba(255,255,255,0.08)", borderRadius: 10, flex: 1 }}>
+          <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(255,107,129,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FF6B81" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
           </div>
-
-          {/* TOTAL ITEMS card — desktop */}
-          <div style={{ minWidth: 140, background: "rgba(17,27,53,0.9)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "14px 16px", flexShrink: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-              <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(55,227,165,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#37E3A5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-            </div>
-              <div style={{ fontSize: 10, fontWeight: 700, color: "#7180A6", textTransform: "uppercase", letterSpacing: "0.08em" }}>ITEMS</div>
-            </div>
-            {loading ? (
-              <div style={{ height: 22, width: 50, borderRadius: 6, background: "rgba(255,255,255,0.06)" }} />
-            ) : (
-              <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: "-0.03em" }}>{totalStock}</div>
-            )}
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 10.5, fontWeight: 700, color: "#A9B3D1", textTransform: "uppercase", letterSpacing: "0.06em", lineHeight: 1, marginBottom: 4, whiteSpace: "nowrap" }}>Low Stock</div>
+            {loading
+              ? <div style={{ height: 16, width: 32, borderRadius: 4, background: "rgba(255,255,255,0.06)" }} />
+              : <div style={{ fontSize: isMobile ? 15 : 17, fontWeight: 800, color: lowStockCount > 0 ? "#FF6B81" : "#fff", letterSpacing: "-0.03em", lineHeight: 1, whiteSpace: "nowrap" }}>{lowStockCount} <span style={{ fontSize: 11, fontWeight: 500, color: "#A9B3D1" }}>stands</span></div>
+            }
           </div>
         </div>
-      )}
 
-      {/* SEARCH BAR */}
-      <div style={{ position: "relative", marginBottom: isMobile ? 8 : 12 }}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7180A6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", flexShrink: 0 }}><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-        <input
-          className="app-input"
-          style={{ paddingLeft: 42 }}
-          placeholder="Search: Mirror, 5mm, 96x48, Mirror 5mm, Plain 96x48…"
-          value={globalSearch}
-          onChange={e => setGlobalSearch(e.target.value)}
-        />
+        {/* ITEMS */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: isMobile ? "7px 10px" : "8px 12px", background: "rgba(17,27,53,0.9)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, flex: 1 }}>
+          <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(55,227,165,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#37E3A5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 10.5, fontWeight: 700, color: "#A9B3D1", textTransform: "uppercase", letterSpacing: "0.06em", lineHeight: 1, marginBottom: 4, whiteSpace: "nowrap" }}>Items</div>
+            {loading
+              ? <div style={{ height: 16, width: 28, borderRadius: 4, background: "rgba(255,255,255,0.06)" }} />
+              : <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 800, color: "#fff", letterSpacing: "-0.03em", lineHeight: 1, whiteSpace: "nowrap" }}>{totalStock} <span style={{ fontSize: 11, fontWeight: 500, color: "#A9B3D1" }}>types</span></div>
+            }
+          </div>
+        </div>
+
       </div>
 
-      {/* FILTER CHIPS */}
-      <div style={{
-        display: "flex",
-        gap: isMobile ? 6 : 8,
-        marginBottom: isMobile ? 10 : 16,
-        ...(isMobile
-          ? { flexWrap: "nowrap" }
-          : { overflowX: "auto", paddingBottom: 4, scrollbarWidth: "none" }),
-      }}>
+      {/* SEARCH + FILTERS toolbar */}
+      <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: isMobile ? "wrap" : "nowrap", marginBottom: isMobile ? 10 : 14 }}>
+
+        {/* Search — fixed compact width on desktop, full-width on mobile */}
+        <div style={{ position: "relative", width: isMobile ? "100%" : 280, flexShrink: 0 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7180A6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          <input
+            className="app-input"
+            style={{ paddingLeft: 34, height: 36, fontSize: 12.5 }}
+            placeholder="Search: Mirror, 5mm, 96×48…"
+            value={globalSearch}
+            onChange={e => setGlobalSearch(e.target.value)}
+          />
+        </div>
+
         {/* Thickness */}
-        <div style={{ display: "flex", alignItems: "center", gap: 4, padding: isMobile ? "0 8px" : "8px 14px", height: isMobile ? 38 : undefined, borderRadius: isMobile ? 8 : 999, background: "rgba(17,27,53,0.9)", border: "1px solid rgba(255,255,255,0.1)", cursor: "pointer", ...(isMobile ? { flex: 1, minWidth: 0 } : { flexShrink: 0 }) }}>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#A9B3D1" strokeWidth="2" style={{ flexShrink: 0 }}><path d="M21 3H3v7l9 11 9-11V3z"/></svg>
-          <input
-            style={{ background: "transparent", border: "none", color: "#A9B3D1", fontSize: isMobile ? 12 : 13, fontWeight: 500, width: isMobile ? "100%" : 70, outline: "none", minWidth: 0 }}
-            placeholder={isMobile ? "T" : "Thickness"}
-            value={filterThickness}
-            onChange={e => setFilterThickness(e.target.value)}
-          />
+        <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "0 9px", height: 36, borderRadius: 8, background: "rgba(17,27,53,0.9)", border: "1px solid rgba(255,255,255,0.1)", width: isMobile ? undefined : 115, flexShrink: 0, ...(isMobile ? { flex: 1, minWidth: 0 } : {}) }}>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#A9B3D1" strokeWidth="2" style={{ flexShrink: 0 }}><path d="M21 3H3v7l9 11 9-11V3z"/></svg>
+          <input style={{ background: "transparent", border: "none", color: "#A9B3D1", fontSize: 12, fontWeight: 500, width: "100%", outline: "none", minWidth: 0 }} placeholder={isMobile ? "T" : "Thickness"} value={filterThickness} onChange={e => setFilterThickness(e.target.value)} />
         </div>
+
         {/* Height */}
-        <div style={{ display: "flex", alignItems: "center", gap: 4, padding: isMobile ? "0 8px" : "8px 14px", height: isMobile ? 38 : undefined, borderRadius: isMobile ? 8 : 999, background: "rgba(17,27,53,0.9)", border: "1px solid rgba(255,255,255,0.1)", cursor: "pointer", ...(isMobile ? { flex: 1, minWidth: 0 } : { flexShrink: 0 }) }}>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#A9B3D1" strokeWidth="2" style={{ flexShrink: 0 }}><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
-          <input
-            style={{ background: "transparent", border: "none", color: "#A9B3D1", fontSize: isMobile ? 12 : 13, fontWeight: 500, width: isMobile ? "100%" : 60, outline: "none", minWidth: 0 }}
-            placeholder={isMobile ? "H" : "Height"}
-            value={filterHeight}
-            onChange={e => setFilterHeight(e.target.value)}
-          />
+        <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "0 9px", height: 36, borderRadius: 8, background: "rgba(17,27,53,0.9)", border: "1px solid rgba(255,255,255,0.1)", width: isMobile ? undefined : 100, flexShrink: 0, ...(isMobile ? { flex: 1, minWidth: 0 } : {}) }}>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#A9B3D1" strokeWidth="2" style={{ flexShrink: 0 }}><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+          <input style={{ background: "transparent", border: "none", color: "#A9B3D1", fontSize: 12, fontWeight: 500, width: "100%", outline: "none", minWidth: 0 }} placeholder={isMobile ? "H" : "Height"} value={filterHeight} onChange={e => setFilterHeight(e.target.value)} />
         </div>
+
         {/* Width */}
-        <div style={{ display: "flex", alignItems: "center", gap: 4, padding: isMobile ? "0 8px" : "8px 14px", height: isMobile ? 38 : undefined, borderRadius: isMobile ? 8 : 999, background: "rgba(17,27,53,0.9)", border: "1px solid rgba(255,255,255,0.1)", cursor: "pointer", ...(isMobile ? { flex: 1, minWidth: 0 } : { flexShrink: 0 }) }}>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#A9B3D1" strokeWidth="2" style={{ flexShrink: 0 }}><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-          <input
-            style={{ background: "transparent", border: "none", color: "#A9B3D1", fontSize: isMobile ? 12 : 13, fontWeight: 500, width: isMobile ? "100%" : 60, outline: "none", minWidth: 0 }}
-            placeholder={isMobile ? "W" : "Width"}
-            value={filterWidth}
-            onChange={e => setFilterWidth(e.target.value)}
-          />
+        <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "0 9px", height: 36, borderRadius: 8, background: "rgba(17,27,53,0.9)", border: "1px solid rgba(255,255,255,0.1)", width: isMobile ? undefined : 100, flexShrink: 0, ...(isMobile ? { flex: 1, minWidth: 0 } : {}) }}>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#A9B3D1" strokeWidth="2" style={{ flexShrink: 0 }}><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          <input style={{ background: "transparent", border: "none", color: "#A9B3D1", fontSize: 12, fontWeight: 500, width: "100%", outline: "none", minWidth: 0 }} placeholder={isMobile ? "W" : "Width"} value={filterWidth} onChange={e => setFilterWidth(e.target.value)} />
         </div>
+
         {/* Unit */}
-        <select
-          value={searchUnit}
-          onChange={e => setSearchUnit(e.target.value)}
-          style={{ padding: isMobile ? "0 6px" : "8px 14px", height: isMobile ? 38 : undefined, borderRadius: isMobile ? 8 : 999, background: "rgba(17,27,53,0.9)", border: "1px solid rgba(255,255,255,0.1)", color: "#A9B3D1", fontSize: isMobile ? 12 : 13, fontWeight: 500, cursor: "pointer", outline: "none", ...(isMobile ? { flex: "0 0 56px" } : { flexShrink: 0 }) }}
-        >
+        <select value={searchUnit} onChange={e => setSearchUnit(e.target.value)} style={{ height: 36, padding: "0 6px", borderRadius: 8, background: "rgba(17,27,53,0.9)", border: "1px solid rgba(255,255,255,0.1)", color: "#A9B3D1", fontSize: 12, fontWeight: 500, cursor: "pointer", outline: "none", flexShrink: 0, width: isMobile ? 56 : 76 }}>
           <option value="MM">MM</option>
           <option value="INCH">IN</option>
           <option value="FEET">FT</option>
         </select>
+
         {/* Clear */}
         {(globalSearch || filterThickness || filterHeight || filterWidth) && (
-          <button
-            onClick={() => { setGlobalSearch(""); setFilterThickness(""); setFilterHeight(""); setFilterWidth(""); setSearchUnit("MM"); }}
-            style={isMobile
-              ? { width: 38, height: 38, borderRadius: 8, background: "rgba(255,107,129,0.15)", border: "1px solid rgba(255,107,129,0.3)", color: "#FF6B81", fontSize: 16, fontWeight: 700, cursor: "pointer", flexShrink: 0, outline: "none", display: "flex", alignItems: "center", justifyContent: "center" }
-              : { padding: "8px 14px", borderRadius: 999, background: "rgba(255,107,129,0.15)", border: "1px solid rgba(255,107,129,0.3)", color: "#FF6B81", fontSize: 13, fontWeight: 600, cursor: "pointer", flexShrink: 0, outline: "none" }
-            }
-          >
+          <button onClick={() => { setGlobalSearch(""); setFilterThickness(""); setFilterHeight(""); setFilterWidth(""); setSearchUnit("MM"); }} style={{ height: 36, padding: isMobile ? 0 : "0 11px", width: isMobile ? 36 : undefined, borderRadius: 8, background: "rgba(255,107,129,0.15)", border: "1px solid rgba(255,107,129,0.3)", color: "#FF6B81", fontSize: isMobile ? 16 : 12, fontWeight: 700, cursor: "pointer", flexShrink: 0, outline: "none", display: "flex", alignItems: "center", justifyContent: "center" }}>
             {isMobile ? "×" : "Clear"}
           </button>
         )}
@@ -801,9 +744,9 @@ function StockDashboard() {
 
       {/* STOCK LIST */}
       {loading ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 8 : 10 }}>
-          {[1,2,3].map(i => (
-            <div key={i} style={{ height: isMobile ? 96 : 148, borderRadius: isMobile ? 12 : 16, background: "rgba(255,255,255,0.04)", backgroundSize: "200% 100%", backgroundImage: "linear-gradient(90deg,rgba(255,255,255,0.04) 25%,rgba(255,255,255,0.08) 50%,rgba(255,255,255,0.04) 75%)" }} />
+        <div style={{ display: "grid", gridTemplateColumns: gridCols, gap: isMobile ? 8 : 10 }}>
+          {[1,2,3,4,5,6,7,8].map(i => (
+            <div key={i} style={{ height: isMobile ? 96 : 118, borderRadius: 12, background: "rgba(255,255,255,0.04)", backgroundSize: "200% 100%", backgroundImage: "linear-gradient(90deg,rgba(255,255,255,0.04) 25%,rgba(255,255,255,0.08) 50%,rgba(255,255,255,0.04) 75%)" }} />
           ))}
         </div>
       ) : filteredStock.length === 0 ? (
@@ -813,7 +756,7 @@ function StockDashboard() {
           <p style={{ fontSize: 13, color: "#7180A6", margin: 0 }}>{globalSearch || filterThickness || filterHeight || filterWidth ? `No stock found matching "${globalSearch || [filterThickness, filterHeight, filterWidth].filter(Boolean).join(' ')}"` : "Add stock to get started"}</p>
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 8 : 12 }}>
+        <div style={{ display: "grid", gridTemplateColumns: gridCols, gap: isMobile ? 8 : 10, alignItems: "start" }}>
           {filteredStock.map((s, i) => {
             const isLow = s.quantity < s.minQuantity;
             const isReverseMatch = s.isReverseMatch || false;
@@ -894,72 +837,76 @@ function StockDashboard() {
               );
             }
 
-            /* ── DESKTOP CARD (unchanged premium style) ── */
-            const thickStrFull = s.glass?.thickness ? `${formatThicknessMM(s.glass.thickness)} thickness` : null;
-            const dimStrFull = (s.height && s.width) ? `${s.height} × ${s.width} ${unitAbbr(unit)}` : null;
+            /* ── COMPACT GRID CARD (desktop/tablet) ── */
             return (
               <div
                 key={i}
-                style={{ ...cardBase, borderRadius: 16, padding: "14px 16px" }}
+                style={{ ...cardBase, borderRadius: 12, padding: "10px 12px" }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = isLow ? "rgba(255,107,129,0.4)" : "rgba(255,255,255,0.14)"; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = isLow ? "rgba(255,107,129,0.25)" : "rgba(255,255,255,0.08)"; }}
               >
-                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 8 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0, flex: 1 }}>
-                    <span style={{ display: "inline-flex", alignItems: "center", padding: "3px 8px", borderRadius: 6, background: "rgba(79,93,255,0.2)", border: "1px solid rgba(79,93,255,0.3)", color: "#818CF8", fontSize: 10.5, fontWeight: 700, flexShrink: 0, letterSpacing: "0.04em" }}>
+                {/* Row 1: Stand badge | Status */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 5, minWidth: 0 }}>
+                    <span style={{ padding: "2px 7px", borderRadius: 5, background: "rgba(79,93,255,0.2)", border: "1px solid rgba(79,93,255,0.3)", color: "#818CF8", fontSize: 10, fontWeight: 700, letterSpacing: "0.04em", flexShrink: 0 }}>
                       STAND #{s.standNo}
                     </span>
                     {isReverseMatch && (
-                      <span style={{ display: "inline-flex", padding: "3px 7px", borderRadius: 6, background: "rgba(255,185,94,0.2)", color: "#FFB95E", fontSize: 10, fontWeight: 700, flexShrink: 0 }}>REVERSED</span>
+                      <span style={{ padding: "2px 5px", borderRadius: 4, background: "rgba(255,185,94,0.2)", color: "#FFB95E", fontSize: 9, fontWeight: 700, flexShrink: 0 }}>REV</span>
                     )}
                   </div>
-                  <div style={{ textAlign: "right", flexShrink: 0 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 5, justifyContent: "flex-end", marginBottom: 2 }}>
-                      <span style={{ width: 7, height: 7, borderRadius: "50%", background: isLow ? "#FF6B81" : "#37E3A5", display: "inline-block", boxShadow: isLow ? "0 0 6px #FF6B81" : "0 0 6px #37E3A5" }} />
-                      <span style={{ fontSize: 13, fontWeight: 700, color: isLow ? "#FF6B81" : "#37E3A5", letterSpacing: "0.02em" }}>{isLow ? "LOW" : "OK"}</span>
-                    </div>
-                    <div style={{ fontSize: 16, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em", lineHeight: 1 }}>{s.quantity}</div>
-                    <div style={{ fontSize: 9.5, fontWeight: 700, color: "#7180A6", textTransform: "uppercase", letterSpacing: "0.08em" }}>UNITS</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: isLow ? "#FF6B81" : "#37E3A5", display: "inline-block", boxShadow: isLow ? "0 0 5px #FF6B81" : "0 0 5px #37E3A5" }} />
+                    <span style={{ fontSize: 11, fontWeight: 700, color: isLow ? "#FF6B81" : "#37E3A5" }}>{isLow ? "LOW" : "OK"}</span>
                   </div>
                 </div>
-                <div style={{ marginBottom: 12 }}>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: "#fff", marginBottom: 3, letterSpacing: "-0.01em" }}>
-                    {s.glass?.type || "N/A"}
-                  </div>
-                  <div style={{ fontSize: 12.5, color: "#A9B3D1" }}>
-                    {[thickStrFull, dimStrFull].filter(Boolean).join(" | ")}
-                  </div>
-                  {s.status === "PENDING" && (
-                    <span style={{ display: "inline-flex", marginTop: 5, padding: "2px 8px", borderRadius: 999, background: "rgba(255,185,94,0.15)", color: "#FFB95E", fontSize: 10.5, fontWeight: 600 }}>⏳ Pending approval</span>
-                  )}
+
+                {/* Row 2: Glass type */}
+                <div style={{ fontSize: 13.5, fontWeight: 700, color: "#fff", marginBottom: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {s.glass?.type || "N/A"}
+                  {s.status === "PENDING" && <span style={{ marginLeft: 5, fontSize: 9, color: "#FFB95E", fontWeight: 600 }}>⏳</span>}
                 </div>
-                <div style={{ display: "flex", gap: 8 }}>
-                  <button
-                    onClick={() => openEditModal(s)}
-                    style={{ flex: 1, height: 36, borderRadius: 10, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "#A9B3D1", fontSize: 12.5, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 5, transition: "all 140ms ease", fontFamily: "inherit", outline: "none" }}
-                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.12)"; e.currentTarget.style.color = "#fff"; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.color = "#A9B3D1"; }}
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => openTransferModal(s)}
-                    style={{ flex: 1, height: 36, borderRadius: 10, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "#A9B3D1", fontSize: 12.5, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 5, transition: "all 140ms ease", fontFamily: "inherit", outline: "none" }}
-                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.12)"; e.currentTarget.style.color = "#fff"; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.color = "#A9B3D1"; }}
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
-                    Move
-                  </button>
-                  <button
-                    onClick={() => openAddRemoveModal(s)}
-                    style={{ width: 36, height: 36, borderRadius: 10, background: "#4F5DFF", border: "none", color: "#fff", fontSize: 18, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 140ms ease", flexShrink: 0, fontFamily: "inherit", outline: "none", boxShadow: "0 2px 12px rgba(79,93,255,0.35)" }}
-                    onMouseEnter={e => { e.currentTarget.style.background = "#3D4DE8"; e.currentTarget.style.transform = "scale(1.05)"; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = "#4F5DFF"; e.currentTarget.style.transform = "scale(1)"; }}
-                  >
-                    +
-                  </button>
+
+                {/* Row 3: Thickness · Dimensions */}
+                <div style={{ fontSize: 11, color: "#A9B3D1", marginBottom: 8, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {[thickStr, dimStr].filter(Boolean).join(" · ")}
+                </div>
+
+                {/* Row 4: Qty + action buttons */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 3 }}>
+                    <span style={{ fontSize: 10, fontWeight: 600, color: "#7180A6", textTransform: "uppercase", letterSpacing: "0.05em" }}>Qty</span>
+                    <span style={{ fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: "-0.03em", lineHeight: 1 }}>{s.quantity}</span>
+                  </div>
+                  <div style={{ display: "flex", gap: 5 }}>
+                    <button
+                      onClick={() => openEditModal(s)}
+                      title="Edit"
+                      style={{ width: 30, height: 30, borderRadius: 8, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "#A9B3D1", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, outline: "none", transition: "all 120ms ease" }}
+                      onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.13)"; e.currentTarget.style.color = "#fff"; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.color = "#A9B3D1"; }}
+                    >
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
+                    <button
+                      onClick={() => openTransferModal(s)}
+                      title="Move"
+                      style={{ width: 30, height: 30, borderRadius: 8, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "#A9B3D1", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, outline: "none", transition: "all 120ms ease" }}
+                      onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.13)"; e.currentTarget.style.color = "#fff"; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.color = "#A9B3D1"; }}
+                    >
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
+                    </button>
+                    <button
+                      onClick={() => openAddRemoveModal(s)}
+                      title="Add/Remove"
+                      style={{ width: 30, height: 30, borderRadius: 8, background: "#4F5DFF", border: "none", color: "#fff", fontSize: 17, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, outline: "none", boxShadow: "0 2px 8px rgba(79,93,255,0.4)", transition: "all 120ms ease" }}
+                      onMouseEnter={e => { e.currentTarget.style.background = "#3D4DE8"; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = "#4F5DFF"; }}
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
               </div>
             );

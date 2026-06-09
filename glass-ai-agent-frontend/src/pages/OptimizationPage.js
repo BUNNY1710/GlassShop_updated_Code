@@ -63,7 +63,7 @@ const MetricRow = ({ label, value, highlight }) => {
 
 /* ─── Smart Cutting Layout SVG ────────────────────────────────────────────── */
 
-const CuttingLayoutSVG = ({ plan, canvasW = 420, canvasH = 300 }) => {
+const CuttingLayoutSVG = ({ plan, canvasW = 420, canvasH = 300, responsive = false }) => {
   if (!plan) return null;
   const { stockW, stockH, stockUnit, placed, remnant, steps } = plan;
   const ul = unitLabel(stockUnit);
@@ -95,7 +95,11 @@ const CuttingLayoutSVG = ({ plan, canvasW = 420, canvasH = 300 }) => {
   steps.forEach(s => { if (s.type === "PIECE") { pieceStep[s.piece.idx] = pStep++; } });
 
   return (
-    <svg width={canvasW} height={canvasH} style={{ display:"block", overflow:"visible" }}>
+    <svg viewBox={`0 0 ${canvasW} ${canvasH}`} preserveAspectRatio="xMidYMid meet"
+      width={responsive ? "100%" : canvasW} height={responsive ? undefined : canvasH}
+      style={responsive
+        ? { display:"block", overflow:"visible", width:"100%", height:"auto" }
+        : { display:"block", overflow:"visible", width:canvasW, height:canvasH, flexShrink:0 }}>
       <defs>
         <pattern id="hatch-w" patternUnits="userSpaceOnUse" width={8} height={8}>
           <path d="M0,8 L8,0 M-2,2 L2,-2 M6,10 L10,6" stroke="#7180A6" strokeWidth={0.7} opacity={0.45}/>
@@ -456,6 +460,102 @@ const StickyActionBar = ({ selected, total, allSelected, onSelectAll, onOptimize
   );
 };
 
+/* ─── Smart Cutting Plan body (shared by PlannerModal + MasterPlanModal) ────── */
+// Single source of truth for the visual cutting plan: stock pills, 2D layout SVG,
+// waste/util bar, orders legend, cutting instructions, remnant, and print.
+// Reused per-sheet in the Master Cutting Plan so every sheet looks identical to
+// the single Smart Cutting Plan.
+
+const SmartCuttingPlanBody = ({ plan, stock, orders, mobile, shopName, userName, canvasW, canvasH }) => {
+  const [printOpts, setPrintOpts] = useState({ diagram: true, summary: true, remnant: true });
+  const su = (stock.glass?.unit || "MM").toUpperCase();
+  const doPrint = () => printCuttingPlan({
+    plan, stock,
+    orders: orders.map(o => ({ ...o, label: o.customerName })),
+    options: printOpts,
+    shopName: shopName || "Glass Shop",
+    userName: userName || "",
+  });
+
+  return (
+    <>
+      {/* Stock info pill row */}
+      <div style={pm.stockInfo}>
+        <span style={pm.standBadge}>Stand #{stock.standNo}</span>
+        <span style={pm.stockSize}>{fmtSize(stock.height, stock.width, stock.glass?.unit)}</span>
+        {stock.glass?.type && <span style={pm.chip}>{stock.glass.type}</span>}
+        {stock.glass?.thickness && <span style={pm.chip}>{fmtThickness(stock.glass.thickness)}</span>}
+        {stock.quantity != null && <span style={pm.chip}>{stock.quantity} pcs</span>}
+      </div>
+
+      {/* 2D cutting layout + waste/util bar */}
+      <div style={{ padding:"4px 14px 0" }}>
+        <CuttingLayoutSVG plan={plan} canvasW={canvasW || (mobile?310:420)} canvasH={canvasH || (mobile?220:290)}/>
+        <WasteBar plan={plan}/>
+      </div>
+
+      {/* Orders legend */}
+      <div style={{ padding:"10px 14px 4px" }}>
+        <div style={pm.legendTitle}>Orders in this plan</div>
+        <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+          {orders.map((o,i) => (
+            <div key={i} style={{ display:"flex", alignItems:"center", gap:5 }}>
+              <span style={{ width:10, height:10, borderRadius:2, background:PALETTE[i%PALETTE.length], flexShrink:0 }}/>
+              <span style={{ fontSize:11, color:"#A9B3D1" }}>{o.customerName||"Order"} · {fmtSize(o.height,o.width,o.unit)}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Cutting instructions */}
+      <div style={{ padding:"0 14px" }}>
+        <CuttingInstructions plan={plan}/>
+      </div>
+
+      {/* Remnant to inventory */}
+      <div style={{ padding:"0 14px" }}>
+        <AddRemnantButton plan={plan} stock={stock}/>
+      </div>
+
+      {/* Print section */}
+      <div style={{ margin:"4px 14px 14px", borderTop:"1px solid rgba(255,255,255,0.08)", paddingTop:14 }}>
+        <div style={{ fontSize:11, fontWeight:700, color:"#7180A6", textTransform:"uppercase", letterSpacing:"0.5px", marginBottom:10 }}>
+          Print Options
+        </div>
+        <div style={{ display:"flex", gap:16, flexWrap:"wrap", marginBottom:12 }}>
+          {[
+            { key:"diagram",  label:"Cutting Diagram" },
+            { key:"summary",  label:"Optimization Summary" },
+            { key:"remnant",  label:"Remnant Details" },
+          ].map(({ key, label }) => (
+            <label key={key} style={{ display:"flex", alignItems:"center", gap:6, fontSize:12.5, cursor:"pointer", color:"#A9B3D1" }}>
+              <input
+                type="checkbox"
+                checked={printOpts[key]}
+                onChange={() => setPrintOpts(p => ({ ...p, [key]: !p[key] }))}
+                style={{ width:15, height:15, accentColor:"#4F5DFF" }}
+              />
+              {label}
+            </label>
+          ))}
+        </div>
+        <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+          <button
+            style={{ padding:"7px 16px", background:"#4F5DFF", color:"#fff", border:"none", borderRadius:7, fontSize:12, fontWeight:700, cursor:"pointer" }}
+            onClick={doPrint}>
+            {mobile ? "Print" : "Print Cutting Plan"}
+          </button>
+          <button
+            style={{ padding:"7px 16px", background:"rgba(255,255,255,0.08)", color:"#A9B3D1", border:"1px solid rgba(255,255,255,0.12)", borderRadius:7, fontSize:12, fontWeight:600, cursor:"pointer" }}
+            onClick={doPrint}>
+            {mobile ? "Download PDF" : "Export PDF"}
+          </button>
+        </div>
+      </div>
+    </>
+  );
+};
+
 /* ─── Cutting Planner Modal ───────────────────────────────────────────────── */
 
 const PlannerModal = ({ open, onClose, stock, orders, best, alternatives, precomputedPlan, mobile, shopName, userName }) => {
@@ -466,9 +566,7 @@ const PlannerModal = ({ open, onClose, stock, orders, best, alternatives, precom
     if (precomputedPlan?.placed) return precomputedPlan;
     return planCuts(orders, stock);
   }, [open, stock, orders, precomputedPlan]);
-  const [printOpts, setPrintOpts] = useState({ diagram: true, summary: true, remnant: true });
   if (!open || !stock) return null;
-  const su = (stock.glass?.unit||"MM").toUpperCase();
 
   return (
     <div style={pm.overlay} onClick={onClose}>
@@ -480,79 +578,7 @@ const PlannerModal = ({ open, onClose, stock, orders, best, alternatives, precom
           <button style={pm.closeBtn} onClick={onClose}>✕</button>
         </div>
 
-        {/* Stock info pill row */}
-        <div style={pm.stockInfo}>
-          <span style={pm.standBadge}>Stand #{stock.standNo}</span>
-          <span style={pm.stockSize}>{fmtSize(stock.height, stock.width, stock.glass?.unit)}</span>
-          {stock.glass?.type&&<span style={pm.chip}>{stock.glass.type}</span>}
-          {stock.glass?.thickness&&<span style={pm.chip}>{fmtThickness(stock.glass.thickness)}</span>}
-          <span style={pm.chip}>{stock.quantity} pcs</span>
-        </div>
-
-        {/* SVG layout */}
-        <div style={{ padding:"4px 14px 0" }}>
-          <CuttingLayoutSVG plan={plan} canvasW={mobile?310:420} canvasH={mobile?220:290}/>
-          <WasteBar plan={plan}/>
-        </div>
-
-        {/* Orders legend */}
-        <div style={{ padding:"10px 14px 4px" }}>
-          <div style={pm.legendTitle}>Orders in this plan</div>
-          <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
-            {orders.map((o,i) => (
-              <div key={i} style={{ display:"flex", alignItems:"center", gap:5 }}>
-                <span style={{ width:10, height:10, borderRadius:2, background:PALETTE[i%PALETTE.length], flexShrink:0 }}/>
-                <span style={{ fontSize:11, color:"#A9B3D1" }}>{o.customerName||"Order"} · {fmtSize(o.height,o.width,o.unit)}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Cutting instructions */}
-        <div style={{ padding:"0 14px" }}>
-          <CuttingInstructions plan={plan}/>
-        </div>
-
-        {/* Remnant to inventory */}
-        <div style={{ padding:"0 14px" }}>
-          <AddRemnantButton plan={plan} stock={stock}/>
-        </div>
-
-        {/* Print section */}
-        <div style={{ margin:"4px 14px 14px", borderTop:"1px solid rgba(255,255,255,0.08)", paddingTop:14 }}>
-          <div style={{ fontSize:11, fontWeight:700, color:"#7180A6", textTransform:"uppercase", letterSpacing:"0.5px", marginBottom:10 }}>
-            Print Options
-          </div>
-          <div style={{ display:"flex", gap:16, flexWrap:"wrap", marginBottom:12 }}>
-            {[
-              { key:"diagram",  label:"Cutting Diagram" },
-              { key:"summary",  label:"Optimization Summary" },
-              { key:"remnant",  label:"Remnant Details" },
-            ].map(({ key, label }) => (
-              <label key={key} style={{ display:"flex", alignItems:"center", gap:6, fontSize:12.5, cursor:"pointer", color:"#A9B3D1" }}>
-                <input
-                  type="checkbox"
-                  checked={printOpts[key]}
-                  onChange={() => setPrintOpts(p => ({ ...p, [key]: !p[key] }))}
-                  style={{ width:15, height:15, accentColor:"#4F5DFF" }}
-                />
-                {label}
-              </label>
-            ))}
-          </div>
-          <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
-            <button
-              style={{ padding:"7px 16px", background:"#4F5DFF", color:"#fff", border:"none", borderRadius:7, fontSize:12, fontWeight:700, cursor:"pointer" }}
-              onClick={() => printCuttingPlan({ plan, stock, orders, options: printOpts, shopName: shopName || "Glass Shop", userName: userName || "" })}>
-              {mobile ? "Print" : "Print Cutting Plan"}
-            </button>
-            <button
-              style={{ padding:"7px 16px", background:"rgba(255,255,255,0.08)", color:"#A9B3D1", border:"1px solid rgba(255,255,255,0.12)", borderRadius:7, fontSize:12, fontWeight:600, cursor:"pointer" }}
-              onClick={() => printCuttingPlan({ plan, stock, orders, options: printOpts, shopName: shopName || "Glass Shop", userName: userName || "" })}>
-              {mobile ? "Download PDF" : "Export PDF"}
-            </button>
-          </div>
-        </div>
+        <SmartCuttingPlanBody plan={plan} stock={stock} orders={orders} mobile={mobile} shopName={shopName} userName={userName}/>
 
         {/* Best stock suggestions */}
         {best && (
@@ -585,6 +611,318 @@ const pm = {
   legendTitle: { fontSize:11, fontWeight:700, color:"#7180A6", textTransform:"uppercase", letterSpacing:"0.4px", marginBottom:6 },
 };
 
+/* ─── Optimization stats + batch grouping helpers ───────────────────────────── */
+
+const batchLetter = i => String.fromCharCode(65 + (i % 26)) + (i >= 26 ? Math.floor(i / 26) : "");
+
+// Material-only stats (no currency): how much stock the packing saved.
+const computeOptStats = (results) => {
+  const sheetPlans = results?.sheetPlans || [];
+  const plans = sheetPlans.map(p => p.cuttingPlan || planCuts(p.orders, p.stock));
+  const usedArea  = r2(plans.reduce((s,p)=> s + (p?.usedArea  || 0), 0));
+  const stockArea = r2(plans.reduce((s,p)=> s + (p?.stockArea || 0), 0));
+  const wasteArea = r2(plans.reduce((s,p)=> s + (p?.wasteArea || 0), 0));
+  const overallUtil = stockArea > 0 ? r2((usedArea / stockArea) * 100) : 0;
+  const sheetsUsed = sheetPlans.length;
+  // Naive baseline: every distinct placed order-line would need its own sheet.
+  const placedOrderKeys = new Set();
+  sheetPlans.forEach(p => p.orders.forEach(o => placedOrderKeys.add(o.orderKey || o.key)));
+  const naiveSheets = placedOrderKeys.size;
+  const sheetsSaved = Math.max(0, naiveSheets - sheetsUsed);
+  const remnants = plans.filter(p => p?.remnant).length;
+  return { plans, usedArea, stockArea, wasteArea, overallUtil, sheetsUsed, naiveSheets, sheetsSaved, remnants };
+};
+
+// Each stock sheet = a "batch". Pieces grouped back to their original order-line.
+const buildBatches = (results) => {
+  const sheetPlans = results?.sheetPlans || [];
+  return sheetPlans.map((plan, i) => {
+    const cPlan = plan.cuttingPlan || planCuts(plan.orders, plan.stock);
+    const byOrder = {};
+    plan.orders.forEach(o => {
+      const k = o.orderKey || o.key;
+      if (!byOrder[k]) byOrder[k] = { ...o, count: 0 };
+      byOrder[k].count++;
+    });
+    return {
+      index: i,
+      label: `Batch ${batchLetter(i)}`,
+      plan, cPlan,
+      stock: plan.stock,
+      su: (plan.stock.glass?.unit || "MM").toUpperCase(),
+      orders: Object.values(byOrder),
+      pieceCount: plan.orders.length,
+      eff: plan.efficiency,
+    };
+  });
+};
+
+// orderKey -> [{ label, sheet, count }] so each order shows which batch(es) it landed in.
+const orderBatchMap = (results) => {
+  const map = {};
+  (results?.sheetPlans || []).forEach((plan, i) => {
+    const lbl = `Batch ${batchLetter(i)}`;
+    const counts = {};
+    plan.orders.forEach(o => { const k = o.orderKey || o.key; counts[k] = (counts[k] || 0) + 1; });
+    Object.entries(counts).forEach(([k, c]) => {
+      if (!map[k]) map[k] = [];
+      map[k].push({ label: lbl, sheet: i + 1, count: c });
+    });
+  });
+  return map;
+};
+
+/* ─── Step 2: Optimization Summary popup ────────────────────────────────────── */
+
+const OptimizationSummaryModal = ({ open, onClose, onViewPlan, results }) => {
+  if (!open || !results) return null;
+  const s = computeOptStats(results);
+  const { summary, orderCount = 0 } = results;
+
+  const cell = (label, val, col) => (
+    <div key={label} style={{ background:"rgba(255,255,255,0.04)", borderRadius:9, padding:"12px 14px", textAlign:"center" }}>
+      <div style={{ fontSize:22, fontWeight:800, color:col, letterSpacing:"-0.03em", lineHeight:1 }}>{val}</div>
+      <div style={{ fontSize:10.5, color:"#7180A6", marginTop:4, textTransform:"uppercase", letterSpacing:"0.05em" }}>{label}</div>
+    </div>
+  );
+
+  return (
+    <div style={pm.overlay} onClick={onClose}>
+      <div style={{ background:"rgba(17,27,53,0.98)", borderRadius:16, width:"min(94vw,520px)", maxHeight:"90vh", overflowY:"auto", border:"1px solid rgba(255,255,255,0.1)", boxShadow:"0 24px 64px rgba(0,0,0,0.6)" }} onClick={e=>e.stopPropagation()}>
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"16px 18px", borderBottom:"1px solid rgba(255,255,255,0.08)" }}>
+          <strong style={{ fontSize:16, color:"#fff" }}>📊 Optimization Summary</strong>
+          <button style={pm.closeBtn} onClick={onClose}>✕</button>
+        </div>
+
+        <div style={{ padding:"18px" }}>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:10 }}>
+            {cell("Selected Orders", orderCount, "#4F5DFF")}
+            {cell("Total Quantity",  summary.total, "#818CF8")}
+            {cell("Sheets Used",     s.sheetsUsed, "#FFB95E")}
+            {cell("Sheets Saved",    s.sheetsSaved, s.sheetsSaved>0?"#37E3A5":"#7180A6")}
+            {cell("Material Utilization", `${s.overallUtil}%`, s.overallUtil>=70?"#37E3A5":s.overallUtil>=40?"#FFB95E":"#FF6B81")}
+            {cell("Total Waste",     fmtNum(s.wasteArea), "#A9B3D1")}
+          </div>
+
+          {summary.noMatch>0 && (
+            <div style={{ marginTop:12, padding:"10px 12px", borderRadius:9, background:"rgba(255,107,129,0.1)", border:"1px solid rgba(255,107,129,0.25)", color:"#FF6B81", fontSize:12.5 }}>
+              ⚠️ {summary.noMatch} piece{summary.noMatch!==1?"s":""} had no matching stock and could not be placed.
+            </div>
+          )}
+
+          <div style={{ marginTop:14, padding:"10px 12px", borderRadius:9, background:"rgba(79,93,255,0.08)", border:"1px solid rgba(79,93,255,0.2)" }}>
+            <div style={{ fontSize:10.5, color:"#7180A6", textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:3 }}>Optimization Strategy</div>
+            <div style={{ fontSize:12.5, color:"#A9B3D1" }}>Pieces grouped by glass type, then guillotine bin-packed onto the fewest stock sheets (largest sheet first) to maximise utilization and reclaim remnants.</div>
+          </div>
+
+          <button
+            onClick={onViewPlan}
+            style={{ marginTop:18, width:"100%", padding:"13px 0", background:"linear-gradient(135deg,#4F5DFF 0%,#7C3AED 100%)", color:"#fff", border:"none", borderRadius:11, fontSize:14.5, fontWeight:800, cursor:"pointer", boxShadow:"0 6px 20px rgba(79,93,255,0.5)", letterSpacing:"-0.01em" }}>
+            View Plan →
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ─── Step 3: Optimized Order Sheet (full-screen single planning sheet) ──────── */
+
+const OptimizedOrderSheet = ({ open, onClose, results, shopName, userName }) => {
+  if (!open || !results) return null;
+  const s = computeOptStats(results);
+  const batches = buildBatches(results);
+  const obMap = orderBatchMap(results);
+  const selectedOrders = results.selectedOrders || [];
+  const { summary, orderCount = 0, unplacedPieces = [] } = results;
+
+  const printSheet = () => window.print();
+
+  const exportCSV = () => {
+    const rows = [];
+    rows.push(["Optimized Order Sheet"]);
+    rows.push([shopName || "Glass Shop", userName || "", new Date().toLocaleString()]);
+    rows.push([]);
+    rows.push(["Total Orders", orderCount, "Total Qty", summary.total, "Sheets Used", s.sheetsUsed, "Sheets Saved", s.sheetsSaved, "Utilization %", s.overallUtil, "Total Waste", s.wasteArea]);
+    rows.push([]);
+    rows.push(["Order", "Quotation #", "Glass Type", "Thickness", "Size", "Qty", "Assigned Batch"]);
+    selectedOrders.forEach(o => {
+      const b = (obMap[o.key] || []).map(x => `${x.label} x${x.count}`).join(" | ") || "Unplaced";
+      rows.push([o.customerName, o.quotationNo, o.glassType || "", o.thickness || "", `${o.height} x ${o.width} ${o.unit}`, o.quantity, b]);
+    });
+    const csv = rows.map(r => r.map(c => `"${String(c ?? "").replace(/"/g, '""')}"`).join(",")).join("\r\n");
+    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `optimized-order-sheet-${Date.now()}.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const th = { textAlign:"left", padding:"9px 12px", fontSize:11, fontWeight:700, color:"#7180A6", textTransform:"uppercase", letterSpacing:"0.04em", borderBottom:"1px solid rgba(255,255,255,0.12)", whiteSpace:"nowrap" };
+  const td = { padding:"9px 12px", fontSize:13, color:"#E6EAF5", borderBottom:"1px solid rgba(255,255,255,0.06)" };
+
+  const resultCell = (label, val, col) => (
+    <div key={label} style={{ background:"rgba(255,255,255,0.04)", borderRadius:10, padding:"12px 14px", textAlign:"center" }}>
+      <div style={{ fontSize:24, fontWeight:800, color:col, letterSpacing:"-0.03em", lineHeight:1 }}>{val}</div>
+      <div style={{ fontSize:10.5, color:"#7180A6", marginTop:4, textTransform:"uppercase", letterSpacing:"0.05em" }}>{label}</div>
+    </div>
+  );
+
+  return (
+    <div className="opt-order-sheet" style={{ position:"fixed", inset:0, background:"#0A1228", zIndex:20002, display:"flex", flexDirection:"column" }}>
+      {/* Print rules: only the sheet prints, on white. */}
+      <style>{`
+        @media print {
+          body * { visibility: hidden !important; }
+          .opt-order-sheet, .opt-order-sheet * { visibility: visible !important; }
+          .opt-order-sheet { position:absolute !important; inset:0 !important; height:auto !important; background:#fff !important; color:#000 !important; display:block !important; }
+          .oos-toolbar { display:none !important; }
+          .opt-order-sheet .oos-card { background:#fff !important; border:1px solid #bbb !important; box-shadow:none !important; }
+          .opt-order-sheet table, .opt-order-sheet th, .opt-order-sheet td { color:#000 !important; background:#fff !important; border-color:#999 !important; }
+          .opt-order-sheet .oos-muted { color:#333 !important; }
+        }
+      `}</style>
+
+      {/* Toolbar */}
+      <div className="oos-toolbar" style={{ display:"flex", alignItems:"center", gap:10, padding:"12px 18px", borderBottom:"1px solid rgba(255,255,255,0.1)", background:"rgba(10,18,40,0.99)", flexShrink:0, flexWrap:"wrap" }}>
+        <div style={{ flex:1, minWidth:160 }}>
+          <div style={{ fontSize:16, fontWeight:800, color:"#fff", letterSpacing:"-0.02em" }}>📋 Optimized Order Sheet</div>
+          <div style={{ fontSize:11, color:"#7180A6", marginTop:1 }}>{shopName||"Glass Shop"}{userName?` · ${userName}`:""} · {new Date().toLocaleDateString()}</div>
+        </div>
+        <button onClick={exportCSV}  style={{ padding:"8px 14px", background:"rgba(55,227,165,0.15)", color:"#37E3A5", border:"1px solid rgba(55,227,165,0.35)", borderRadius:8, fontSize:12.5, fontWeight:700, cursor:"pointer" }}>⬇ Excel (CSV)</button>
+        <button onClick={printSheet} style={{ padding:"8px 14px", background:"rgba(79,93,255,0.15)", color:"#818CF8", border:"1px solid rgba(79,93,255,0.35)", borderRadius:8, fontSize:12.5, fontWeight:700, cursor:"pointer" }}>⬇ PDF</button>
+        <button onClick={printSheet} style={{ padding:"8px 14px", background:"#4F5DFF", color:"#fff", border:"none", borderRadius:8, fontSize:12.5, fontWeight:700, cursor:"pointer" }}>🖨 Print Plan</button>
+        <button onClick={onClose} style={{ width:34, height:34, borderRadius:"50%", background:"rgba(255,255,255,0.08)", border:"none", color:"#A9B3D1", cursor:"pointer", fontSize:15 }}>✕</button>
+      </div>
+
+      {/* Scrollable single sheet */}
+      <div className="oos-body" style={{ flex:1, overflowY:"auto", padding:"20px 16px 48px" }}>
+        <div style={{ maxWidth:1100, margin:"0 auto", display:"flex", flexDirection:"column", gap:18 }}>
+
+          {/* Optimization Result */}
+          <div className="oos-card" style={{ background:"rgba(13,21,44,0.95)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:14, padding:"16px 18px" }}>
+            <h2 style={{ fontSize:16, fontWeight:800, color:"#fff", margin:"0 0 12px", letterSpacing:"-0.02em" }}>Optimization Result</h2>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))", gap:10 }}>
+              {resultCell("Total Orders", orderCount, "#4F5DFF")}
+              {resultCell("Total Quantity", summary.total, "#818CF8")}
+              {resultCell("Sheets Used", s.sheetsUsed, "#FFB95E")}
+              {resultCell("Sheets Saved", s.sheetsSaved, s.sheetsSaved>0?"#37E3A5":"#7180A6")}
+              {resultCell("Utilization", `${s.overallUtil}%`, s.overallUtil>=70?"#37E3A5":s.overallUtil>=40?"#FFB95E":"#FF6B81")}
+              {resultCell("Total Waste", fmtNum(s.wasteArea), "#FF6B81")}
+              {resultCell("Remnants", s.remnants, "#37E3A5")}
+              {resultCell("Unplaced", summary.noMatch, summary.noMatch>0?"#FF6B81":"#7180A6")}
+            </div>
+          </div>
+
+          {/* Master orders table — every order on one sheet */}
+          <div className="oos-card" style={{ background:"rgba(13,21,44,0.95)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:14, overflow:"hidden" }}>
+            <div style={{ padding:"12px 16px", borderBottom:"1px solid rgba(255,255,255,0.08)", fontSize:14, fontWeight:800, color:"#fff" }}>All Orders ({selectedOrders.length})</div>
+            <div style={{ overflowX:"auto" }}>
+              <table style={{ width:"100%", borderCollapse:"collapse" }}>
+                <thead><tr>
+                  <th style={th}>Order</th><th style={th}>Quotation #</th><th style={th}>Glass</th><th style={th}>Thickness</th><th style={th}>Size</th><th style={th}>Qty</th><th style={th}>Assigned Batch</th>
+                </tr></thead>
+                <tbody>
+                  {selectedOrders.map((o,i)=>{
+                    const b = obMap[o.key] || [];
+                    return (
+                      <tr key={i}>
+                        <td style={{ ...td, fontWeight:600, color:"#fff" }}>{o.customerName}</td>
+                        <td style={td} className="oos-muted">#{o.quotationNo}</td>
+                        <td style={td}>{o.glassType||"—"}</td>
+                        <td style={td}>{o.thickness?fmtThickness(o.thickness):"—"}</td>
+                        <td style={td}>{fmtSize(o.height,o.width,o.unit)}</td>
+                        <td style={{ ...td, fontWeight:700 }}>{o.quantity}</td>
+                        <td style={td}>
+                          {b.length
+                            ? b.map((x,j)=><span key={j} style={{ display:"inline-block", marginRight:6, marginBottom:3, fontSize:11.5, fontWeight:700, padding:"2px 8px", borderRadius:6, background:"rgba(79,93,255,0.18)", color:"#818CF8" }}>{x.label} ×{x.count}</span>)
+                            : <span style={{ fontSize:11.5, fontWeight:700, color:"#FF6B81" }}>Unplaced</span>}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Batch groups — table + visual layout per stock sheet */}
+          <h2 style={{ fontSize:16, fontWeight:800, color:"#fff", margin:"4px 0 0", letterSpacing:"-0.02em" }}>Batches ({batches.length})</h2>
+          {batches.map(b => {
+            const ul = unitLabel(b.su);
+            return (
+              <div key={b.index} className="oos-card" style={{ background:"rgba(13,21,44,0.95)", border:"1px solid rgba(255,255,255,0.1)", borderTop:`4px solid ${b.eff>=70?"#37E3A5":b.eff>=40?"#FFB95E":"#4F5DFF"}`, borderRadius:14, overflow:"hidden" }}>
+                {/* Batch header */}
+                <div style={{ display:"flex", alignItems:"center", gap:10, flexWrap:"wrap", padding:"12px 16px", borderBottom:"1px solid rgba(255,255,255,0.08)", background:"rgba(255,255,255,0.03)" }}>
+                  <span style={{ fontSize:16, fontWeight:800, color:"#fff" }}>{b.label}</span>
+                  <span style={{ fontSize:12.5, fontWeight:700, color:"#4F5DFF", background:"rgba(79,93,255,0.15)", borderRadius:7, padding:"3px 10px" }}>Sheet {b.index+1} · Stand #{b.stock.standNo}</span>
+                  <span style={{ fontSize:12.5, color:"#A9B3D1" }}>{fmtSize(b.stock.height,b.stock.width,b.su)}</span>
+                  {b.stock.glass?.type && <span style={{ fontSize:11.5, padding:"2px 8px", borderRadius:5, background:"rgba(255,255,255,0.07)", color:"#A9B3D1" }}>{b.stock.glass.type}</span>}
+                  <span style={{ marginLeft:"auto", fontSize:11.5, fontWeight:700, padding:"3px 10px", borderRadius:99, background:b.eff>=70?"rgba(55,227,165,0.15)":"rgba(255,185,94,0.15)", color:b.eff>=70?"#37E3A5":"#FFB95E" }}>{b.eff}% util</span>
+                </div>
+
+                {/* Batch order table */}
+                <div style={{ overflowX:"auto" }}>
+                  <table style={{ width:"100%", borderCollapse:"collapse" }}>
+                    <thead><tr>
+                      <th style={th}>Order</th><th style={th}>Quotation #</th><th style={th}>Glass</th><th style={th}>Size</th><th style={th}>Pieces</th>
+                    </tr></thead>
+                    <tbody>
+                      {b.orders.map((o,j)=>(
+                        <tr key={j}>
+                          <td style={{ ...td, fontWeight:600, color:"#fff" }}>
+                            <span style={{ display:"inline-block", width:10, height:10, borderRadius:3, background:PALETTE[(o.idx??j)%PALETTE.length], marginRight:7 }}/>
+                            {o.customerName}
+                          </td>
+                          <td style={td} className="oos-muted">#{o.quotationNo}</td>
+                          <td style={td}>{o.glassType||"—"}</td>
+                          <td style={td}>{fmtSize(o.height,o.width,o.unit)}</td>
+                          <td style={{ ...td, fontWeight:700 }}>{o.count}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Batch metrics strip */}
+                <div style={{ display:"flex", flexWrap:"wrap", gap:18, padding:"10px 16px", borderTop:"1px solid rgba(255,255,255,0.06)", fontSize:12.5 }} className="oos-muted">
+                  <span>Combined Pieces: <strong style={{ color:"#fff" }}>{b.pieceCount}</strong></span>
+                  <span>Utilization: <strong style={{ color:b.eff>=70?"#37E3A5":"#FFB95E" }}>{b.eff}%</strong></span>
+                  <span>Waste: <strong style={{ color:"#FF6B81" }}>{fmtNum(r2(b.cPlan?.wasteArea||0))} sq.{ul}</strong></span>
+                  <span>Remnant: <strong style={{ color:"#37E3A5" }}>{b.cPlan?.remnant?`${fmtNum(r2(b.cPlan.remnant.w))} × ${fmtNum(r2(b.cPlan.remnant.h))} ${b.su}`:"none"}</strong></span>
+                </div>
+
+                {/* Visual cutting layout */}
+                <div style={{ padding:"14px 16px 18px", background:"rgba(7,13,28,0.5)" }}>
+                  <CuttingLayoutSVG plan={b.cPlan} canvasW={760} canvasH={460} responsive/>
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Unplaced */}
+          {unplacedPieces.length>0 && (
+            <div className="oos-card" style={{ background:"rgba(255,107,129,0.06)", border:"1px solid rgba(255,107,129,0.25)", borderRadius:14, padding:"14px 18px" }}>
+              <h3 style={{ fontSize:14, fontWeight:700, color:"#FF6B81", margin:"0 0 10px" }}>⚠️ No Matching Stock — {unplacedPieces.length} piece{unplacedPieces.length!==1?"s":""}</h3>
+              <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                {unplacedPieces.map((p,i)=>(
+                  <div key={i} style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap", padding:"7px 10px", background:"rgba(255,107,129,0.06)", borderRadius:7 }}>
+                    <span style={{ fontWeight:600, color:"#fff", fontSize:13 }}>{p.customerName}</span>
+                    <span style={{ fontSize:11, color:"#7180A6" }}>#{p.quotationNo}</span>
+                    <span style={{ fontSize:11, padding:"2px 8px", borderRadius:4, background:"rgba(255,107,129,0.15)", color:"#FF6B81" }}>{fmtSize(p.height,p.width,p.unit)}</span>
+                    {p.glassType && <span style={{ fontSize:11, padding:"2px 8px", borderRadius:4, background:"rgba(79,93,255,0.15)", color:"#4F5DFF" }}>{p.glassType}</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 /* ─── Main Page ───────────────────────────────────────────────────────────── */
 
 export default function OptimizationPage() {
@@ -600,9 +938,11 @@ export default function OptimizationPage() {
   const [results,   setResults]  = useState(null);
   const [running,   setRunning]  = useState(false);
   const [showRes,   setShowRes]  = useState(false);
-  const [modal,     setModal]    = useState({ open:false });
-  const [shopName,  setShopName] = useState("Glass Shop");
-  const [userName,  setUserName] = useState("");
+  const [modal,              setModal]          = useState({ open:false });
+  const [summaryOpen,    setSummaryOpen]    = useState(false); // multi-order: post-Optimize summary popup
+  const [planOpen,       setPlanOpen]       = useState(false); // multi-order: full-screen Optimized Order Sheet
+  const [shopName,       setShopName]       = useState("Glass Shop");
+  const [userName,       setUserName]       = useState("");
 
   useEffect(() => {
     const r = () => { setMobile(isMob()); setIsDesktop(window.innerWidth >= 1024); };
@@ -698,7 +1038,7 @@ export default function OptimizationPage() {
     chosen.forEach(item => {
       const qty = Math.max(1, parseInt(item.quantity) || 1);
       for (let q = 0; q < qty; q++) {
-        expanded.push({ ...item, quantity: 1, key: `${item.key}-${q}` });
+        expanded.push({ ...item, quantity: 1, key: `${item.key}-${q}`, orderKey: item.key });
       }
     });
     setRunning(true);
@@ -716,14 +1056,16 @@ export default function OptimizationPage() {
         }).filter(Boolean).sort((a, b) => b.plan.utilization - a.plan.utilization);
         return { order, suggestions };
       }).filter(p => p.suggestions.length > 0);
-      setResults({ ...multiResult, mode: "multi", perOrderSuggestions });
+      setResults({ ...multiResult, mode: "multi", perOrderSuggestions, selectedOrders: chosen, orderCount: chosen.length });
       setShowRes(true);
       setRunning(false);
+      setSummaryOpen(true);   // Step 2: show summary popup first (not inline cards)
+      setPlanOpen(false);
     }, 300);
   };
 
   const openModal = (stock, orders, best, alts, precomputedPlan) => setModal({ open:true, stock, orders, best, alternatives:alts||[], shopName, userName, precomputedPlan });
-  const reset = () => { setShowRes(false); setResults(null); setSel(new Set()); };
+  const reset = () => { setShowRes(false); setResults(null); setSel(new Set()); setSummaryOpen(false); setPlanOpen(false); };
 
   if (loading) return (
     <PageWrapper>
@@ -967,153 +1309,35 @@ export default function OptimizationPage() {
           </>
         )}
 
-        {/* ── Multi-Order Optimization Result ── */}
+        {/* ── Multi-Order Optimization Result (compact — full plan opens via View Plan) ── */}
         {showRes&&results&&results.mode==="multi"&&(
           <>
-            {/* Summary */}
-            <div style={{ background:"rgba(17,27,53,0.9)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:12, padding:"16px 18px", marginBottom:16 }}>
-              <h3 style={{ fontSize:15,fontWeight:700,color:"#ffffff",margin:"0 0 8px",letterSpacing:"-0.02em" }}>Plan Summary</h3>
-              <div style={{ display:"grid",gridTemplateColumns:mobile?"repeat(2,1fr)":"repeat(4,1fr)",gap:10,marginTop:10 }}>
-                {[
-                  {label:"Total Pieces", val:results.summary.total,   col:"#4F5DFF"},
-                  {label:"Placed",       val:results.summary.placed,  col:"#37E3A5"},
-                  {label:"Sheets Used",  val:results.summary.sheets,  col:"#FFB95E"},
-                  {label:"No Match",     val:results.summary.noMatch, col:"#FF6B81"},
-                ].map(({label,val,col})=>(
-                  <div key={label} style={{ textAlign:"center",padding:"8px 4px",background:"rgba(255,255,255,0.04)",borderRadius:8 }}>
-                    <div style={{ fontSize:24,fontWeight:800,color:col,letterSpacing:"-0.04em" }}>{val}</div>
-                    <div style={{ fontSize:11,color:"#7180A6",marginTop:2 }}>{label}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Sheet-based cutting plans */}
-            {results.sheetPlans.length>0&&(
-              <>
-                <h3 style={{ fontSize:15,fontWeight:700,color:"#ffffff",margin:"0 0 12px" }}>✂️ Cutting Sheets</h3>
-                <div style={{ display:"flex",flexDirection:"column",gap:10,marginBottom:16 }}>
-                  {results.sheetPlans.map((plan,i)=>{
-                    const su=(plan.stock.glass?.unit||"MM").toUpperCase();
-                    const ul=unitLabel(su);
-                    const cPlan=plan.cuttingPlan;
-                    const eff=plan.efficiency;
-                    return (
-                      <div key={i} style={{ background:"rgba(17,27,53,0.9)",border:"1px solid rgba(255,255,255,0.08)",borderLeft:`4px solid ${eff>=70?"rgba(55,227,165,0.5)":eff>=40?"rgba(255,185,94,0.5)":"rgba(79,93,255,0.4)"}`,borderRadius:12,padding:"16px 18px" }}>
-                        {/* Header */}
-                        <div style={{ display:"flex",alignItems:"center",gap:10,flexWrap:"wrap",marginBottom:8 }}>
-                          <strong style={{ fontSize:14,color:"#ffffff" }}>Sheet {i+1} — Stand #{plan.stock.standNo}</strong>
-                          <span style={{ fontSize:12,color:"#A9B3D1" }}>{fmtSize(plan.stock.height,plan.stock.width,su)}</span>
-                          {plan.stock.glass?.type&&<span style={{ fontSize:11,padding:"2px 8px",borderRadius:4,background:"rgba(79,93,255,0.15)",color:"#4F5DFF",fontWeight:500 }}>{plan.stock.glass.type}</span>}
-                          <span style={{ marginLeft:"auto",fontSize:11,fontWeight:700,padding:"3px 10px",borderRadius:99,background:eff>=70?"rgba(55,227,165,0.15)":"rgba(255,185,94,0.15)",color:eff>=70?"#37E3A5":"#FFB95E" }}>
-                            {eff}% utilization
-                          </span>
-                        </div>
-                        {/* Piece tags */}
-                        <div style={{ display:"flex",flexWrap:"wrap",gap:6,marginBottom:10 }}>
-                          {plan.orders.map((o,j)=>(
-                            <span key={j} style={{ fontSize:11,padding:"3px 10px",borderRadius:99,background:"rgba(255,255,255,0.06)",color:"#A9B3D1",border:"1px solid rgba(255,255,255,0.08)" }}>
-                              <span style={{ color:"#ffffff",fontWeight:600 }}>{o.customerName}</span>
-                              {" · "}{fmtSize(o.height,o.width,o.unit)}
-                              {o.glassType&&<span style={{ marginLeft:5,color:"#818CF8" }}>{o.glassType}</span>}
-                            </span>
-                          ))}
-                        </div>
-                        {/* Metrics + View Plan */}
-                        <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8 }}>
-                          <span style={{ fontSize:12,color:"#7180A6" }}>
-                            Pieces: <strong style={{ color:"#ffffff" }}>{plan.orders.length}</strong>
-                            {"  ·  "}Remnant: <strong style={{ color:"#37E3A5" }}>{cPlan?.remnant?`${fmtNum(r2(cPlan.remnant.w))} × ${fmtNum(r2(cPlan.remnant.h))} ${su}`:"none"}</strong>
-                            {"  ·  "}Waste: <strong style={{ color:"#ffffff" }}>{fmtNum(r2(cPlan?.wasteArea||0))} sq.{ul}</strong>
-                            {plan.mirrorUndesirable&&<span style={{ marginLeft:8,color:"#FFB95E",fontSize:11 }}>⚠️ Mirror remnant {"<"} 12 in</span>}
-                          </span>
-                          <button
-                            style={{ padding:"6px 14px",background:"#4F5DFF",color:"#fff",border:"none",borderRadius:7,fontSize:12,fontWeight:700,cursor:"pointer" }}
-                            onClick={()=>openModal(plan.stock,plan.orders.map(o=>({...o,label:o.customerName})),null,[],plan.cuttingPlan)}>
-                            ✂️ View Plan
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </>
-            )}
-
-            {/* Unplaced pieces */}
-            {results.unplacedPieces.length>0&&(
-              <div style={{ background:"rgba(255,107,129,0.06)",border:"1px solid rgba(255,107,129,0.25)",borderRadius:12,padding:"16px 18px",marginBottom:16 }}>
-                <h3 style={{ fontSize:14,fontWeight:700,color:"#FF6B81",margin:"0 0 10px" }}>⚠️ No Matching Stock</h3>
-                <div style={{ display:"flex",flexDirection:"column",gap:6 }}>
-                  {results.unplacedPieces.map((p,i)=>(
-                    <div key={i} style={{ display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",padding:"7px 10px",background:"rgba(255,107,129,0.06)",borderRadius:7 }}>
-                      <span style={{ fontWeight:600,color:"#ffffff",fontSize:13 }}>{p.customerName}</span>
-                      <span style={{ fontSize:11,color:"#7180A6" }}>#{p.quotationNo}</span>
-                      <span style={{ fontSize:11,padding:"2px 8px",borderRadius:4,background:"rgba(255,107,129,0.15)",color:"#FF6B81" }}>{fmtSize(p.height,p.width,p.unit)}</span>
-                      {p.glassType&&<span style={{ fontSize:11,padding:"2px 8px",borderRadius:4,background:"rgba(79,93,255,0.15)",color:"#4F5DFF" }}>{p.glassType}</span>}
-                    </div>
-                  ))}
+            {results.sheetPlans.length>0 ? (
+              <div style={{ background:"rgba(17,27,53,0.9)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:14, padding:"24px 22px", textAlign:"center" }}>
+                <div style={{ fontSize:36, marginBottom:6 }}>✅</div>
+                <h3 style={{ fontSize:19, fontWeight:800, color:"#fff", margin:"0 0 4px", letterSpacing:"-0.02em" }}>Optimization Complete</h3>
+                <p style={{ fontSize:13, color:"#A9B3D1", margin:"0 0 18px" }}>
+                  {results.orderCount} order{results.orderCount!==1?"s":""} packed onto {results.summary.sheets} sheet{results.summary.sheets!==1?"s":""}
+                  {results.summary.noMatch>0 && <> · <span style={{ color:"#FF6B81" }}>{results.summary.noMatch} unplaced</span></>}
+                </p>
+                <div style={{ display:"flex", gap:10, justifyContent:"center", flexWrap:"wrap" }}>
+                  <button
+                    onClick={()=>setSummaryOpen(true)}
+                    style={{ padding:"11px 20px", background:"rgba(255,255,255,0.06)", color:"#A9B3D1", border:"1px solid rgba(255,255,255,0.14)", borderRadius:10, fontSize:13.5, fontWeight:700, cursor:"pointer" }}>
+                    📊 View Summary
+                  </button>
+                  <button
+                    onClick={()=>{ setSummaryOpen(false); setPlanOpen(true); }}
+                    style={{ padding:"11px 24px", background:"linear-gradient(135deg,#4F5DFF 0%,#7C3AED 100%)", color:"#fff", border:"none", borderRadius:10, fontSize:13.5, fontWeight:800, cursor:"pointer", boxShadow:"0 4px 18px rgba(79,93,255,0.5)", letterSpacing:"-0.01em" }}>
+                    📋 View Plan
+                  </button>
                 </div>
               </div>
-            )}
-
-            {/* Nothing placed at all */}
-            {results.sheetPlans.length===0&&(
+            ) : (
               <div style={{ background:"rgba(17,27,53,0.9)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,padding:"40px 20px",textAlign:"center" }}>
                 <div style={{ fontSize:36,marginBottom:10 }}>🔍</div>
                 <p style={{ color:"#A9B3D1",fontWeight:600,margin:"0 0 6px" }}>No matching stock found</p>
                 <p style={{ color:"#7180A6",fontSize:13,margin:0 }}>Add more stock or check glass type filters.</p>
-              </div>
-            )}
-
-            {/* ── Per-Order Single Glass Suggestions ── */}
-            {results.perOrderSuggestions?.length>0&&(
-              <div style={{ marginTop:8 }}>
-                <div style={{ display:"flex",alignItems:"center",gap:8,marginBottom:10 }}>
-                  <h3 style={{ fontSize:14,fontWeight:700,color:"#ffffff",margin:0 }}>Alternative Single Glass Suggestions</h3>
-                  <span style={{ fontSize:11,padding:"2px 8px",borderRadius:99,background:"rgba(255,255,255,0.07)",color:"#7180A6" }}>per order</span>
-                </div>
-                <div style={{ display:"flex",flexDirection:"column",gap:12 }}>
-                  {results.perOrderSuggestions.map((pos,oi)=>(
-                    <div key={oi} style={{ background:"rgba(17,27,53,0.9)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:10,padding:"12px 14px" }}>
-                      {/* Order label */}
-                      <div style={{ display:"flex",alignItems:"center",gap:6,flexWrap:"wrap",marginBottom:10 }}>
-                        <span style={{ fontSize:12,fontWeight:700,color:"#ffffff" }}>{pos.order.customerName}</span>
-                        <span style={{ fontSize:10,color:"#7180A6",background:"rgba(255,255,255,0.06)",borderRadius:4,padding:"1px 5px" }}>#{pos.order.quotationNo}</span>
-                        <span style={{ fontSize:11,color:"#A9B3D1" }}>{fmtSize(pos.order.height,pos.order.width,pos.order.unit)}{pos.order.glassType&&` · ${pos.order.glassType}`}</span>
-                      </div>
-                      {/* Suggestion cards row */}
-                      <div style={{ display:"grid",gridTemplateColumns:mobile?"1fr":"repeat(auto-fill,minmax(200px,1fr))",gap:8 }}>
-                        {pos.suggestions.map((s,si)=>{
-                          const su=(s.match.stock.glass?.unit||"MM").toUpperCase();
-                          const ul=unitLabel(su);
-                          const isBest=si===0;
-                          return (
-                            <div key={si} style={{ background:isBest?"rgba(255,185,94,0.04)":"rgba(255,255,255,0.03)",border:isBest?"1px solid rgba(255,185,94,0.3)":"1px solid rgba(255,255,255,0.07)",borderRadius:8,padding:"10px 12px" }}>
-                              <div style={{ display:"flex",alignItems:"center",gap:4,marginBottom:6,flexWrap:"wrap" }}>
-                                {isBest&&<span style={{ fontSize:9,fontWeight:800,color:"#FFB95E",background:"rgba(255,185,94,0.15)",borderRadius:3,padding:"1px 5px" }}>🏆</span>}
-                                <span style={{ fontSize:11,fontWeight:700,color:isBest?"#FFB95E":"#A9B3D1" }}>#{si+1}</span>
-                                <span style={{ marginLeft:"auto",fontSize:10,fontWeight:700,color:"#4F5DFF" }}>Stand #{s.match.stock.standNo}</span>
-                              </div>
-                              <div style={{ fontSize:11,color:"#ffffff",fontWeight:600,marginBottom:2 }}>{fmtSize(s.match.stock.height,s.match.stock.width,su)}</div>
-                              {s.match.stock.glass?.type&&<div style={{ fontSize:10,color:"#7180A6",marginBottom:6 }}>{s.match.stock.glass.type}{s.match.stock.glass?.thickness&&` · ${fmtThickness(s.match.stock.glass.thickness)}`}</div>}
-                              <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"4px 6px",marginBottom:8,fontSize:10 }}>
-                                <div><span style={{ color:"#7180A6" }}>Util </span><strong style={{ color:s.plan.utilization>=70?"#37E3A5":"#FFB95E" }}>{s.plan.utilization}%</strong></div>
-                                <div><span style={{ color:"#7180A6" }}>Waste </span><strong style={{ color:"#FF6B81" }}>{fmtNum(r2(s.plan.wasteArea))} sq.{ul}</strong></div>
-                                <div style={{ gridColumn:"1/-1" }}><span style={{ color:"#7180A6" }}>Remnant </span><strong style={{ color:"#A9B3D1" }}>{s.plan.remnant?`${fmtNum(r2(s.plan.remnant.w))}×${fmtNum(r2(s.plan.remnant.h))} ${su}`:"none"}</strong></div>
-                              </div>
-                              <button
-                                style={{ width:"100%",padding:"5px 0",background:isBest?"rgba(255,185,94,0.12)":"rgba(79,93,255,0.12)",color:isBest?"#FFB95E":"#4F5DFF",border:`1px solid ${isBest?"rgba(255,185,94,0.3)":"rgba(79,93,255,0.25)"}`,borderRadius:6,fontSize:11,fontWeight:700,cursor:"pointer" }}
-                                onClick={()=>openModal(s.match.stock,[{...pos.order,label:pos.order.customerName}],s.match,[],s.plan)}>
-                                ✂️ View Plan
-                              </button>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                </div>
               </div>
             )}
           </>
@@ -1131,6 +1355,23 @@ export default function OptimizationPage() {
         mobile={mobile}
         shopName={modal.shopName || "Glass Shop"}
         userName={modal.userName || ""}
+      />
+
+      {/* Step 2: summary popup after Optimize */}
+      <OptimizationSummaryModal
+        open={summaryOpen}
+        onClose={()=>setSummaryOpen(false)}
+        onViewPlan={()=>{ setSummaryOpen(false); setPlanOpen(true); }}
+        results={results}
+      />
+
+      {/* Step 3: full-screen Optimized Order Sheet */}
+      <OptimizedOrderSheet
+        open={planOpen}
+        onClose={()=>setPlanOpen(false)}
+        results={results}
+        shopName={shopName}
+        userName={userName}
       />
     </PageWrapper>
   );
