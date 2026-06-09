@@ -19,7 +19,11 @@ module.exports = (sequelize) => {
     standNo: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      field: 'stand_no'
+      field: 'stand_no',
+      validate: {
+        isInt: { msg: 'Stand number must be a whole number' },
+        min: { args: [1], msg: 'Stand number must be greater than 0' }
+      }
     },
     quantity: {
       type: DataTypes.INTEGER,

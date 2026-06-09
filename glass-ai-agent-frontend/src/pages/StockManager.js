@@ -89,6 +89,12 @@ function StockManager() {
       return;
     }
 
+    const standNoValue = Number(standNo);
+    if (!Number.isInteger(standNoValue) || standNoValue < 1) {
+      setStockMessage("❌ Stand number must be 1 or greater (whole numbers only)");
+      return;
+    }
+
     if (!unit) {
       setStockMessage("❌ Please select the unit");
       return;
@@ -243,6 +249,11 @@ function StockManager() {
     gridTemplateColumns: isMobile ? "1fr" : "repeat(4, 1fr)",
     gap: 14,
   };
+
+  // Stand number must be a positive integer (≥ 1). No 0, negatives, decimals, blank.
+  const standNoNum = Number(standNo);
+  const standNoTouched = standNo !== "";
+  const standNoInvalid = !standNoTouched || !Number.isInteger(standNoNum) || standNoNum < 1;
 
   return (
     <div style={{ padding: "16px 16px 24px", minHeight: "100vh" }}>
@@ -496,12 +507,19 @@ function StockManager() {
             <label style={fieldLabel}>Stand Number <span style={{ color: "#FF6B81" }}>*</span></label>
             <input
               type="number"
+              min="1"
+              step="1"
               placeholder="Enter stand number"
               value={standNo}
               onChange={e => setStandNo(e.target.value)}
-              style={darkInput}
+              style={{ ...darkInput, border: standNoTouched && standNoInvalid ? "1.5px solid #FF6B81" : darkInput.border }}
               required
             />
+            {standNoTouched && standNoInvalid && (
+              <p style={{ marginTop: 6, color: "#FF6B81", fontSize: 12, fontWeight: 500 }}>
+                ⚠️ Stand number must be 1 or greater (whole numbers only).
+              </p>
+            )}
           </div>
 
           <div>
@@ -547,14 +565,16 @@ function StockManager() {
       <div style={{ display: "flex", gap: 12, marginBottom: 12 }}>
         <button
           onClick={() => updateStock("ADD")}
-          style={{ flex: 1, height: 46, borderRadius: 12, background: "rgba(55,227,165,0.15)", border: "1px solid rgba(55,227,165,0.3)", color: "#37E3A5", fontSize: 15, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", outline: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+          disabled={standNoInvalid}
+          style={{ flex: 1, height: 46, borderRadius: 12, background: "rgba(55,227,165,0.15)", border: "1px solid rgba(55,227,165,0.3)", color: "#37E3A5", fontSize: 15, fontWeight: 700, cursor: standNoInvalid ? "not-allowed" : "pointer", opacity: standNoInvalid ? 0.45 : 1, fontFamily: "inherit", outline: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Add Stock
         </button>
         <button
           onClick={() => updateStock("REMOVE")}
-          style={{ flex: 1, height: 46, borderRadius: 12, background: "rgba(255,107,129,0.15)", border: "1px solid rgba(255,107,129,0.3)", color: "#FF6B81", fontSize: 15, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", outline: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+          disabled={standNoInvalid}
+          style={{ flex: 1, height: 46, borderRadius: 12, background: "rgba(255,107,129,0.15)", border: "1px solid rgba(255,107,129,0.3)", color: "#FF6B81", fontSize: 15, fontWeight: 700, cursor: standNoInvalid ? "not-allowed" : "pointer", opacity: standNoInvalid ? 0.45 : 1, fontFamily: "inherit", outline: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Remove Stock

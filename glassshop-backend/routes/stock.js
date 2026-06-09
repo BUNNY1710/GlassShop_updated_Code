@@ -125,6 +125,11 @@ router.post('/update', async (req, res) => {
     }
 
     // Validate inputs
+    const standNoValue = Number(standNo);
+    if (!Number.isInteger(standNoValue) || standNoValue < 1) {
+      return res.status(400).json('❌ Stand number must be greater than 0');
+    }
+
     if (!glassType) {
       return res.status(400).json('❌ Glass type is required');
     }
@@ -354,6 +359,13 @@ router.post('/transfer', async (req, res) => {
 
     if (!user || !user.shopId) {
       return res.status(404).json('❌ User not found or not linked to a shop');
+    }
+
+    const fromStandValue = Number(fromStand);
+    const toStandValue = Number(toStand);
+    if (!Number.isInteger(fromStandValue) || fromStandValue < 1 ||
+        !Number.isInteger(toStandValue) || toStandValue < 1) {
+      return res.status(400).json('❌ Stand number must be greater than 0');
     }
 
     const thicknessValue = parseFloat(thickness);
