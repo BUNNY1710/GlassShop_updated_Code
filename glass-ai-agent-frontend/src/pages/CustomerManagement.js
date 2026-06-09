@@ -40,6 +40,38 @@ const darkLabel = {
 const darkHint = { marginTop: 4, color: TEXT_MUT, fontSize: 11.5 };
 const darkErr  = { marginTop: 4, color: DANGER, fontSize: 11.5, fontWeight: 500 };
 
+/* ── field helpers (module scope — MUST stay outside the component, otherwise
+   they get a new identity every render and React remounts the <input> on each
+   keystroke, dropping focus and closing the mobile keyboard) ── */
+const DField = ({ label, hint, error, type = "text", value, onChange, placeholder, required, maxLength, extraStyle }) => (
+  <div>
+    {label && <label style={darkLabel}>{label}{required && <span style={{ color: DANGER, marginLeft: 3 }}>*</span>}</label>}
+    <input
+      type={type} value={value} onChange={onChange} placeholder={placeholder}
+      required={required} maxLength={maxLength}
+      style={{
+        ...darkInput, ...(extraStyle || {}),
+        border: error ? `1.5px solid ${DANGER}` : `1.5px solid ${BORDER_IN}`,
+      }}
+      onFocus={e => { e.target.style.borderColor = ACCENT; e.target.style.boxShadow = `0 0 0 3px rgba(79,93,255,0.15)`; }}
+      onBlur={e => { e.target.style.borderColor = error ? DANGER : BORDER_IN; e.target.style.boxShadow = "none"; }}
+    />
+    {error ? <p style={darkErr}>⚠️ {error}</p> : hint ? <p style={darkHint}>{hint}</p> : null}
+  </div>
+);
+
+const DTextarea = ({ label, value, onChange, placeholder }) => (
+  <div>
+    {label && <label style={darkLabel}>{label}</label>}
+    <textarea
+      value={value} onChange={onChange} placeholder={placeholder}
+      style={{ ...darkInput, height: "auto", minHeight: 90, padding: "10px 12px", resize: "vertical", fontFamily: "inherit" }}
+      onFocus={e => { e.target.style.borderColor = ACCENT; e.target.style.boxShadow = `0 0 0 3px rgba(79,93,255,0.15)`; }}
+      onBlur={e => { e.target.style.borderColor = BORDER_IN; e.target.style.boxShadow = "none"; }}
+    />
+  </div>
+);
+
 function CustomerManagement() {
   const navigate = useNavigate();
   const [customers, setCustomers] = useState([]);
@@ -258,36 +290,6 @@ function CustomerManagement() {
       setConfirmDelete(null);
     }
   };
-
-  /* ── helper: dark field ── */
-  const DField = ({ label, hint, error, type = "text", value, onChange, placeholder, required, maxLength, extraStyle }) => (
-    <div>
-      {label && <label style={darkLabel}>{label}{required && <span style={{ color: DANGER, marginLeft: 3 }}>*</span>}</label>}
-      <input
-        type={type} value={value} onChange={onChange} placeholder={placeholder}
-        required={required} maxLength={maxLength}
-        style={{
-          ...darkInput, ...(extraStyle || {}),
-          border: error ? `1.5px solid ${DANGER}` : `1.5px solid ${BORDER_IN}`,
-        }}
-        onFocus={e => { e.target.style.borderColor = ACCENT; e.target.style.boxShadow = `0 0 0 3px rgba(79,93,255,0.15)`; }}
-        onBlur={e => { e.target.style.borderColor = error ? DANGER : BORDER_IN; e.target.style.boxShadow = "none"; }}
-      />
-      {error ? <p style={darkErr}>⚠️ {error}</p> : hint ? <p style={darkHint}>{hint}</p> : null}
-    </div>
-  );
-
-  const DTextarea = ({ label, value, onChange, placeholder }) => (
-    <div>
-      {label && <label style={darkLabel}>{label}</label>}
-      <textarea
-        value={value} onChange={onChange} placeholder={placeholder}
-        style={{ ...darkInput, height: "auto", minHeight: 90, padding: "10px 12px", resize: "vertical", fontFamily: "inherit" }}
-        onFocus={e => { e.target.style.borderColor = ACCENT; e.target.style.boxShadow = `0 0 0 3px rgba(79,93,255,0.15)`; }}
-        onBlur={e => { e.target.style.borderColor = BORDER_IN; e.target.style.boxShadow = "none"; }}
-      />
-    </div>
-  );
 
   const sectionTitle = { color: TEXT_SEC, fontSize: 13, fontWeight: 700, marginBottom: 14, textTransform: "uppercase", letterSpacing: "0.06em" };
 
