@@ -130,6 +130,11 @@ router.post('/update', async (req, res) => {
       return res.status(400).json('❌ Stand number must be greater than 0');
     }
 
+    const quantityValue = Number(quantity);
+    if (!Number.isInteger(quantityValue) || quantityValue < 1) {
+      return res.status(400).json('❌ Enter valid quantity (must be greater than or equal to 1)');
+    }
+
     if (!glassType) {
       return res.status(400).json('❌ Glass type is required');
     }
@@ -366,6 +371,11 @@ router.post('/transfer', async (req, res) => {
     if (!Number.isInteger(fromStandValue) || fromStandValue < 1 ||
         !Number.isInteger(toStandValue) || toStandValue < 1) {
       return res.status(400).json('❌ Stand number must be greater than 0');
+    }
+
+    const transferQty = Number(quantity);
+    if (!Number.isInteger(transferQty) || transferQty < 1) {
+      return res.status(400).json('❌ Enter valid quantity (must be greater than or equal to 1)');
     }
 
     const thicknessValue = parseFloat(thickness);

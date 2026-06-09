@@ -20,7 +20,12 @@ module.exports = (sequelize) => {
     },
     quantity: {
       type: DataTypes.INTEGER,
-      allowNull: false
+      allowNull: false,
+      // Records the entered add/remove amount, which is always ≥ 1.
+      validate: {
+        isInt: { msg: 'Quantity must be a whole number' },
+        min: { args: [1], msg: 'Quantity must be greater than or equal to 1' }
+      }
     },
     action: {
       type: DataTypes.STRING(20),

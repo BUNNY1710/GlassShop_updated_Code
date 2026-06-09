@@ -28,7 +28,14 @@ module.exports = (sequelize) => {
     quantity: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      defaultValue: 0
+      defaultValue: 0,
+      // On-hand count may be 0 (out of stock) but never negative. The "≥ 1"
+      // rule applies to the entered add/remove amount (validated in the route),
+      // not to this stored balance.
+      validate: {
+        isInt: { msg: 'Quantity must be a whole number' },
+        min: { args: [0], msg: 'Quantity cannot be negative' }
+      }
     },
     minQuantity: {
       type: DataTypes.INTEGER,

@@ -95,6 +95,12 @@ function StockManager() {
       return;
     }
 
+    const quantityValue = Number(quantity);
+    if (!Number.isInteger(quantityValue) || quantityValue < 1) {
+      setStockMessage("❌ Enter valid quantity (must be 1 or greater)");
+      return;
+    }
+
     if (!unit) {
       setStockMessage("❌ Please select the unit");
       return;
@@ -254,6 +260,13 @@ function StockManager() {
   const standNoNum = Number(standNo);
   const standNoTouched = standNo !== "";
   const standNoInvalid = !standNoTouched || !Number.isInteger(standNoNum) || standNoNum < 1;
+
+  // Quantity (amount to add/remove) must be a whole number ≥ 1. No 0, negatives, blank.
+  const quantityNum = Number(quantity);
+  const quantityTouched = quantity !== "";
+  const quantityInvalid = !quantityTouched || !Number.isInteger(quantityNum) || quantityNum < 1;
+
+  const formInvalid = standNoInvalid || quantityInvalid;
 
   return (
     <div style={{ padding: "16px 16px 24px", minHeight: "100vh" }}>
@@ -526,12 +539,19 @@ function StockManager() {
             <label style={fieldLabel}>Quantity <span style={{ color: "#FF6B81" }}>*</span></label>
             <input
               type="number"
+              min="1"
+              step="1"
               placeholder="Enter quantity"
               value={quantity}
               onChange={e => setQuantity(e.target.value)}
-              style={darkInput}
+              style={{ ...darkInput, border: quantityTouched && quantityInvalid ? "1.5px solid #FF6B81" : darkInput.border }}
               required
             />
+            {quantityTouched && quantityInvalid && (
+              <p style={{ marginTop: 6, color: "#FF6B81", fontSize: 12, fontWeight: 500 }}>
+                ⚠️ Quantity must be greater than or equal to 1 (whole numbers only).
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -565,16 +585,16 @@ function StockManager() {
       <div style={{ display: "flex", gap: 12, marginBottom: 12 }}>
         <button
           onClick={() => updateStock("ADD")}
-          disabled={standNoInvalid}
-          style={{ flex: 1, height: 46, borderRadius: 12, background: "rgba(55,227,165,0.15)", border: "1px solid rgba(55,227,165,0.3)", color: "#37E3A5", fontSize: 15, fontWeight: 700, cursor: standNoInvalid ? "not-allowed" : "pointer", opacity: standNoInvalid ? 0.45 : 1, fontFamily: "inherit", outline: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+          disabled={formInvalid}
+          style={{ flex: 1, height: 46, borderRadius: 12, background: "rgba(55,227,165,0.15)", border: "1px solid rgba(55,227,165,0.3)", color: "#37E3A5", fontSize: 15, fontWeight: 700, cursor: formInvalid ? "not-allowed" : "pointer", opacity: formInvalid ? 0.45 : 1, fontFamily: "inherit", outline: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Add Stock
         </button>
         <button
           onClick={() => updateStock("REMOVE")}
-          disabled={standNoInvalid}
-          style={{ flex: 1, height: 46, borderRadius: 12, background: "rgba(255,107,129,0.15)", border: "1px solid rgba(255,107,129,0.3)", color: "#FF6B81", fontSize: 15, fontWeight: 700, cursor: standNoInvalid ? "not-allowed" : "pointer", opacity: standNoInvalid ? 0.45 : 1, fontFamily: "inherit", outline: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+          disabled={formInvalid}
+          style={{ flex: 1, height: 46, borderRadius: 12, background: "rgba(255,107,129,0.15)", border: "1px solid rgba(255,107,129,0.3)", color: "#FF6B81", fontSize: 15, fontWeight: 700, cursor: formInvalid ? "not-allowed" : "pointer", opacity: formInvalid ? 0.45 : 1, fontFamily: "inherit", outline: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Remove Stock
