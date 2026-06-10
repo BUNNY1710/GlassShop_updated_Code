@@ -728,13 +728,117 @@ const OptimizationSummaryModal = ({ open, onClose, onViewPlan, results }) => {
 
 /* ─── Step 3: Optimized Order Sheet (full-screen single planning sheet) ──────── */
 
-const OptimizedOrderSheet = ({ open, onClose, results, shopName, userName }) => {
+const OptimizedOrderSheet = ({ open, onClose, results, shopName, userName, onConfirmed }) => {
+  // Hooks must run before any early return.
+  const [confirming, setConfirming]       = useState(false);
+  const [confirmed, setConfirmed]         = useState(null);   // { sheetsConsumed, remnantsCreated, ordersUpdated, already? }
+  const [confirmError, setConfirmError]   = useState("");
+  const [showRemnantModal, setShowRemnant] = useState(false);
+  const [remnantAssign, setRemnantAssign] = useState([]);     // [{ ...remnant, standNo }]
+  const [sameStand, setSameStand]         = useState(true);
+  const [sameStandValue, setSameStandValue] = useState("");
+
+  // Reset confirmation state whenever a new plan is shown.
+  useEffect(() => {
+    setConfirmed(null); setConfirmError(""); setShowRemnant(false);
+  }, [results?.planRef]);
+
   if (!open || !results) return null;
   const s = computeOptStats(results);
   const batches = buildBatches(results);
   const obMap = orderBatchMap(results);
   const selectedOrders = results.selectedOrders || [];
   const { summary, orderCount = 0, unplacedPieces = [] } = results;
+
+  // Remnants across all batches (each placed sheet that left a remnant).
+  const remnants = batches
+    .filter(b => b.cPlan?.remnant)
+    .map((b, i) => ({
+      idx: i,
+      batchLabel: b.label,
+      glassType: b.stock.glass?.type || "",
+      thickness: b.stock.glass?.thickness || null,
+      unit: b.su,
+      width: r2(b.cPlan.remnant.w),
+      height: r2(b.cPlan.remnant.h),
+      sourceStandNo: b.stock.standNo,
+      sheetW: b.stock.width,
+      sheetH: b.stock.height,
+    }));
+
+  // value → feet divisor for the remnant's unit (for live Sq.Ft).
+  const unitDivisor = (u) => u === "MM" ? 304.8 : u === "FEET" ? 1 : 12;
+  const remnantMetrics = (r) => {
+    const h = parseFloat(r.height) || 0;
+    const w = parseFloat(r.width) || 0;
+    const div = unitDivisor(r.unit);
+    return { h, w, areaUnit: h * w, sqft: (h / div) * (w / div), valid: h > 0 && w > 0 };
+  };
+  const allRemnantsValid =
+    remnantAssign.every(r => remnantMetrics(r).valid) &&
+    (sameStand ? (parseInt(sameStandValue, 10) >= 1)
+               : remnantAssign.every(r => parseInt(r.standNo, 10) >= 1));
+
+  // Aggregate consumed sheets by stock id.
+  const buildSheetsPayload = () => {
+    const counts = {};
+    (results.sheetPlans || []).forEach(p => {
+      const id = p.stock?.id;
+      if (id != null) counts[id] = (counts[id] || 0) + 1;
+    });
+    return Object.entries(counts).map(([stockId, count]) => ({ stockId: Number(stockId), count }));
+  };
+
+  const orderIds = [...new Set(selectedOrders.map(o => o.quotationId).filter(Boolean))];
+
+  const doConfirm = async (remnantsPayload) => {
+    setConfirming(true);
+    setConfirmError("");
+    try {
+      const { data } = await api.post("/api/optimization/confirm", {
+        planRef: results.planRef,
+        sheets: buildSheetsPayload(),
+        remnants: remnantsPayload,
+        orders: orderIds,
+        summary: { sheets: s.sheetsUsed, placed: summary.placed, total: summary.total },
+      });
+      setConfirmed(data);
+      setShowRemnant(false);
+      onConfirmed && onConfirmed();
+    } catch (e) {
+      if (e?.response?.status === 409 && e?.response?.data?.alreadyConfirmed) {
+        setConfirmed({ already: true });
+        setShowRemnant(false);
+      } else {
+        setConfirmError(e?.response?.data?.message || "Failed to confirm cutting plan.");
+      }
+    } finally {
+      setConfirming(false);
+    }
+  };
+
+  const onConfirmClick = () => {
+    if (confirmed || confirming) return;
+    if (remnants.length > 0) {
+      // Open remnant placement modal, default each to its source stand.
+      setRemnantAssign(remnants.map(r => ({ ...r, standNo: String(r.sourceStandNo || "") })));
+      setSameStand(true);
+      setSameStandValue(String(remnants[0]?.sourceStandNo || ""));
+      setShowRemnant(true);
+    } else {
+      doConfirm([]);
+    }
+  };
+
+  const saveRemnants = () => {
+    if (!allRemnantsValid) { setConfirmError("Please enter valid remnant dimensions."); return; }
+    const payload = remnantAssign.map(r => ({
+      glassType: r.glassType, thickness: r.thickness, unit: r.unit,
+      width: parseFloat(r.width), height: parseFloat(r.height),
+      standNo: sameStand ? sameStandValue : r.standNo,
+    }));
+    doConfirm(payload);
+  };
 
   const printSheet = () => window.print();
 
@@ -917,8 +1021,142 @@ const OptimizedOrderSheet = ({ open, onClose, results, shopName, userName }) => 
               </div>
             </div>
           )}
+
+          {/* ── Confirm Cutting Plan ── */}
+          {s.sheetsUsed > 0 && (
+            <div className="oos-card no-print" style={{ background:"rgba(13,21,44,0.95)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:14, padding:"18px 20px", textAlign:"center" }}>
+              {confirmed ? (
+                <div>
+                  <div style={{ fontSize:34, marginBottom:6 }}>✅</div>
+                  <div style={{ fontSize:17, fontWeight:800, color:"#37E3A5" }}>Plan Confirmed</div>
+                  <div style={{ fontSize:13, color:"#A9B3D1", marginTop:4 }}>
+                    {confirmed.already
+                      ? "This plan was already confirmed — inventory was not changed again."
+                      : `${confirmed.sheetsConsumed} sheet${confirmed.sheetsConsumed!==1?"s":""} deducted · ${confirmed.remnantsCreated} remnant${confirmed.remnantsCreated!==1?"s":""} saved · ${confirmed.ordersUpdated} order${confirmed.ordersUpdated!==1?"s":""} marked Cut.`}
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div style={{ fontSize:13, color:"#A9B3D1", marginBottom:12 }}>
+                    Confirming deducts <strong style={{ color:"#fff" }}>{s.sheetsUsed}</strong> sheet{s.sheetsUsed!==1?"s":""} from inventory
+                    {remnants.length ? <>, saves <strong style={{ color:"#37E3A5" }}>{remnants.length}</strong> remnant{remnants.length!==1?"s":""}</> : null}
+                    , and marks <strong style={{ color:"#fff" }}>{orderIds.length}</strong> order{orderIds.length!==1?"s":""} as Cut.
+                  </div>
+                  {confirmError && <div style={{ marginBottom:10, color:"#FF6B81", fontSize:13 }}>{confirmError}</div>}
+                  <button onClick={onConfirmClick} disabled={confirming}
+                    style={{ padding:"13px 28px", background:"linear-gradient(135deg,#37E3A5 0%,#10B981 100%)", color:"#04210f", border:"none", borderRadius:11, fontSize:15, fontWeight:800, cursor:confirming?"default":"pointer", opacity:confirming?0.7:1, boxShadow:"0 6px 20px rgba(55,227,165,0.4)" }}>
+                    {confirming ? "Confirming…" : "✓ Confirm Cutting Plan"}
+                  </button>
+                </>
+              )}
+            </div>
+          )}
         </div>
       </div>
+
+      {/* ── Remnant placement modal ── */}
+      {showRemnantModal && (
+        <div onClick={()=>!confirming && setShowRemnant(false)}
+          style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.7)", zIndex:20010, display:"flex", alignItems:"flex-start", justifyContent:"center", padding:"24px 16px", overflowY:"auto" }}>
+          <div onClick={e=>e.stopPropagation()}
+            style={{ background:"rgba(17,27,53,0.99)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:14, width:"100%", maxWidth:640, boxShadow:"0 24px 64px rgba(0,0,0,0.6)" }}>
+            <div style={{ padding:"16px 20px", borderBottom:"1px solid rgba(255,255,255,0.08)", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+              <div>
+                <div style={{ fontSize:16, fontWeight:800, color:"#fff" }}>♻️ Remnant Detected</div>
+                <div style={{ fontSize:12.5, color:"#7180A6", marginTop:2 }}>{remnantAssign.length} remnant{remnantAssign.length!==1?"s":""} — choose a stand to store each back into inventory</div>
+              </div>
+              <button onClick={()=>setShowRemnant(false)} style={{ width:28, height:28, borderRadius:8, background:"rgba(255,255,255,0.08)", border:"none", color:"#A9B3D1", cursor:"pointer", fontSize:14 }}>✕</button>
+            </div>
+            <div style={{ padding:"16px 20px", maxHeight:"68vh", overflowY:"auto" }}>
+              <label style={{ display:"flex", alignItems:"center", gap:8, fontSize:13, color:"#A9B3D1", cursor:"pointer", marginBottom:6 }}>
+                <input type="checkbox" checked={sameStand} onChange={e=>setSameStand(e.target.checked)} style={{ width:16, height:16, accentColor:"#4F5DFF" }}/>
+                Apply the same stand to all remnants
+              </label>
+              {sameStand && (
+                <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:14 }}>
+                  <span style={{ fontSize:13, color:"#7180A6" }}>Store all remnants on Stand #</span>
+                  <input type="number" min="1" step="1" value={sameStandValue} onChange={e=>setSameStandValue(e.target.value)}
+                    style={{ width:100, background:"rgba(255,255,255,0.06)", border:`1.5px solid ${parseInt(sameStandValue,10)>=1?"rgba(255,255,255,0.12)":"#FF6B81"}`, borderRadius:8, height:38, padding:"0 12px", color:"#fff", fontSize:14, outline:"none" }}/>
+                </div>
+              )}
+
+              {/* One detailed review card per remnant */}
+              <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+                {remnantAssign.map((r, i) => {
+                  const m = remnantMetrics(r);
+                  const ul = unitLabel(r.unit);
+                  const lockField = (label, val) => (
+                    <div>
+                      <div style={{ fontSize:10, color:"#7180A6", textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:2 }}>{label}</div>
+                      <div style={{ fontSize:13, fontWeight:600, color:"#A9B3D1" }}>{val}</div>
+                    </div>
+                  );
+                  const dimInput = (field) => (
+                    <input type="number" min="0" step="0.01" value={r[field]}
+                      onChange={e=>setRemnantAssign(prev => prev.map((x,j)=> j===i ? { ...x, [field]: e.target.value } : x))}
+                      style={{ width:"100%", boxSizing:"border-box", background:"rgba(255,255,255,0.06)", border:`1.5px solid ${m.valid?"rgba(79,93,255,0.4)":"#FF6B81"}`, borderRadius:8, height:38, padding:"0 12px", color:"#fff", fontSize:14, outline:"none" }}/>
+                  );
+                  return (
+                    <div key={i} style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.09)", borderRadius:12, overflow:"hidden" }}>
+                      <div style={{ padding:"9px 14px", background:"rgba(55,227,165,0.1)", borderBottom:"1px solid rgba(255,255,255,0.07)", display:"flex", alignItems:"center", gap:8 }}>
+                        <span style={{ fontSize:13, fontWeight:800, color:"#37E3A5" }}>♻️ Remnant #{i+1}</span>
+                        <span style={{ fontSize:11.5, color:"#7180A6" }}>{r.batchLabel}</span>
+                      </div>
+                      <div style={{ padding:"12px 14px" }}>
+                        {/* Locked details */}
+                        <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:"10px 16px", marginBottom:12 }}>
+                          {lockField("Glass Type", r.glassType || "—")}
+                          {lockField("Thickness", r.thickness ? fmtThickness(r.thickness) : "—")}
+                          {lockField("Original Sheet", fmtSize(r.sheetH, r.sheetW, r.unit))}
+                          {lockField("Source Stand", `#${r.sourceStandNo}`)}
+                        </div>
+                        {/* Editable dimensions */}
+                        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:10 }}>
+                          <div>
+                            <div style={{ fontSize:11, color:"#A9B3D1", fontWeight:600, marginBottom:5 }}>Height ({ul})</div>
+                            {dimInput("height")}
+                          </div>
+                          <div>
+                            <div style={{ fontSize:11, color:"#A9B3D1", fontWeight:600, marginBottom:5 }}>Width ({ul})</div>
+                            {dimInput("width")}
+                          </div>
+                        </div>
+                        {/* Live area */}
+                        <div style={{ display:"flex", gap:18, flexWrap:"wrap", fontSize:12.5, color:"#7180A6", marginBottom: sameStand ? 0 : 10 }}>
+                          <span>Area: <strong style={{ color:"#fff" }}>{fmtNum(r2(m.areaUnit))} sq.{ul}</strong></span>
+                          <span>Sq.Ft: <strong style={{ color:"#37E3A5" }}>{fmtNum(r2(m.sqft))}</strong></span>
+                        </div>
+                        {/* Per-remnant stand (when not applying same stand) */}
+                        {!sameStand && (
+                          <div style={{ display:"flex", alignItems:"center", gap:10, borderTop:"1px solid rgba(255,255,255,0.06)", paddingTop:10 }}>
+                            <span style={{ fontSize:12.5, color:"#A9B3D1", fontWeight:600 }}>Store In Stand #</span>
+                            <input type="number" min="1" step="1" value={r.standNo}
+                              onChange={e=>setRemnantAssign(prev => prev.map((x,j)=> j===i ? { ...x, standNo:e.target.value } : x))}
+                              style={{ width:90, background:"rgba(255,255,255,0.06)", border:`1.5px solid ${parseInt(r.standNo,10)>=1?"rgba(255,255,255,0.12)":"#FF6B81"}`, borderRadius:8, height:34, padding:"0 10px", color:"#fff", fontSize:13, outline:"none" }}/>
+                          </div>
+                        )}
+                        {!m.valid && (
+                          <div style={{ marginTop:8, fontSize:12, color:"#FF6B81" }}>⚠️ Please enter valid remnant dimensions.</div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {confirmError && <div style={{ marginTop:12, color:"#FF6B81", fontSize:13 }}>{confirmError}</div>}
+            </div>
+            <div style={{ padding:"14px 20px", borderTop:"1px solid rgba(255,255,255,0.08)", display:"flex", gap:10, justifyContent:"flex-end" }}>
+              <button onClick={()=>setShowRemnant(false)} disabled={confirming}
+                style={{ padding:"9px 18px", borderRadius:8, border:"1px solid rgba(255,255,255,0.12)", background:"rgba(255,255,255,0.08)", color:"#A9B3D1", fontSize:13, fontWeight:600, cursor:"pointer" }}>Cancel</button>
+              <button onClick={saveRemnants} disabled={confirming || !allRemnantsValid}
+                style={{ padding:"9px 20px", borderRadius:8, border:"none", background:"#37E3A5", color:"#04210f", fontSize:13, fontWeight:800, cursor:(confirming||!allRemnantsValid)?"not-allowed":"pointer", opacity:(confirming||!allRemnantsValid)?0.5:1 }}>
+                {confirming ? "Saving…" : "Save Remnant & Confirm"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -1060,7 +1298,8 @@ export default function OptimizationPage() {
         }).filter(Boolean).sort((a, b) => b.plan.utilization - a.plan.utilization);
         return { order, suggestions };
       }).filter(p => p.suggestions.length > 0);
-      setResults({ ...multiResult, mode: "multi", perOrderSuggestions, selectedOrders: chosen, orderCount: chosen.length });
+      const planRef = `plan-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      setResults({ ...multiResult, mode: "multi", perOrderSuggestions, selectedOrders: chosen, orderCount: chosen.length, planRef });
       setShowRes(true);
       setRunning(false);
       setSummaryOpen(true);   // Step 2: show summary popup first (not inline cards)
@@ -1376,6 +1615,13 @@ export default function OptimizationPage() {
         results={results}
         shopName={shopName}
         userName={userName}
+        onConfirmed={async ()=>{
+          // Refresh stock so a re-optimize reflects the deducted quantities.
+          try {
+            const sR = await api.get("/api/stock/all");
+            setStock((Array.isArray(sR.data) ? sR.data : []).filter(s => s.quantity > 0));
+          } catch { /* ignore */ }
+        }}
       />
     </PageWrapper>
   );

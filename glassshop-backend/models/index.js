@@ -19,6 +19,8 @@ const Site = require('./Site')(sequelize);
 const GlassPriceMaster = require('./GlassPriceMaster')(sequelize);
 const GlassType = require('./GlassType')(sequelize);
 const StaffPermission = require('./StaffPermission')(sequelize);
+const OptimizationConfirmation = require('./OptimizationConfirmation')(sequelize);
+const InventoryMovement = require('./InventoryMovement')(sequelize);
 
 // Define associations
 // Shop associations
@@ -112,5 +114,7 @@ module.exports = {
   Site,
   GlassPriceMaster,
   GlassType,
-  StaffPermission
+  StaffPermission,
+  OptimizationConfirmation,
+  InventoryMovement
 };

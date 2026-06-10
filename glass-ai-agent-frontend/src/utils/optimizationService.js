@@ -124,6 +124,12 @@ const scoreCandidate = (stock, orderItem) => {
   // Orders with no glassType specified are unrestricted (legacy behaviour).
   if (orderItem.glassType && !sameType) return null;
 
+  // Strict thickness enforcement: a 5mm order may only use 5mm stock.
+  if (orderItem.thickness != null && orderItem.thickness !== "") {
+    const sTh = stock.glass?.thickness != null ? parseFloat(stock.glass.thickness) : null;
+    if (sTh == null || Math.abs(sTh - parseFloat(orderItem.thickness)) > 0.001) return null;
+  }
+
   return {
     stock,
     stockUnit,
@@ -170,7 +176,13 @@ const findCombinedPlans = (results, allStock) => {
       const reqWmm = toMM(r.order.width,  orderUnit);
       const sameType = (stock.glass?.type || "").toLowerCase() ===
                        (r.order.glassType || "").toLowerCase();
-      return reqHmm <= stockHmm && reqWmm <= stockWmm && sameType;
+      // Thickness must match too (5mm order -> 5mm stock only).
+      let sameThickness = true;
+      if (r.order.thickness != null && r.order.thickness !== "") {
+        const sTh = stock.glass?.thickness != null ? parseFloat(stock.glass.thickness) : null;
+        sameThickness = sTh != null && Math.abs(sTh - parseFloat(r.order.thickness)) < 0.001;
+      }
+      return reqHmm <= stockHmm && reqWmm <= stockWmm && sameType && sameThickness;
     });
 
     if (fitting.length < 2) return;
@@ -352,34 +364,44 @@ export const planCuts = (orderItems, stock) => {
 
 // ── Global cross-order bin packing ───────────────────────────────────────────
 //
-// Groups all pieces by glass type, then greedily packs them onto the fewest
-// stock sheets possible (largest stock first within each type group).
-// A piece not placed on any available sheet is returned in unplacedPieces.
+// Groups pieces by glass type + thickness, then packs them onto the SMALLEST
+// sufficient stock first. Smallest-first means existing remnants (small pieces)
+// are consumed before full sheets — maximising remnant reuse and minimising
+// full-sheet consumption. A piece not placed anywhere is returned in
+// unplacedPieces.
 
 export const optimizeGlobal = (pieces, allStock) => {
-  // Group pieces by glass type (case-insensitive key)
-  const byType = {};
+  // Group pieces by glass type + thickness (5mm only matches 5mm stock).
+  const byGroup = {};
   pieces.forEach(p => {
     const type = (p.glassType || '').toLowerCase();
-    if (!byType[type]) byType[type] = [];
-    byType[type].push(p);
+    const th = (p.thickness != null && p.thickness !== '') ? parseFloat(p.thickness) : null;
+    const key = `${type}|${th ?? ''}`;
+    if (!byGroup[key]) byGroup[key] = { type, thickness: th, pieces: [] };
+    byGroup[key].pieces.push(p);
   });
 
   const sheetPlans     = [];
   const unplacedPieces = [];
 
-  Object.entries(byType).forEach(([glassType, typePieces]) => {
-    // Eligible stock for this type, sorted largest area first
+  Object.values(byGroup).forEach(({ type: glassType, thickness, pieces: typePieces }) => {
+    // Eligible stock for this type+thickness, sorted SMALLEST area first so
+    // remnants are tried before full sheets (Priority: remnants → full sheets).
     const eligibleStock = allStock
       .filter(s => {
         if (!s.quantity || s.quantity <= 0) return false;
         const sType = (s.glass?.type || '').toLowerCase();
-        return glassType === '' || sType === glassType;
+        if (glassType !== '' && sType !== glassType) return false;
+        if (thickness != null) {
+          const sTh = s.glass?.thickness != null ? parseFloat(s.glass.thickness) : null;
+          if (sTh == null || Math.abs(sTh - thickness) > 0.001) return false;
+        }
+        return true;
       })
       .sort((a, b) => {
         const aArea = toMM(a.height, a.glass?.unit || 'MM') * toMM(a.width, a.glass?.unit || 'MM');
         const bArea = toMM(b.height, b.glass?.unit || 'MM') * toMM(b.width, b.glass?.unit || 'MM');
-        return bArea - aArea;
+        return aArea - bArea; // smallest first → use remnants before full sheets
       });
 
     let remaining   = [...typePieces];
