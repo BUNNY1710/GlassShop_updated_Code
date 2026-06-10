@@ -47,6 +47,7 @@ router.post('/confirm', async (req, res) => {
 
     let sheetsConsumed = 0;
     const movements = [];
+    const auditRows = []; // detailed audit log rows (glass/size/stand per item)
 
     // ── Step 1: deduct consumed sheets ──
     for (const s of sheets) {
@@ -63,6 +64,11 @@ router.post('/confirm', async (req, res) => {
         shopId, stockId: stock.id, glassType: glass?.type || null, thickness: glass?.thickness || null,
         standNo: stock.standNo, quantity: count, movementType: 'OUT',
         reason: 'Optimization sheets consumed', username: user.userName
+      });
+      auditRows.push({
+        action: 'OPTIMIZE_CONFIRM', glassType: glass?.type || null,
+        height: stock.height, width: stock.width, unit: (glass?.unit || 'MM').toUpperCase(),
+        standNo: stock.standNo, quantity: count
       });
     }
 
@@ -112,6 +118,11 @@ router.post('/confirm', async (req, res) => {
         standNo, quantity: 1, movementType: 'IN',
         reason: 'Optimization Remnant', username: user.userName
       });
+      auditRows.push({
+        action: 'ADD_REMNANT', glassType: r.glassType,
+        height: String(h), width: String(w), unit,
+        standNo, quantity: 1
+      });
     }
 
     // ── Step 3: update order status ──
@@ -131,14 +142,26 @@ router.post('/confirm', async (req, res) => {
       details: JSON.stringify({ summary, sheets, remnants: remnants.length })
     }, { transaction: t });
 
-    // Inventory movements (audit trail) + a summary audit log row.
+    // Inventory movements (audit trail).
     for (const m of movements) {
       await InventoryMovement.create({ ...m, refId: confirmation.id }, { transaction: t });
     }
-    await AuditLog.create({
-      username: user.userName, role: user.role, action: 'OPTIMIZE_CONFIRM',
-      quantity: sheetsConsumed, shopId, timestamp: new Date()
-    }, { transaction: t });
+    // Detailed audit log rows — one per consumed sheet + one per remnant, each
+    // carrying glass type / size / stand so the Audit Log shows full info.
+    const stamp = new Date();
+    if (auditRows.length) {
+      for (const a of auditRows) {
+        await AuditLog.create({
+          ...a, username: user.userName, role: user.role, shopId, timestamp: stamp
+        }, { transaction: t });
+      }
+    } else {
+      // Fallback: nothing placed and no remnant — still record the confirm.
+      await AuditLog.create({
+        username: user.userName, role: user.role, action: 'OPTIMIZE_CONFIRM',
+        quantity: sheetsConsumed, shopId, timestamp: stamp
+      }, { transaction: t });
+    }
 
     await t.commit();
     res.json({
@@ -150,6 +173,13 @@ router.post('/confirm', async (req, res) => {
   } catch (error) {
     await t.rollback();
     console.error('Error confirming optimization plan:', error);
+    const msg = String(error.message || '');
+    if (msg.includes('chk_stock_stand_no_positive')) {
+      return res.status(400).json({
+        success: false,
+        message: 'A stock item has an invalid stand (≤ 0). Fix it in Stand Management / Manage Stock, then retry.'
+      });
+    }
     res.status(500).json({ success: false, message: error.message || 'Failed to confirm cutting plan' });
   }
 });

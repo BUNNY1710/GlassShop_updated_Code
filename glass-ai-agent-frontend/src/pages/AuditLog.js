@@ -12,6 +12,8 @@ const ACTION_STYLES = {
   REMOVE:   { bg: "rgba(255,107,129,0.15)", color: "#FF6B81", dot: "#FF6B81" },
   EDIT:     { bg: "rgba(79,93,255,0.15)",   color: "#818CF8", dot: "#818CF8" },
   TRANSFER: { bg: "rgba(255,185,94,0.15)",  color: "#FFB95E", dot: "#FFB95E" },
+  ADD_REMNANT:      { bg: "rgba(255,159,64,0.18)",  color: "#FF9F40", dot: "#FF9F40" },
+  OPTIMIZE_CONFIRM: { bg: "rgba(124,58,237,0.18)",  color: "#A78BFA", dot: "#A78BFA" },
   CREATE:   { bg: "rgba(79,93,255,0.15)",   color: "#818CF8", dot: "#818CF8" },
   DELETE:   { bg: "rgba(255,107,129,0.15)", color: "#FF6B81", dot: "#FF6B81" },
   APPROVE:  { bg: "rgba(55,227,165,0.15)",  color: "#37E3A5", dot: "#37E3A5" },
@@ -100,6 +102,12 @@ function buildDescription(log) {
       return `Updated ${glass}${size ? ` · ${size}` : ""}${log.standNo ? ` at Stand #${log.standNo}` : ""}`;
     case "TRANSFER":
       return `Transferred ${qty} of ${glass} · Stand #${log.fromStand || "?"} → Stand #${log.toStand || "?"}`;
+    case "ADD_REMNANT":
+      return `Added remnant stock ${glass}${size ? ` (${size})` : ""} to Stand #${log.standNo || "?"}`;
+    case "OPTIMIZE_CONFIRM":
+      return glass
+        ? `Optimization confirmed · ${qty} of ${glass}${size ? ` (${size})` : ""} from Stand #${log.standNo || "?"}`
+        : "Optimization confirmed";
     default:
       return `${log.action || "Action"}${glass ? ` on ${glass}` : ""}${size ? ` (${size})` : ""}`;
   }

@@ -791,7 +791,20 @@ const OptimizedOrderSheet = ({ open, onClose, results, shopName, userName, onCon
     return Object.entries(counts).map(([stockId, count]) => ({ stockId: Number(stockId), count }));
   };
 
-  const orderIds = [...new Set(selectedOrders.map(o => o.quotationId).filter(Boolean))];
+  // Only orders that were actually PLACED count as optimized. An order whose
+  // pieces are (even partially) unplaced stays PENDING in the planner. So:
+  //   optimized = (quotations with placed pieces) − (quotations with unplaced pieces)
+  const placedQIds = new Set();
+  (results.sheetPlans || []).forEach(p => (p.orders || []).forEach(o => {
+    if (o.quotationId != null) placedQIds.add(o.quotationId);
+  }));
+  const unplacedQIds = new Set(
+    (results.unplacedPieces || []).map(p => p.quotationId).filter(v => v != null)
+  );
+  const orderIds = [...placedQIds].filter(id => !unplacedQIds.has(id));
+  const failedCount = new Set(
+    selectedOrders.map(o => o.quotationId).filter(id => id != null && !orderIds.includes(id))
+  ).size;
 
   const doConfirm = async (remnantsPayload) => {
     setConfirming(true);
@@ -806,7 +819,7 @@ const OptimizedOrderSheet = ({ open, onClose, results, shopName, userName, onCon
       });
       setConfirmed(data);
       setShowRemnant(false);
-      onConfirmed && onConfirmed();
+      onConfirmed && onConfirmed(orderIds);
     } catch (e) {
       if (e?.response?.status === 409 && e?.response?.data?.alreadyConfirmed) {
         setConfirmed({ already: true });
@@ -1030,11 +1043,20 @@ const OptimizedOrderSheet = ({ open, onClose, results, shopName, userName, onCon
               {confirmed ? (
                 <div>
                   <div style={{ fontSize:34, marginBottom:6 }}>✅</div>
-                  <div style={{ fontSize:17, fontWeight:800, color:"#37E3A5" }}>Plan Confirmed</div>
+                  <div style={{ fontSize:17, fontWeight:800, color:"#37E3A5" }}>Optimization Confirmed</div>
                   <div style={{ fontSize:13, color:"#A9B3D1", marginTop:4 }}>
                     {confirmed.already
                       ? "This plan was already confirmed — inventory was not changed again."
-                      : `${confirmed.sheetsConsumed} sheet${confirmed.sheetsConsumed!==1?"s":""} deducted · ${confirmed.remnantsCreated} remnant${confirmed.remnantsCreated!==1?"s":""} saved · ${confirmed.ordersUpdated} order${confirmed.ordersUpdated!==1?"s":""} marked Cut.`}
+                      : <>
+                          <div><strong style={{ color:"#37E3A5" }}>{confirmed.ordersUpdated} order{confirmed.ordersUpdated!==1?"s":""}</strong> optimized & removed from the Smart Cutting Planner.</div>
+                          {failedCount > 0 && (
+                            <div style={{ marginTop:2, color:"#FFB95E" }}>
+                              <strong>{failedCount} order{failedCount!==1?"s":""}</strong> remain pending — no matching stock was found.
+                            </div>
+                          )}
+                          <div style={{ marginTop:2 }}>{confirmed.sheetsConsumed} sheet{confirmed.sheetsConsumed!==1?"s":""} deducted · {confirmed.remnantsCreated} remnant{confirmed.remnantsCreated!==1?"s":""} saved.</div>
+                          {results.planRef && <div style={{ marginTop:4, fontSize:11.5, color:"#7180A6" }}>Plan: {results.planRef}</div>}
+                        </>}
                   </div>
                 </div>
               ) : (
@@ -1042,7 +1064,12 @@ const OptimizedOrderSheet = ({ open, onClose, results, shopName, userName, onCon
                   <div style={{ fontSize:13, color:"#A9B3D1", marginBottom:12 }}>
                     Confirming deducts <strong style={{ color:"#fff" }}>{s.sheetsUsed}</strong> sheet{s.sheetsUsed!==1?"s":""} from inventory
                     {remnants.length ? <>, saves <strong style={{ color:"#37E3A5" }}>{remnants.length}</strong> remnant{remnants.length!==1?"s":""}</> : null}
-                    , and marks <strong style={{ color:"#fff" }}>{orderIds.length}</strong> order{orderIds.length!==1?"s":""} as Cut.
+                    , and removes <strong style={{ color:"#37E3A5" }}>{orderIds.length}</strong> optimized order{orderIds.length!==1?"s":""} from the planner.
+                    {failedCount > 0 && (
+                      <div style={{ marginTop:6, color:"#FFB95E" }}>
+                        ⚠️ {failedCount} selected order{failedCount!==1?"s":""} had no matching stock and will stay in the planner for later.
+                      </div>
+                    )}
                   </div>
                   {confirmError && <div style={{ marginBottom:10, color:"#FF6B81", fontSize:13 }}>{confirmError}</div>}
                   <button onClick={onConfirmClick} disabled={confirming}
@@ -1179,6 +1206,7 @@ export default function OptimizationPage() {
   const [loading,   setLoading]  = useState(true);
   const [error,     setError]    = useState("");
   const [selected,  setSel]      = useState(new Set());
+  const [optimizedIds, setOptimizedIds] = useState(() => new Set()); // confirmed orders removed from planner
   const [status,    setStatus]   = useState("ALL");
   const [mode,      setMode]     = useState("multi"); // "single" | "multi"
   const [results,   setResults]  = useState(null);
@@ -1218,9 +1246,19 @@ export default function OptimizationPage() {
     })();
   }, []);
 
-  const filteredQ = useMemo(() =>
-    !status||status==="ALL" ? quotations : quotations.filter(q=>(q.status||"").toUpperCase()===status),
-  [quotations,status]);
+  // Smart Cutting Planner shows ONLY orders that still need optimization.
+  // Already-planned orders (status CUT/OPTIMIZED/PLANNED/COMPLETED on the server,
+  // or just-confirmed in this session) are hidden automatically.
+  const PLANNED_STATUSES = new Set(["CUT", "OPTIMIZED", "PLANNED", "COMPLETED"]);
+  const filteredQ = useMemo(() => {
+    const pending = quotations.filter(q =>
+      !PLANNED_STATUSES.has((q.status || "").toUpperCase()) && !optimizedIds.has(q.id)
+    );
+    return (!status || status === "ALL")
+      ? pending
+      : pending.filter(q => (q.status || "").toUpperCase() === status);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quotations, status, optimizedIds]);
 
   const allItems = useMemo(() => {
     const rows = [];
@@ -1623,7 +1661,13 @@ export default function OptimizationPage() {
         results={results}
         shopName={shopName}
         userName={userName}
-        onConfirmed={async ()=>{
+        onConfirmed={async (confirmedOrderIds = [])=>{
+          // Instantly remove the confirmed orders from the planner (no refresh)
+          // and clear selection + update counts.
+          if (confirmedOrderIds.length) {
+            setOptimizedIds(prev => new Set([...prev, ...confirmedOrderIds]));
+            setSel(new Set());
+          }
           // Refresh stock so a re-optimize reflects the deducted quantities.
           try {
             const sR = await api.get("/api/stock/all");
