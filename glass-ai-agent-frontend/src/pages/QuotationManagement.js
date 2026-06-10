@@ -1,4 +1,5 @@
 ﻿import { useState, useEffect, useRef } from "react";
+import { toast } from "react-toastify";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import PageWrapper from "../components/PageWrapper";
@@ -3882,11 +3883,11 @@ function QuotationManagement() {
                 </div>
                 <div style={{ display:'flex', gap:5, alignItems:'center' }}>
                   <DocDropdownBtn label="Print" icon="🖨️" iconOnly={isMobile} items={[
-                    { icon:'📄', label:'Quotation PDF', onClick: async () => { try { const r = await downloadQuotationPdf(selectedQuotation.id); const url = window.URL.createObjectURL(new Blob([r.data],{type:'application/pdf'})); const w = window.open(url,'_blank'); if(w) w.onload=()=>w.print(); } catch { alert('Failed to print quotation PDF'); } } },
-                    { icon:'✂️', label:'Cutting Pad',   onClick: async () => { try { const r = await printCuttingPad(selectedQuotation.id); const url = window.URL.createObjectURL(new Blob([r.data],{type:'application/pdf'})); const w = window.open(url,'_blank'); if(w) w.onload=()=>w.print(); } catch { alert('Failed to print cutting-pad PDF'); } } },
+                    { icon:'📄', label:'Quotation PDF', onClick: async () => { try { const r = await downloadQuotationPdf(selectedQuotation.id); const url = window.URL.createObjectURL(new Blob([r.data],{type:'application/pdf'})); const w = window.open(url,'_blank'); if(w) w.onload=()=>w.print(); } catch { toast.error('Failed to print quotation PDF'); } } },
+                    { icon:'✂️', label:'Cutting Pad',   onClick: async () => { try { const r = await printCuttingPad(selectedQuotation.id); const url = window.URL.createObjectURL(new Blob([r.data],{type:'application/pdf'})); const w = window.open(url,'_blank'); if(w) w.onload=()=>w.print(); } catch { toast.error('Failed to print cutting-pad PDF'); } } },
                   ]} />
                   <DocDropdownBtn label="Download" icon="⬇️" iconOnly={isMobile} items={[
-                    { icon:'📥', label:'Quotation PDF', onClick: async () => { try { const r = await downloadQuotationPdf(selectedQuotation.id); const url = window.URL.createObjectURL(new Blob([r.data])); const a = document.createElement('a'); a.href=url; a.setAttribute('download',`quotation-${selectedQuotation.quotationNumber}.pdf`); document.body.appendChild(a); a.click(); a.remove(); window.URL.revokeObjectURL(url); } catch { alert('Failed to download quotation PDF'); } } },
+                    { icon:'📥', label:'Quotation PDF', onClick: async () => { try { const r = await downloadQuotationPdf(selectedQuotation.id); const url = window.URL.createObjectURL(new Blob([r.data])); const a = document.createElement('a'); a.href=url; a.setAttribute('download',`quotation-${selectedQuotation.quotationNumber}.pdf`); document.body.appendChild(a); a.click(); a.remove(); window.URL.revokeObjectURL(url); } catch { toast.error('Failed to download quotation PDF'); } } },
                   ]} />
                   <button onClick={() => setSelectedQuotation(null)} style={{ width:32, height:32, borderRadius:'50%', border:'1px solid rgba(255,255,255,0.1)', background:'rgba(255,255,255,0.08)', cursor:'pointer', fontSize:14, color:'#A9B3D1', display:'flex', alignItems:'center', justifyContent:'center', transition:'all 140ms ease', flexShrink:0 }}
                     onMouseEnter={e=>{ e.currentTarget.style.background='rgba(255,255,255,0.15)'; e.currentTarget.style.color='#E2E8F0'; }}

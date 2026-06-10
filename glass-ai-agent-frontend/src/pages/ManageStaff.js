@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import PageWrapper from "../components/PageWrapper";
 import api from "../api/api";
 
@@ -11,7 +12,7 @@ function ManageStaff() {
   useEffect(() => {
     api.get("/api/auth/staff")
       .then(res => setStaff(res.data))
-      .catch(() => alert("Failed to load staff"));
+      .catch(() => toast.error("Failed to load staff"));
   }, []);
 
   const removeStaff = (id) => {
@@ -20,7 +21,7 @@ function ManageStaff() {
         setStaff(prev => prev.filter(s => s.id !== id));
         setConfirmUser(null);
       })
-      .catch(() => alert("Failed to remove staff"));
+      .catch(() => toast.error("Failed to remove staff"));
   };
 
   return (

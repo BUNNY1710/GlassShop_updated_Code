@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import PageWrapper from "../components/PageWrapper";
+import { toast } from "react-toastify";
 import {
   getArchitects, createArchitect, updateArchitect, deleteArchitect,
   searchArchitects, getArchitectById, getArchitectQuotations, getArchitectOrders,
@@ -153,7 +154,7 @@ ${inclOrders && ordRows ? `
 </body></html>`;
 
   const win = window.open("", "_blank", "width=850,height=1100");
-  if (!win) { alert("Please allow popups to print."); return; }
+  if (!win) { toast.warn("Please allow popups to print."); return; }
   win.document.write(html);
   win.document.close();
 };

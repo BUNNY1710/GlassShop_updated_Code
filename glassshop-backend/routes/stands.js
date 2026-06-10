@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { Stand, Stock, User, Shop } = require('../models');
+const { sequelize, Stand, Stock, User, Shop, AuditLog } = require('../models');
 const { Op } = require('sequelize');
 const { requireStaff, requireAdmin } = require('../middleware/auth');
 
@@ -134,6 +134,101 @@ router.delete('/:id', requireAdmin, async (req, res) => {
     res.json({ success: true, message: 'Stand deleted' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message || 'Failed to delete stand' });
+  }
+});
+
+// GET /api/stands/:id/delete-info  (admin) — stock on this stand + candidate
+// destination stands (active, excluding this one) with their current load.
+router.get('/:id/delete-info', requireAdmin, async (req, res) => {
+  try {
+    const shopId = await getShopId(req, res);
+    if (shopId === null) return;
+    const stand = await Stand.findOne({ where: { id: req.params.id, shopId } });
+    if (!stand) return res.status(404).json({ success: false, message: 'Stand not found' });
+
+    const srcRows = await Stock.findAll({ where: { shopId, standNo: stand.standNumber } });
+    const source = {
+      standNumber: stand.standNumber,
+      itemCount: srcRows.length,
+      totalQty: srcRows.reduce((a, s) => a + (s.quantity || 0), 0),
+    };
+
+    const others = await Stand.findAll({
+      where: { shopId, isActive: true, standNumber: { [Op.ne]: stand.standNumber } },
+      order: [['standNumber', 'ASC']],
+    });
+    const targets = [];
+    for (const st of others) {
+      const rows = await Stock.findAll({ where: { shopId, standNo: st.standNumber } });
+      targets.push({
+        standNumber: st.standNumber, standName: st.standName,
+        itemCount: rows.length, totalQty: rows.reduce((a, s) => a + (s.quantity || 0), 0),
+      });
+    }
+    res.json({ source, targets });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message || 'Failed to load delete info' });
+  }
+});
+
+// POST /api/stands/:id/transfer-and-delete  { toStandNumber }  (admin)
+// Moves all stock off the stand (merging on collision), audits, then deletes it.
+router.post('/:id/transfer-and-delete', requireAdmin, async (req, res) => {
+  const t = await sequelize.transaction();
+  try {
+    const user = await User.findOne({ where: { userName: req.user.username } });
+    if (!user || !user.shopId) { await t.rollback(); return res.status(404).json({ success: false, message: 'User not linked to a shop' }); }
+    const shopId = user.shopId;
+
+    const stand = await Stand.findOne({ where: { id: req.params.id, shopId }, transaction: t });
+    if (!stand) { await t.rollback(); return res.status(404).json({ success: false, message: 'Stand not found' }); }
+
+    const toStandNumber = parseInt(req.body.toStandNumber, 10);
+    if (!Number.isInteger(toStandNumber) || toStandNumber < 1) {
+      await t.rollback(); return res.status(400).json({ success: false, message: 'Please select a valid destination stand.' });
+    }
+    if (toStandNumber === stand.standNumber) {
+      await t.rollback(); return res.status(400).json({ success: false, message: 'Cannot transfer to the same stand.' });
+    }
+    const target = await Stand.findOne({ where: { shopId, standNumber: toStandNumber, isActive: true }, transaction: t });
+    if (!target) {
+      await t.rollback(); return res.status(400).json({ success: false, message: `Destination Stand #${toStandNumber} is not an active stand.` });
+    }
+
+    // Move every stock row off the source stand, merging into a matching row on
+    // the target (same glass + dimensions) so the unique index isn't violated.
+    const sourceStock = await Stock.findAll({ where: { shopId, standNo: stand.standNumber }, transaction: t });
+    let moved = 0, qtyMoved = 0;
+    for (const s of sourceStock) {
+      qtyMoved += (s.quantity || 0);
+      const match = await Stock.findOne({
+        where: { shopId, standNo: toStandNumber, glassId: s.glassId, height: s.height, width: s.width, id: { [Op.ne]: s.id } },
+        transaction: t,
+      });
+      if (match) {
+        match.quantity = (match.quantity || 0) + (s.quantity || 0);
+        await match.save({ transaction: t });
+        await s.destroy({ transaction: t });
+      } else {
+        s.standNo = toStandNumber;
+        await s.save({ transaction: t });
+      }
+      moved += 1;
+    }
+
+    // Audit + delete stand.
+    await AuditLog.create({
+      username: user.userName, role: user.role, action: 'DELETE_STAND',
+      fromStand: stand.standNumber, toStand: toStandNumber,
+      quantity: qtyMoved, shopId, timestamp: new Date(),
+    }, { transaction: t });
+
+    await stand.destroy({ transaction: t });
+    await t.commit();
+    res.json({ success: true, moved, qtyMoved, from: stand.standNumber, to: toStandNumber });
+  } catch (error) {
+    await t.rollback();
+    res.status(500).json({ success: false, message: error.message || 'Failed to transfer and delete stand' });
   }
 });
 

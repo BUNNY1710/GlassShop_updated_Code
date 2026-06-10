@@ -4,6 +4,7 @@
  * The caller just needs: printCuttingPlan({ plan, stock, orders, options, shopName, userName })
  */
 
+import { toast } from "react-toastify";
 import { fmtNum, parseDim, unitLabel } from "./optimizationService";
 
 const r2 = n => Math.round(n * 100) / 100;
@@ -337,7 +338,7 @@ ${showRemnant && plan?.remnant ? `
 </html>`;
 
   const win = window.open("", "_blank", "width=850,height=1100");
-  if (!win) { alert("Please allow popups for this site to print."); return; }
+  if (!win) { toast.warn("Please allow popups for this site to print."); return; }
   win.document.write(html);
   win.document.close();
 };

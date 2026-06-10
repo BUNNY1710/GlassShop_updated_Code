@@ -14,6 +14,7 @@ const ACTION_STYLES = {
   TRANSFER: { bg: "rgba(255,185,94,0.15)",  color: "#FFB95E", dot: "#FFB95E" },
   ADD_REMNANT:      { bg: "rgba(255,159,64,0.18)",  color: "#FF9F40", dot: "#FF9F40" },
   OPTIMIZE_CONFIRM: { bg: "rgba(124,58,237,0.18)",  color: "#A78BFA", dot: "#A78BFA" },
+  DELETE_STAND:     { bg: "rgba(255,107,129,0.15)", color: "#FF6B81", dot: "#FF6B81" },
   CREATE:   { bg: "rgba(79,93,255,0.15)",   color: "#818CF8", dot: "#818CF8" },
   DELETE:   { bg: "rgba(255,107,129,0.15)", color: "#FF6B81", dot: "#FF6B81" },
   APPROVE:  { bg: "rgba(55,227,165,0.15)",  color: "#37E3A5", dot: "#37E3A5" },
@@ -108,6 +109,10 @@ function buildDescription(log) {
       return glass
         ? `Optimization confirmed · ${qty} of ${glass}${size ? ` (${size})` : ""} from Stand #${log.standNo || "?"}`
         : "Optimization confirmed";
+    case "DELETE_STAND":
+      return log.toStand
+        ? `Transferred ${qty || "0 units"} from Stand #${log.fromStand} to Stand #${log.toStand}, then deleted Stand #${log.fromStand}`
+        : `Deleted Stand #${log.fromStand || log.standNo || "?"}`;
     default:
       return `${log.action || "Action"}${glass ? ` on ${glass}` : ""}${size ? ` (${size})` : ""}`;
   }
@@ -124,7 +129,7 @@ function exportCSV(logs) {
     l.glassType || "",
     l.height && l.width ? `${l.height}×${l.width} ${l.unit || "MM"}` : "",
     l.quantity || "",
-    l.action === "TRANSFER" ? `${l.fromStand}→${l.toStand}` : (l.standNo || ""),
+    ["TRANSFER","DELETE_STAND"].includes(l.action) ? `${l.fromStand}→${l.toStand}` : (l.standNo || ""),
   ]);
   const csv  = [H, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -335,7 +340,7 @@ function DropMenu({ dropRef, open, setOpen, value, setValue, options, placeholde
 
 function TableRow({ log, idx }) {
   const [hov, setHov] = useState(false);
-  const standInfo = log.action === "TRANSFER"
+  const standInfo = ["TRANSFER", "DELETE_STAND"].includes(log.action)
     ? `#${log.fromStand} → #${log.toStand}`
     : log.standNo ? `#${log.standNo}` : "—";
 
@@ -443,7 +448,7 @@ function TimelineItem({ log, last }) {
 
 function MobileCard({ log }) {
   const color     = avatarColor(log.username);
-  const standInfo = log.action === "TRANSFER"
+  const standInfo = ["TRANSFER", "DELETE_STAND"].includes(log.action)
     ? `Stand #${log.fromStand} → #${log.toStand}`
     : log.standNo ? `Stand #${log.standNo}` : "";
 

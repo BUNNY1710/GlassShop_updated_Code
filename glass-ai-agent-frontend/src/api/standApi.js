@@ -7,6 +7,9 @@ export const createStand     = (payload) => api.post("/api/stands", payload).the
 export const updateStand     = (id, payload) => api.put(`/api/stands/${id}`, payload).then(r => r.data);
 export const setStandActive  = (id, isActive) => api.patch(`/api/stands/${id}/active`, { isActive }).then(r => r.data);
 export const deleteStand     = (id) => api.delete(`/api/stands/${id}`).then(r => r.data);
+export const getStandDeleteInfo    = (id) => api.get(`/api/stands/${id}/delete-info`).then(r => r.data);
+export const transferAndDeleteStand = (id, toStandNumber) =>
+  api.post(`/api/stands/${id}/transfer-and-delete`, { toStandNumber }).then(r => r.data);
 
 // Shared hook: load the shop's active stands once, expose numbers + reload.
 export function useStands() {
