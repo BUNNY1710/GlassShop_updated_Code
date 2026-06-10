@@ -96,12 +96,14 @@ router.post('/confirm', async (req, res) => {
       });
       if (stock) {
         stock.quantity = (stock.quantity || 0) + 1;
+        stock.source = 'Optimization Remnant';
         await stock.save({ transaction: t });
       } else {
         stock = await Stock.create({
           glassId: glass.id, standNo, shopId,
           height: String(h), width: String(w),
-          quantity: 1, minQuantity: 0, status: 'APPROVED'
+          quantity: 1, minQuantity: 0, status: 'APPROVED',
+          source: 'Optimization Remnant'
         }, { transaction: t });
       }
       remnantsCreated += 1;

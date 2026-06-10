@@ -80,6 +80,7 @@ function StockDashboard() {
   const [filterHeight, setFilterHeight] = useState("");
   const [filterWidth, setFilterWidth] = useState("");
   const [searchUnit, setSearchUnit] = useState("MM");
+  const [showRemnantsOnly, setShowRemnantsOnly] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const isMobile  = windowWidth < 768;
   const gridCols  = windowWidth < 768  ? "1fr"
@@ -536,7 +537,12 @@ function StockDashboard() {
       return null;
     }).filter(s => s !== null);
 
-    return filtered.sort((a, b) => {
+    // Remnants-only filter
+    const afterRemnant = showRemnantsOnly
+      ? filtered.filter(s => s.source === "Optimization Remnant")
+      : filtered;
+
+    return afterRemnant.sort((a, b) => {
       if (a.isReverseMatch !== b.isReverseMatch) return a.isReverseMatch ? -1 : 1;
 
       const aHeightMM = parseDimension(a.height) !== null ? convertToMM(parseDimension(a.height), a.glass?.unit) : 0;
@@ -547,7 +553,13 @@ function StockDashboard() {
       if (aHeightMM !== bHeightMM) return aHeightMM - bHeightMM;
       return aWidthMM - bWidthMM;
     });
-  }, [allStock, globalSearch, filterThickness, filterHeight, filterWidth, searchUnit]);
+  }, [allStock, globalSearch, filterThickness, filterHeight, filterWidth, searchUnit, showRemnantsOnly]);
+
+  // Total remnants in inventory (independent of the remnants-only toggle)
+  const totalRemnants = useMemo(
+    () => allStock.filter(s => s.source === "Optimization Remnant" && (s.quantity || 0) > 0).length,
+    [allStock]
+  );
 
   // Calculate stats
   const totalStock = filteredStock.length;
@@ -737,6 +749,17 @@ function StockDashboard() {
           <option value="FEET">FT</option>
         </select>
 
+        {/* Remnants only */}
+        <label
+          title="Show only optimization remnants"
+          style={{ display: "flex", alignItems: "center", gap: 6, height: 36, padding: "0 11px", borderRadius: 8, cursor: "pointer", flexShrink: 0,
+            background: showRemnantsOnly ? "rgba(255,159,64,0.18)" : "rgba(17,27,53,0.9)",
+            border: `1px solid ${showRemnantsOnly ? "rgba(255,159,64,0.5)" : "rgba(255,255,255,0.1)"}`,
+            color: showRemnantsOnly ? "#FF9F40" : "#A9B3D1", fontSize: 12, fontWeight: 700, ...(isMobile ? { flex: 1, minWidth: 0, justifyContent: "center" } : {}) }}>
+          <input type="checkbox" checked={showRemnantsOnly} onChange={e => setShowRemnantsOnly(e.target.checked)} style={{ width: 15, height: 15, accentColor: "#FF9F40", cursor: "pointer" }} />
+          🟠 Remnants{totalRemnants > 0 ? ` (${totalRemnants})` : ""}
+        </label>
+
         {/* Clear */}
         {(globalSearch || filterThickness || filterHeight || filterWidth) && (
           <button onClick={() => { setGlobalSearch(""); setFilterThickness(""); setFilterHeight(""); setFilterWidth(""); setSearchUnit("MM"); }} style={{ height: 36, padding: isMobile ? 0 : "0 11px", width: isMobile ? 36 : undefined, borderRadius: 8, background: "rgba(255,107,129,0.15)", border: "1px solid rgba(255,107,129,0.3)", color: "#FF6B81", fontSize: isMobile ? 16 : 12, fontWeight: 700, cursor: "pointer", flexShrink: 0, outline: "none", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -763,6 +786,7 @@ function StockDashboard() {
           {filteredStock.map((s, i) => {
             const isLow = s.quantity < s.minQuantity;
             const isReverseMatch = s.isReverseMatch || false;
+            const isRemnant = s.source === "Optimization Remnant";
             const unit = s.glass?.unit || "MM";
             const dimStr = (s.height && s.width) ? `${s.height}×${s.width} ${unitAbbr(unit)}` : null;
             const thickStr = s.glass?.thickness ? formatThicknessMM(s.glass.thickness).replace(" mm", "MM") : null;
@@ -786,6 +810,9 @@ function StockDashboard() {
                       </span>
                       {isReverseMatch && (
                         <span style={{ padding: "2px 5px", borderRadius: 4, background: "rgba(255,185,94,0.2)", color: "#FFB95E", fontSize: 9, fontWeight: 700 }}>REV</span>
+                      )}
+                      {isRemnant && (
+                        <span style={{ padding: "2px 6px", borderRadius: 4, background: "rgba(255,159,64,0.2)", border: "1px solid rgba(255,159,64,0.4)", color: "#FF9F40", fontSize: 9, fontWeight: 800, letterSpacing: "0.04em" }}>🟠 REMNANT</span>
                       )}
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
@@ -856,6 +883,9 @@ function StockDashboard() {
                     </span>
                     {isReverseMatch && (
                       <span style={{ padding: "2px 5px", borderRadius: 4, background: "rgba(255,185,94,0.2)", color: "#FFB95E", fontSize: 9, fontWeight: 700, flexShrink: 0 }}>REV</span>
+                    )}
+                    {isRemnant && (
+                      <span style={{ padding: "2px 6px", borderRadius: 4, background: "rgba(255,159,64,0.2)", border: "1px solid rgba(255,159,64,0.4)", color: "#FF9F40", fontSize: 9, fontWeight: 800, letterSpacing: "0.04em", flexShrink: 0 }}>🟠 REMNANT</span>
                     )}
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>

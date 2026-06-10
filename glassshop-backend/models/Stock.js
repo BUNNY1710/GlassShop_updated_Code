@@ -80,6 +80,12 @@ module.exports = (sequelize) => {
       allowNull: true,
       defaultValue: 'APPROVED'
     },
+    // Origin of the stock row. 'Optimization Remnant' marks reusable offcuts
+    // saved back from a confirmed cutting plan; null = regular stock.
+    source: {
+      type: DataTypes.STRING(50),
+      allowNull: true
+    },
     updatedAt: {
       type: DataTypes.DATE,
       allowNull: true,
