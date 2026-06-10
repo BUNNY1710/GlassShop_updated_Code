@@ -7,6 +7,7 @@ import {
   parseDim, toMM, fromMM, unitLabel,
 } from "../utils/optimizationService";
 import { printCuttingPlan } from "../utils/printCuttingPlan";
+import { useStands } from "../api/standApi";
 import "../styles/design-system.css";
 
 /* ─── constants ───────────────────────────────────────────────────────────── */
@@ -737,6 +738,7 @@ const OptimizedOrderSheet = ({ open, onClose, results, shopName, userName, onCon
   const [remnantAssign, setRemnantAssign] = useState([]);     // [{ ...remnant, standNo }]
   const [sameStand, setSameStand]         = useState(true);
   const [sameStandValue, setSameStandValue] = useState("");
+  const { standNumbers } = useStands();
 
   // Reset confirmation state whenever a new plan is shown.
   useEffect(() => {
@@ -1074,9 +1076,12 @@ const OptimizedOrderSheet = ({ open, onClose, results, shopName, userName, onCon
               </label>
               {sameStand && (
                 <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:14 }}>
-                  <span style={{ fontSize:13, color:"#7180A6" }}>Store all remnants on Stand #</span>
-                  <input type="number" min="1" step="1" value={sameStandValue} onChange={e=>setSameStandValue(e.target.value)}
-                    style={{ width:100, background:"rgba(255,255,255,0.06)", border:`1.5px solid ${parseInt(sameStandValue,10)>=1?"rgba(255,255,255,0.12)":"#FF6B81"}`, borderRadius:8, height:38, padding:"0 12px", color:"#fff", fontSize:14, outline:"none" }}/>
+                  <span style={{ fontSize:13, color:"#7180A6" }}>Store all remnants on</span>
+                  <select value={sameStandValue} onChange={e=>setSameStandValue(e.target.value)}
+                    style={{ minWidth:140, background:"rgba(255,255,255,0.06)", border:`1.5px solid ${parseInt(sameStandValue,10)>=1?"rgba(255,255,255,0.12)":"#FF6B81"}`, borderRadius:8, height:38, padding:"0 12px", color:"#fff", fontSize:14, outline:"none" }}>
+                    <option value="">Select stand</option>
+                    {standNumbers.map(n => <option key={n} value={n}>Stand #{n}</option>)}
+                  </select>
                 </div>
               )}
 
@@ -1129,10 +1134,13 @@ const OptimizedOrderSheet = ({ open, onClose, results, shopName, userName, onCon
                         {/* Per-remnant stand (when not applying same stand) */}
                         {!sameStand && (
                           <div style={{ display:"flex", alignItems:"center", gap:10, borderTop:"1px solid rgba(255,255,255,0.06)", paddingTop:10 }}>
-                            <span style={{ fontSize:12.5, color:"#A9B3D1", fontWeight:600 }}>Store In Stand #</span>
-                            <input type="number" min="1" step="1" value={r.standNo}
+                            <span style={{ fontSize:12.5, color:"#A9B3D1", fontWeight:600 }}>Store In Stand</span>
+                            <select value={r.standNo}
                               onChange={e=>setRemnantAssign(prev => prev.map((x,j)=> j===i ? { ...x, standNo:e.target.value } : x))}
-                              style={{ width:90, background:"rgba(255,255,255,0.06)", border:`1.5px solid ${parseInt(r.standNo,10)>=1?"rgba(255,255,255,0.12)":"#FF6B81"}`, borderRadius:8, height:34, padding:"0 10px", color:"#fff", fontSize:13, outline:"none" }}/>
+                              style={{ minWidth:130, background:"rgba(255,255,255,0.06)", border:`1.5px solid ${parseInt(r.standNo,10)>=1?"rgba(255,255,255,0.12)":"#FF6B81"}`, borderRadius:8, height:34, padding:"0 10px", color:"#fff", fontSize:13, outline:"none" }}>
+                              <option value="">Select stand</option>
+                              {standNumbers.map(n => <option key={n} value={n}>Stand #{n}</option>)}
+                            </select>
                           </div>
                         )}
                         {!m.valid && (

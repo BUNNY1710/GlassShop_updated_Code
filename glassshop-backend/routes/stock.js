@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { Stock, Glass, StockHistory, User, Shop, AuditLog, GlassPriceMaster } = require('../models');
+const { Stock, Glass, StockHistory, User, Shop, AuditLog, GlassPriceMaster, Stand } = require('../models');
 const { Op } = require('sequelize');
 const { requireStaff, requirePermission, requireAnyPermission } = require('../middleware/auth');
 
@@ -15,6 +15,15 @@ router.use(requireAnyPermission(
   'VIEW_OPTIMIZATION', 'RUN_OPTIMIZATION', 'VIEW_PLANS',
   'VIEW_DASHBOARD'
 ));
+
+// True if the stand number exists and is active for the shop. Lenient: if the
+// shop has no stands defined yet, any number is allowed (avoids lockout).
+async function isValidStand(shopId, standNumber) {
+  const total = await Stand.count({ where: { shopId } });
+  if (total === 0) return true;
+  const row = await Stand.findOne({ where: { shopId, standNumber, isActive: true } });
+  return !!row;
+}
 
 // Get all stock
 router.get('/all', async (req, res) => {
@@ -137,6 +146,9 @@ router.post('/update', requirePermission('ADD_STOCK'), async (req, res) => {
     const standNoValue = Number(standNo);
     if (!Number.isInteger(standNoValue) || standNoValue < 1) {
       return res.status(400).json('❌ Stand number must be greater than 0');
+    }
+    if (!(await isValidStand(user.shopId, standNoValue))) {
+      return res.status(400).json(`❌ Enter valid stand number. Stand #${standNoValue} does not exist`);
     }
 
     const quantityValue = Number(quantity);
@@ -380,6 +392,9 @@ router.post('/transfer', requirePermission('CREATE_TRANSFER'), async (req, res) 
     if (!Number.isInteger(fromStandValue) || fromStandValue < 1 ||
         !Number.isInteger(toStandValue) || toStandValue < 1) {
       return res.status(400).json('❌ Stand number must be greater than 0');
+    }
+    if (!(await isValidStand(user.shopId, toStandValue))) {
+      return res.status(400).json(`❌ Enter valid stand number. Stand #${toStandValue} does not exist`);
     }
 
     const transferQty = Number(quantity);

@@ -21,6 +21,7 @@ const GlassType = require('./GlassType')(sequelize);
 const StaffPermission = require('./StaffPermission')(sequelize);
 const OptimizationConfirmation = require('./OptimizationConfirmation')(sequelize);
 const InventoryMovement = require('./InventoryMovement')(sequelize);
+const Stand = require('./Stand')(sequelize);
 
 // Define associations
 // Shop associations
@@ -116,5 +117,6 @@ module.exports = {
   GlassType,
   StaffPermission,
   OptimizationConfirmation,
-  InventoryMovement
+  InventoryMovement,
+  Stand
 };

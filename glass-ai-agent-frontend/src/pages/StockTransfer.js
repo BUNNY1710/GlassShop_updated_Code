@@ -2,9 +2,11 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import PageWrapper from "../components/PageWrapper";
 import api from "../api/api";
+import { useStands } from "../api/standApi";
 
 function StockTransfer() {
   const navigate = useNavigate();
+  const { standNumbers } = useStands();
   const [step, setStep] = useState(1); // 1: Enter source stand, 2: Select stock, 3: Enter destination, 4: Confirm
   const [sourceStand, setSourceStand] = useState("");
   const [destinationStand, setDestinationStand] = useState("");
@@ -632,13 +634,10 @@ function StockTransfer() {
                 <label style={{ display: "block", marginBottom: "10px", color: "#A9B3D1", fontWeight: "600", fontSize: "14px", textTransform: "uppercase", letterSpacing: "0.08em" }}>
                   📍 Enter Destination Stand Number *
                 </label>
-                <input
-                  type="number"
+                <select
                   required
-                  min="1"
                   value={destinationStand}
                   onChange={(e) => setDestinationStand(e.target.value)}
-                  placeholder="Enter destination stand number..."
                   style={{
                     width: "100%",
                     padding: "14px",
@@ -651,12 +650,17 @@ function StockTransfer() {
                     boxSizing: "border-box",
                     outline: "none",
                   }}
-                  onFocus={(e) => (e.target.style.borderColor = "rgba(79,93,255,0.6)")}
-                  onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
                   autoFocus
-                />
+                >
+                  <option value="">Select destination stand</option>
+                  {standNumbers.map((n) => (
+                    <option key={n} value={n}>Stand #{n}</option>
+                  ))}
+                </select>
                 <p style={{ marginTop: "8px", color: "#7180A6", fontSize: "13px" }}>
-                  Enter the stand number where you want to transfer the stock
+                  {standNumbers.length === 0
+                    ? "No stands defined. Ask an admin to add stands in Stand Management."
+                    : "Select the stand where you want to transfer the stock"}
                 </p>
               </div>
 

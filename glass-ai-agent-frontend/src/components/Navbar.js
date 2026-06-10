@@ -505,6 +505,7 @@ function SidebarBody({ role, username, onNavClick }) {
             {showAdministration && <>
               <Section label="Administration" />
               <Item to="/staff-management"   icon={IC.staff}        label="Staff"        onClick={onNavClick} />
+              <Item to="/stand-management"   icon={IC.stock_manage} label="Stands"       onClick={onNavClick} />
               <Item to="/glass-price-master" icon={IC.price_master} label="Price Master" onClick={onNavClick} />
               <Item to="/ai"                 icon={IC.ai}           label="AI Assistant" onClick={onNavClick} />
               <Item to="/audit"              icon={IC.audit}        label="Audit Log"    onClick={onNavClick} />

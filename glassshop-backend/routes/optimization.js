@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const {
   sequelize, Stock, Glass, Quotation, AuditLog, User, Shop,
-  OptimizationConfirmation, InventoryMovement
+  OptimizationConfirmation, InventoryMovement, Stand
 } = require('../models');
 const { requireAnyPermission } = require('../middleware/auth');
 
@@ -67,11 +67,20 @@ router.post('/confirm', async (req, res) => {
     }
 
     // ── Step 2: create remnant stock entries ──
+    const standsTotal = await Stand.count({ where: { shopId }, transaction: t });
     let remnantsCreated = 0;
     for (const r of remnants) {
       const w = parseFloat(r.width), h = parseFloat(r.height);
       const standNo = parseInt(r.standNo, 10);
       if (!w || !h || !Number.isInteger(standNo) || standNo < 1) continue;
+      // Remnant must go to a valid stand (lenient if no stands defined).
+      if (standsTotal > 0) {
+        const validStand = await Stand.findOne({ where: { shopId, standNumber: standNo, isActive: true }, transaction: t });
+        if (!validStand) {
+          await t.rollback();
+          return res.status(400).json({ success: false, message: `Enter valid stand number. Stand #${standNo} does not exist` });
+        }
+      }
       const unit = (r.unit || 'MM').toUpperCase();
       const thickness = parseFloat(r.thickness) || null;
 

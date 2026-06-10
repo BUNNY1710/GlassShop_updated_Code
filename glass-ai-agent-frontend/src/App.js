@@ -10,6 +10,7 @@ import CreateStaff from "./pages/CreateStaff";
 import AuditLog from "./pages/AuditLog";
 import ManageStaff from "./pages/ManageStaff";
 import StaffManagement from "./pages/StaffManagement";
+import StandManagement from "./pages/StandManagement";
 import Profile from "./pages/Profile";
 import CustomerManagement from "./pages/CustomerManagement";
 import QuotationManagement from "./pages/QuotationManagement";
@@ -141,6 +142,12 @@ function App() {
         <Route
           path="/staff-management"
           element={<RequireAdmin><StaffManagement /></RequireAdmin>}
+        />
+
+        {/* Stand Management (admin-only) */}
+        <Route
+          path="/stand-management"
+          element={<RequireAdmin><StandManagement /></RequireAdmin>}
         />
 
         {/* Profile — accessible to all logged-in users */}

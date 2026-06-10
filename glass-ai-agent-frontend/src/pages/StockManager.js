@@ -3,6 +3,7 @@ import api from "../api/api";
 import ConfirmModal from "../components/ConfirmModal";
 import GlassTypeManager from "../components/GlassTypeManager";
 import { useGlassTypes } from "../api/glassTypeApi";
+import { useStands } from "../api/standApi";
 import { hasPermission } from "../utils/permissions";
 import "../styles/design-system.css";
 
@@ -29,6 +30,9 @@ function StockManager() {
   // Glass-type master (dynamic — no hardcoded dropdown values)
   const { names: glassTypeNames, reload: reloadGlassTypes } = useGlassTypes();
   const [showGlassMgr, setShowGlassMgr] = useState(false);
+
+  // Stand master — only valid stands are selectable
+  const { standNumbers } = useStands();
 
   // Default glass type options
   const defaultGlassTypeOptions = [
@@ -99,6 +103,10 @@ function StockManager() {
     const standNoValue = Number(standNo);
     if (!Number.isInteger(standNoValue) || standNoValue < 1) {
       setStockMessage("❌ Stand number must be 1 or greater (whole numbers only)");
+      return;
+    }
+    if (standNumbers.length > 0 && !standNumbers.includes(standNoValue)) {
+      setStockMessage(`❌ Enter valid stand number. Stand #${standNoValue} does not exist`);
       return;
     }
 
@@ -263,10 +271,13 @@ function StockManager() {
     gap: 14,
   };
 
-  // Stand number must be a positive integer (≥ 1). No 0, negatives, decimals, blank.
+  // Stand must be a valid, existing stand (from Stand Management). Lenient only
+  // if no stands are defined yet (standNumbers empty).
   const standNoNum = Number(standNo);
   const standNoTouched = standNo !== "";
-  const standNoInvalid = !standNoTouched || !Number.isInteger(standNoNum) || standNoNum < 1;
+  const standNoInvalid = !standNoTouched
+    || !Number.isInteger(standNoNum) || standNoNum < 1
+    || (standNumbers.length > 0 && !standNumbers.includes(standNoNum));
 
   // Quantity (amount to add/remove) must be a whole number ≥ 1. No 0, negatives, blank.
   const quantityNum = Number(quantity);
@@ -534,20 +545,26 @@ function StockManager() {
 
         <div style={formGrid2}>
           <div>
-            <label style={fieldLabel}>Stand Number <span style={{ color: "#FF6B81" }}>*</span></label>
-            <input
-              type="number"
-              min="1"
-              step="1"
-              placeholder="Enter stand number"
+            <label style={fieldLabel}>Stand <span style={{ color: "#FF6B81" }}>*</span></label>
+            <select
               value={standNo}
               onChange={e => setStandNo(e.target.value)}
-              style={{ ...darkInput, border: standNoTouched && standNoInvalid ? "1.5px solid #FF6B81" : darkInput.border }}
+              style={{ ...darkSelect, border: standNoTouched && standNoInvalid ? "1.5px solid #FF6B81" : darkSelect.border }}
               required
-            />
-            {standNoTouched && standNoInvalid && (
+            >
+              <option value="">Select stand</option>
+              {standNumbers.map(n => (
+                <option key={n} value={n}>Stand #{n}</option>
+              ))}
+            </select>
+            {standNumbers.length === 0 && (
+              <p style={{ marginTop: 6, color: "#FFB95E", fontSize: 12 }}>
+                No stands defined yet. Ask an admin to add stands in Stand Management.
+              </p>
+            )}
+            {standNoTouched && standNoInvalid && standNumbers.length > 0 && (
               <p style={{ marginTop: 6, color: "#FF6B81", fontSize: 12, fontWeight: 500 }}>
-                ⚠️ Stand number must be 1 or greater (whole numbers only).
+                ⚠️ Enter valid stand number. Stand #{standNo} does not exist.
               </p>
             )}
           </div>

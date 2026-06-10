@@ -15,7 +15,7 @@
 'use strict';
 
 const bcrypt = require('bcryptjs');
-const { Shop, User, Customer, Architect, Glass, Stock, GlassPriceMaster, GlassType } = require('../models');
+const { Shop, User, Customer, Architect, Glass, Stock, GlassPriceMaster, GlassType, Stand } = require('../models');
 
 // Default glass-type catalogue seeded for every shop.
 const DEFAULT_GLASS_TYPES = [
@@ -46,6 +46,17 @@ async function seedGlassTypes(shopId) {
     await GlassType.findOrCreate({
       where:    { shopId, name },
       defaults: { shopId, name, isActive: true },
+    });
+  }
+}
+
+// ─── stands master (default 1..5 for every shop) ───────────────────────────────
+
+async function seedStands(shopId) {
+  for (let n = 1; n <= 5; n++) {
+    await Stand.findOrCreate({
+      where:    { shopId, standNumber: n },
+      defaults: { shopId, standNumber: n, isActive: true },
     });
   }
 }
@@ -147,6 +158,7 @@ async function runSeeder() {
     const shop = await seedShop();
     await seedAdmin(shop.id);
     await seedGlassTypes(shop.id);
+    await seedStands(shop.id);
 
     const isDev      = process.env.NODE_ENV !== 'production';
     const forceSeed  = process.env.SEED_SAMPLE_DATA === 'true';
