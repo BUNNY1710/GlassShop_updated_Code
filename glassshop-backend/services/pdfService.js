@@ -227,55 +227,57 @@ function drawInfoSection(doc, y, left, right) {
   const rx   = LX + HALF;
   const PAD  = 6;
   const TH   = 15;   // orange strip height
+  const colW = HALF - PAD * 2;
 
-  // Calculate height needed
-  const lLines = (left.lines || []).filter(Boolean);
-  const rLines = (right ? (right.lines || []) : []).filter(Boolean);
-  const lH = TH + PAD + lLines.reduce((h, ln, i) => h + (i === 0 ? 14 : 12), 0) + PAD;
-  const rH = TH + PAD + rLines.reduce((h, ln, i) => h + (i === 0 ? 14 : 12), 0) + PAD;
+  // First line (name) is bold/larger; remaining lines (mobile, address, site)
+  // are regular and WRAP. Address can be multi-line / very long (≤ 500 chars).
+  const fontFor = (i) => { doc.fontSize(i === 0 ? 11 : 8.5).font(i === 0 ? 'Helvetica-Bold' : 'Helvetica'); };
+  const gapFor  = (i) => (i === 0 ? 3 : 2);          // intra-paragraph line gap
+  const padFor  = (i) => (i === 0 ? 3 : 2);          // extra space after each entry
+
+  const lLines = (left.lines || []).filter(Boolean).map(String);
+  const rLines = (right ? (right.lines || []) : []).filter(Boolean).map(String);
+
+  // Measure a column's wrapped content height (font must be set before measuring).
+  const measure = (lines) => lines.reduce((h, ln, i) => {
+    fontFor(i);
+    return h + doc.heightOfString(ln, { width: colW, lineGap: gapFor(i) }) + padFor(i);
+  }, 0);
+
+  const lH = TH + PAD + measure(lLines) + PAD;
+  const rH = TH + PAD + measure(rLines) + PAD;
   const bh = Math.max(lH, rH, 52);
 
-  // Outer border
+  // Outer border (height auto-expanded to fit the wrapped address)
   doc.rect(lx, y, CW, bh).strokeColor(BORDER).lineWidth(0.7).stroke();
+
+  // Renders one column of wrapped lines, advancing Y by each line's real height.
+  const renderColumn = (lines, x) => {
+    let ly = y + TH + PAD;
+    lines.forEach((ln, i) => {
+      fontFor(i);
+      doc.fillColor(i === 0 ? DARK : GRAY);
+      const lineGap = gapFor(i);
+      doc.text(ln, x + PAD, ly, { width: colW, lineGap });
+      ly += doc.heightOfString(ln, { width: colW, lineGap }) + padFor(i);
+    });
+  };
 
   // Left orange header
   doc.rect(lx, y, HALF, TH).fill(ORANGE);
   doc.fontSize(8).font('Helvetica-Bold').fillColor(WHITE)
-     .text((left.title || '').toUpperCase(), lx + PAD, y + 4,
-           { width: HALF - PAD * 2, lineBreak: false });
-
-  // Left data lines
-  let ly = y + TH + PAD;
-  lLines.forEach((ln, i) => {
-    if (i === 0) {
-      doc.fontSize(11).font('Helvetica-Bold').fillColor(DARK);
-    } else {
-      doc.fontSize(8.5).font('Helvetica').fillColor(GRAY);
-    }
-    doc.text(String(ln), lx + PAD, ly, { width: HALF - PAD * 2, lineBreak: false });
-    ly += i === 0 ? 14 : 12;
-  });
+     .text((left.title || '').toUpperCase(), lx + PAD, y + 4, { width: colW, lineBreak: false });
+  renderColumn(lLines, lx);
 
   // Vertical divider
   doc.moveTo(rx, y).lineTo(rx, y + bh).strokeColor(BORDER).lineWidth(0.6).stroke();
 
-  // Right orange header
+  // Right orange header + lines
   if (right) {
     doc.rect(rx, y, HALF, TH).fill(ORANGE);
     doc.fontSize(8).font('Helvetica-Bold').fillColor(WHITE)
-       .text((right.title || '').toUpperCase(), rx + PAD, y + 4,
-             { width: HALF - PAD * 2, lineBreak: false });
-
-    let ry2 = y + TH + PAD;
-    rLines.forEach((ln, i) => {
-      if (i === 0) {
-        doc.fontSize(10).font('Helvetica-Bold').fillColor(DARK);
-      } else {
-        doc.fontSize(8.5).font('Helvetica').fillColor(GRAY);
-      }
-      doc.text(String(ln), rx + PAD, ry2, { width: HALF - PAD * 2, lineBreak: false });
-      ry2 += i === 0 ? 14 : 12;
-    });
+       .text((right.title || '').toUpperCase(), rx + PAD, y + 4, { width: colW, lineBreak: false });
+    renderColumn(rLines, rx);
   }
 
   return y + bh;
