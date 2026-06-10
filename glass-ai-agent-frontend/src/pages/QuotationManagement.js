@@ -3175,10 +3175,17 @@ function QuotationManagement() {
                             const quantity = parseFloat(item.quantity) || 1;
                             const sellingPrice = parseFloat(item.sellingPrice || item.ratePerSqft) || 0;
                             if (height > 0 && width > 0 && sellingPrice > 0) {
-                              const areaInSqFt = (height * width) / 144;
+                              // Convert to feet per the selected unit (MM ÷ 304.8,
+                              // INCH ÷ 12, FEET ×1) — never treat MM as inches.
+                              const hFt = convertToFeet(height, item.heightUnit || "FEET");
+                              const wFt = convertToFeet(width, item.widthUnit || "FEET");
+                              const areaInSqFt = hFt * wFt;
                               const totalArea = areaInSqFt * quantity;
                               const totalPrice = sellingPrice * totalArea;
-                              return ` | Default Total: ₹${totalPrice.toFixed(2)} (${totalArea.toFixed(2)} SqFt × ₹${sellingPrice.toFixed(2)})`;
+                              const mmNote = (item.heightUnit === "MM" || item.widthUnit === "MM")
+                                ? ` · ${(height / 25.4).toFixed(2)} × ${(width / 25.4).toFixed(2)} IN`
+                                : "";
+                              return ` | Default Total: ₹${totalPrice.toFixed(2)} (${totalArea.toFixed(2)} SqFt × ₹${sellingPrice.toFixed(2)})${mmNote}`;
                             }
                             return "";
                           })()}
