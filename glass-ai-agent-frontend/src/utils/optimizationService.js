@@ -391,33 +391,42 @@ export const optimizeGlobal = (pieces, allStock) => {
       const stockId = stock.id != null
         ? `id-${stock.id}`
         : `stand-${stock.standNo}-${stock.glassId}`;
-      const used = usedCounts[stockId] || 0;
-      if (used >= (stock.quantity || 1)) continue;
 
-      const cut = planCuts(remaining, stock);
-      if (!cut || cut.placed.length === 0) continue;
+      // A stand with quantity N is N physical sheets. Consume them one at a
+      // time — each sheet packs the next batch of remaining pieces — until the
+      // quantity is exhausted, all orders are placed, or nothing more fits.
+      const maxSheets = Math.max(1, parseInt(stock.quantity, 10) || 1);
+      let used = usedCounts[stockId] || 0;
 
-      const placedPieces = cut.placed.map(p => p.piece);
-      const placedKeys   = new Set(placedPieces.map(p => p.key));
+      while (remaining.length > 0 && used < maxSheets) {
+        const cut = planCuts(remaining, stock);
+        // Nothing fits on a fresh sheet of this stand (every remaining piece is
+        // too big) — no point burning more of its quantity; move to next stock.
+        if (!cut || cut.placed.length === 0) break;
 
-      const isMirror     = isMirrorGlass(stock.glass?.type);
-      const su           = (stock.glass?.unit || 'MM').toUpperCase();
-      const remnantHmm   = cut.remnant ? toMM(cut.remnant.h, su) : 0;
-      const mirrorUndesirable = isMirror &&
-        remnantHmm > 0.01 && remnantHmm < MIRROR_MIN_REMNANT_MM;
+        const placedPieces = cut.placed.map(p => p.piece);
+        const placedKeys   = new Set(placedPieces.map(p => p.key));
 
-      sheetPlans.push({
-        stock,
-        orders: placedPieces,
-        cuttingPlan: cut,
-        efficiency: cut.stockArea > 0
-          ? Math.round((cut.usedArea / cut.stockArea) * 10000) / 100
-          : 0,
-        mirrorUndesirable,
-      });
+        const isMirror     = isMirrorGlass(stock.glass?.type);
+        const su           = (stock.glass?.unit || 'MM').toUpperCase();
+        const remnantHmm   = cut.remnant ? toMM(cut.remnant.h, su) : 0;
+        const mirrorUndesirable = isMirror &&
+          remnantHmm > 0.01 && remnantHmm < MIRROR_MIN_REMNANT_MM;
 
-      usedCounts[stockId] = used + 1;
-      remaining = remaining.filter(p => !placedKeys.has(p.key));
+        sheetPlans.push({
+          stock,
+          orders: placedPieces,
+          cuttingPlan: cut,
+          efficiency: cut.stockArea > 0
+            ? Math.round((cut.usedArea / cut.stockArea) * 10000) / 100
+            : 0,
+          mirrorUndesirable,
+        });
+
+        used += 1;
+        usedCounts[stockId] = used;
+        remaining = remaining.filter(p => !placedKeys.has(p.key));
+      }
     }
 
     unplacedPieces.push(...remaining);
