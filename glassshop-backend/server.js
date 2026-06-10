@@ -49,6 +49,7 @@ const invoiceRoutes = require('./routes/invoice');
 const auditRoutes = require('./routes/audit');
 const aiRoutes = require('./routes/ai');
 const glassPriceMasterRoutes = require('./routes/glassPriceMaster');
+const glassTypeRoutes = require('./routes/glassTypes');
 const architectRoutes = require('./routes/architect');
 const settingsRoutes  = require('./routes/settings');
 
@@ -128,6 +129,7 @@ app.use('/api/invoices', authMiddleware, invoiceRoutes);
 app.use('/api/audit', authMiddleware, auditRoutes);
 app.use('/api/ai', authMiddleware, aiRoutes);
 app.use('/api/glass-price-master', authMiddleware, glassPriceMasterRoutes);
+app.use('/api/glass-types', authMiddleware, glassTypeRoutes);
 app.use('/api/architects', authMiddleware, architectRoutes);
 app.use('/api/settings',  authMiddleware, settingsRoutes);
 

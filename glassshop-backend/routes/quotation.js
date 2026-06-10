@@ -1,14 +1,22 @@
 const express = require('express');
 const router = express.Router();
 const { Quotation, QuotationItem, Customer, Architect, User, Shop, Stock, Glass } = require('../models');
-const { requireAdmin } = require('../middleware/auth');
+const { requirePermission, requireAnyPermission } = require('../middleware/auth');
 const pdfService = require('../services/pdfService');
 
-// Note: Most routes are accessible to both admin and staff
-// Only confirm/reject route requires admin access
+// Baseline: quotation data is consumed by several modules (optimization,
+// invoices, customers, dashboard). Allow access to anyone who can view any of
+// those pages so a visible page never 403s. Mutating endpoints below add a
+// strict per-action permission. Admin bypasses everything.
+router.use(requireAnyPermission(
+  'VIEW_QUOTATION', 'CREATE_QUOTATION', 'EDIT_QUOTATION', 'DELETE_QUOTATION',
+  'VIEW_OPTIMIZATION', 'RUN_OPTIMIZATION', 'VIEW_PLANS',
+  'VIEW_INVOICE', 'CREATE_INVOICE',
+  'VIEW_CUSTOMER', 'VIEW_DASHBOARD'
+));
 
-// Create quotation (admin only)
-router.post('/', requireAdmin, async (req, res) => {
+// Create quotation
+router.post('/', requirePermission('CREATE_QUOTATION'), async (req, res) => {
   try {
     const user = await User.findOne({
       where: { userName: req.user.username },
@@ -297,7 +305,7 @@ router.get('/status/:status', async (req, res) => {
 });
 
 // Confirm quotation (Admin only)
-router.put('/:id/confirm', requireAdmin, async (req, res) => {
+router.put('/:id/confirm', requirePermission('EDIT_QUOTATION'), async (req, res) => {
   try {
     const user = await User.findOne({
       where: { userName: req.user.username },
@@ -351,7 +359,7 @@ router.put('/:id/confirm', requireAdmin, async (req, res) => {
 });
 
 // Delete quotation (admin only)
-router.delete('/:id', requireAdmin, async (req, res) => {
+router.delete('/:id', requirePermission('DELETE_QUOTATION'), async (req, res) => {
   try {
     const user = await User.findOne({
       where: { userName: req.user.username },

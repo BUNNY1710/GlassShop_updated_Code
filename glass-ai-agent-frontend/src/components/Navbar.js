@@ -1,6 +1,7 @@
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+import { hasPermission, hasAnyPermission, isAdmin } from "../utils/permissions";
 
 function getUsername() {
   try {
@@ -466,45 +467,51 @@ function SidebarBody({ role, username, onNavClick }) {
         </div>
       </div>
 
-      {/* Navigation */}
-      <nav style={{ flex: 1, overflowY: "auto", padding: "4px 8px 12px", scrollbarWidth: "none" }}>
-        <Section label="Overview" />
-        <Item to="/dashboard" icon={IC.dashboard} label="Dashboard" onClick={onNavClick} />
+      {/* Navigation — gated by permission (admin sees everything) */}
+      {(() => {
+        const admin          = isAdmin();
+        const showDashboard  = hasPermission("VIEW_DASHBOARD");
+        const showViewStock  = hasPermission("VIEW_STOCK");
+        const showManage     = hasAnyPermission(["VIEW_STOCK", "ADD_STOCK", "EDIT_STOCK", "DELETE_STOCK"]);
+        const showTransfer   = hasAnyPermission(["VIEW_TRANSFER", "CREATE_TRANSFER"]);
+        const showOptim      = hasAnyPermission(["VIEW_OPTIMIZATION", "RUN_OPTIMIZATION", "VIEW_PLANS"]);
+        const showCustomers  = hasPermission("VIEW_CUSTOMER");
+        const showQuotations = hasPermission("VIEW_QUOTATION");
+        const showInvoices   = hasPermission("VIEW_INVOICE");
 
-        <Section label="Inventory" />
-        <Item to="/view-stock" icon={IC.stock_view} label="View Stock" onClick={onNavClick} />
+        const showInventory      = showViewStock || showManage || showTransfer;
+        const showBilling        = showCustomers || showQuotations || showInvoices || showOptim;
+        const showAdministration = admin;
 
-        {role === "ROLE_ADMIN" && (
-          <>
-            <Item to="/manage-stock"   icon={IC.stock_manage} label="Manage Stock"   onClick={onNavClick} />
-            <Item to="/stock-transfer" icon={IC.transfer}     label="Transfer Stock" onClick={onNavClick} />
-          </>
-        )}
+        return (
+          <nav style={{ flex: 1, overflowY: "auto", padding: "4px 8px 12px", scrollbarWidth: "none" }}>
+            {showDashboard && <>
+              <Section label="Overview" />
+              <Item to="/dashboard" icon={IC.dashboard} label="Dashboard" onClick={onNavClick} />
+            </>}
 
-        {role === "ROLE_STAFF" && (
-          <>
-            <Section label="Tools" />
-            <Item to="/optimization" icon={IC.optimization} label="Optimization" onClick={onNavClick} />
-          </>
-        )}
+            {showInventory && <Section label="Inventory" />}
+            {showViewStock && <Item to="/view-stock"     icon={IC.stock_view}   label="View Stock"     onClick={onNavClick} />}
+            {showManage    && <Item to="/manage-stock"   icon={IC.stock_manage} label="Manage Stock"   onClick={onNavClick} />}
+            {showTransfer  && <Item to="/stock-transfer" icon={IC.transfer}     label="Transfer Stock" onClick={onNavClick} />}
 
-        {role === "ROLE_ADMIN" && (
-          <>
-            <Section label="Billing" />
-            <Item to="/customers"    icon={IC.customers}    label="Customers"    onClick={onNavClick} />
-            <Item to="/architects"   icon={IC.architects}   label="Architects"   onClick={onNavClick} />
-            <Item to="/quotations"   icon={IC.quotations}   label="Quotations"   onClick={onNavClick} />
-            <Item to="/invoices"     icon={IC.invoices}     label="Invoices"     onClick={onNavClick} />
-            <Item to="/optimization" icon={IC.optimization} label="Optimization" onClick={onNavClick} />
+            {showBilling && <Section label="Billing & Tools" />}
+            {showCustomers  && <Item to="/customers"    icon={IC.customers}    label="Customers"    onClick={onNavClick} />}
+            {admin          && <Item to="/architects"   icon={IC.architects}   label="Architects"   onClick={onNavClick} />}
+            {showQuotations && <Item to="/quotations"   icon={IC.quotations}   label="Quotations"   onClick={onNavClick} />}
+            {showInvoices   && <Item to="/invoices"     icon={IC.invoices}     label="Invoices"     onClick={onNavClick} />}
+            {showOptim      && <Item to="/optimization" icon={IC.optimization} label="Optimization" onClick={onNavClick} />}
 
-            <Section label="Administration" />
-            <Item to="/staff-management"   icon={IC.staff}        label="Staff"        onClick={onNavClick} />
-            <Item to="/glass-price-master" icon={IC.price_master} label="Price Master" onClick={onNavClick} />
-            <Item to="/ai"                 icon={IC.ai}           label="AI Assistant" onClick={onNavClick} />
-            <Item to="/audit"              icon={IC.audit}        label="Audit Log"    onClick={onNavClick} />
-          </>
-        )}
-      </nav>
+            {showAdministration && <>
+              <Section label="Administration" />
+              <Item to="/staff-management"   icon={IC.staff}        label="Staff"        onClick={onNavClick} />
+              <Item to="/glass-price-master" icon={IC.price_master} label="Price Master" onClick={onNavClick} />
+              <Item to="/ai"                 icon={IC.ai}           label="AI Assistant" onClick={onNavClick} />
+              <Item to="/audit"              icon={IC.audit}        label="Audit Log"    onClick={onNavClick} />
+            </>}
+          </nav>
+        );
+      })()}
 
       {/* Profile area */}
       <div style={{

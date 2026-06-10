@@ -963,7 +963,11 @@ export default function OptimizationPage() {
         setStock((Array.isArray(sR.data) ? sR.data : []).filter(s => s.quantity > 0));
         if (pR.data?.shop?.shopName) setShopName(pR.data.shop.shopName);
         if (pR.data?.userName) setUserName(pR.data.userName);
-      } catch { setError("Failed to load data."); }
+      } catch (e) {
+        setError(e?.response?.status === 403
+          ? "Access Denied — you do not have permission to view optimization data. Ask an admin to grant View Optimization (and View Stock / View Quotations)."
+          : "Unable to load data. Please try again.");
+      }
       finally { setLoading(false); }
     })();
   }, []);

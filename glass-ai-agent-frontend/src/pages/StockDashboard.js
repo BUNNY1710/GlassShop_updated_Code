@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import api from "../api/api";
 import ConfirmModal from "../components/ConfirmModal";
 import { getUserRole } from "../utils/auth";
+import { useGlassTypes } from "../api/glassTypeApi";
 import "../styles/design-system.css";
 
 // Short unit label: INCH→in, FEET→ft, MM→mm
@@ -71,6 +72,8 @@ const convertFromMM = (valueInMM, targetUnit) => {
 };
 
 function StockDashboard() {
+  // Glass type options (dynamic — from the Glass Type master)
+  const { names: glassTypeOptionsDyn } = useGlassTypes();
   const [allStock, setAllStock] = useState([]);
   const [globalSearch, setGlobalSearch] = useState("");
   const [filterThickness, setFilterThickness] = useState("");
@@ -1123,10 +1126,10 @@ function StockDashboard() {
                   style={darkSelect}
                 >
                   <option value="">Select glass type</option>
-                  {["Plan","Extra Clear","Grey Tinted","Brown Tinted","One Way","Star","Karakachi","Bajari","Diomand","Mirror"].map(t => (
+                  {glassTypeOptionsDyn.map(t => (
                     <option key={t} value={t}>{t}</option>
                   ))}
-                  {!["Plan","Extra Clear","Grey Tinted","Brown Tinted","One Way","Star","Karakachi","Bajari","Diomand","Mirror"].includes(editGlassType) && editGlassType && (
+                  {!glassTypeOptionsDyn.includes(editGlassType) && editGlassType && (
                     <option value={editGlassType}>{editGlassType}</option>
                   )}
                 </select>

@@ -4,6 +4,8 @@ import PageWrapper from "../components/PageWrapper";
 import api from "../api/api";
 import { useResponsive } from "../hooks/useResponsive";
 import { getUserRole } from "../utils/auth";
+import { useGlassTypes } from "../api/glassTypeApi";
+import GlassTypeManager from "../components/GlassTypeManager";
 import "../styles/design-system.css";
 
 function GlassPriceMaster() {
@@ -29,19 +31,9 @@ function GlassPriceMaster() {
   const [message, setMessage] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(null); // { id, glassType, thickness }
 
-  // Default glass type options
-  const defaultGlassTypeOptions = [
-    "Plan",
-    "Extra Clear",
-    "Grey Tinted",
-    "Brown Tinted",
-    "One Way",
-    "Star",
-    "Karakachi",
-    "Bajari",
-    "Diomand",
-    "Mirror"
-  ];
+  // Glass type options (dynamic — from the Glass Type master)
+  const { names: defaultGlassTypeOptions, reload: reloadGlassTypes } = useGlassTypes();
+  const [showGlassMgr, setShowGlassMgr] = useState(false);
 
   // Load custom glass types from localStorage (same as Manage Stock)
   const [customGlassTypes, setCustomGlassTypes] = useState(() => {
@@ -311,6 +303,12 @@ function GlassPriceMaster() {
               onClick={() => { setShowPending(true); loadPriceMaster(); }}
             >
               Pending ({pendingCount})
+            </button>
+            <button
+              style={{ padding: "9px 18px", borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer", background: "rgba(79,93,255,0.12)", color: "#818CF8", border: "1px solid rgba(79,93,255,0.3)" }}
+              onClick={() => setShowGlassMgr(true)}
+            >
+              ⚙ Manage Glass Types
             </button>
             <button style={primaryBtn} onClick={handleAdd}>
               ➕ Add New
@@ -719,6 +717,11 @@ function GlassPriceMaster() {
           </div>
         </div>
       )}
+      <GlassTypeManager
+        open={showGlassMgr}
+        onClose={() => setShowGlassMgr(false)}
+        onChanged={reloadGlassTypes}
+      />
     </PageWrapper>
   );
 }

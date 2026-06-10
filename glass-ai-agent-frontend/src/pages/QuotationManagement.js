@@ -2,6 +2,7 @@
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import PageWrapper from "../components/PageWrapper";
+import { useGlassTypes } from "../api/glassTypeApi";
 import {
   getCustomers,
   createCustomer,
@@ -1572,19 +1573,8 @@ function QuotationManagement() {
     setStockDropdownType({ ...stockDropdownType, [index]: null });
   };
 
-  // Glass type options
-  const glassTypeOptions = [
-    "Plan",
-    "Extra Clear",
-    "Grey Tinted",
-    "Brown Tinted",
-    "One Way",
-    "Star",
-    "Karakachi",
-    "Bajari",
-    "Diomand",
-    "Mirror"
-  ];
+  // Glass type options (dynamic — from the Glass Type master)
+  const { names: glassTypeOptions } = useGlassTypes();
 
   return (
     <PageWrapper>
@@ -2266,7 +2256,7 @@ function QuotationManagement() {
                   >
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        <div style={{ width: "24px", height: "24px", borderRadius: "50%", backgroundcolor: "#818CF8", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "700", fontSize: "12px" }}>
+                        <div style={{ width: "24px", height: "24px", borderRadius: "50%", backgroundColor: "#818CF8", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "700", fontSize: "12px" }}>
                           {index + 1}
                         </div>
                         <strong style={{ color: "#ffffff", fontSize: "14px" }}>Item {index + 1}</strong>
@@ -3535,7 +3525,7 @@ function QuotationManagement() {
                     onClick={handleAddItem}
                     style={{
                       padding: "12px 24px",
-                      backgroundcolor: "#818CF8",
+                      backgroundColor: "#818CF8",
                       color: "white",
                       border: "none",
                       borderRadius: "8px",
@@ -3676,7 +3666,7 @@ function QuotationManagement() {
                 <button
                   type="button"
                   onClick={() => { setShowForm(false); resetForm(); }}
-                  style={{ padding: "9px 20px", backgroundcolor: "#7180A6", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontWeight: "500", transition: "all 0.2s" }}
+                  style={{ padding: "9px 20px", backgroundColor: "#7180A6", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontWeight: "500", transition: "all 0.2s" }}
                   onMouseOver={(e) => (e.target.style.backgroundColor = "rgba(255,255,255,0.14)")}
                   onMouseOut={(e) => (e.target.style.backgroundColor = "rgba(255,255,255,0.08)")}
                 >
@@ -4382,7 +4372,7 @@ function QuotationManagement() {
                   style={{
                     flex: 1,
                     padding: "12px 24px",
-                    backgroundcolor: "#7180A6",
+                    backgroundColor: "#7180A6",
                     color: "white",
                     border: "none",
                     borderRadius: "8px",
@@ -4585,7 +4575,7 @@ function QuotationManagement() {
             onClick={() => navigate("/invoices")}
             style={{
               padding: "12px 32px",
-              backgroundcolor: "#818CF8",
+              backgroundColor: "#4F5DFF",
               color: "white",
               border: "none",
               borderRadius: "8px",

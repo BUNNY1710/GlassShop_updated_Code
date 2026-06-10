@@ -2,10 +2,11 @@ const express = require('express');
 const router = express.Router();
 const { Customer, Architect, User, Shop } = require('../models');
 const { Op } = require('sequelize');
-const { requireAdmin } = require('../middleware/auth');
+const { requirePermission } = require('../middleware/auth');
 
-// All customer routes require admin access
-router.use(requireAdmin);
+// Baseline: viewing customers requires VIEW_CUSTOMER (admin bypasses). Mutating
+// endpoints add a stricter permission below.
+router.use(requirePermission('VIEW_CUSTOMER'));
 
 // Validate and normalize mobile number
 const validateMobileNumber = (mobile) => {
@@ -42,7 +43,7 @@ const validateMobileNumber = (mobile) => {
 };
 
 // Create customer
-router.post('/', async (req, res) => {
+router.post('/', requirePermission('ADD_CUSTOMER'), async (req, res) => {
   try {
     const user = await User.findOne({
       where: { userName: req.user.username },
@@ -188,7 +189,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Update customer (Admin only)
-router.put('/:id', requireAdmin, async (req, res) => {
+router.put('/:id', requirePermission('EDIT_CUSTOMER'), async (req, res) => {
   try {
     const user = await User.findOne({
       where: { userName: req.user.username },
@@ -233,7 +234,7 @@ router.put('/:id', requireAdmin, async (req, res) => {
 
 // Delete customer
 // Delete customer (Admin only)
-router.delete('/:id', requireAdmin, async (req, res) => {
+router.delete('/:id', requirePermission('DELETE_CUSTOMER'), async (req, res) => {
   try {
     const user = await User.findOne({
       where: { userName: req.user.username },

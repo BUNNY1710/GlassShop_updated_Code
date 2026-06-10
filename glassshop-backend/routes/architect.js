@@ -2,9 +2,15 @@ const express = require('express');
 const router = express.Router();
 const { Architect, Customer, Quotation, Invoice, User, Shop } = require('../models');
 const { Op } = require('sequelize');
-const { requireAdmin } = require('../middleware/auth');
+const { requireAdmin, requireAnyPermission } = require('../middleware/auth');
 
-router.use(requireAdmin);
+// Architects are reference data shown on customer/quotation/invoice forms, so
+// allow read access to staff who can view those modules (admin bypasses).
+// Mutations stay admin-only via requireAdmin on each write endpoint below.
+router.use(requireAnyPermission(
+  'VIEW_CUSTOMER', 'VIEW_QUOTATION', 'CREATE_QUOTATION',
+  'VIEW_INVOICE', 'VIEW_DASHBOARD'
+));
 
 const validateMobile = (mobile) => {
   if (!mobile || mobile.trim() === '') return 'Mobile number is required';
@@ -28,7 +34,7 @@ const getShopId = async (username) => {
 
 // ── Create ────────────────────────────────────────────────────────────────────
 
-router.post('/', async (req, res) => {
+router.post('/', requireAdmin, async (req, res) => {
   try {
     const shopId = await getShopId(req.user.username);
     if (!shopId) return res.status(404).json({ error: 'User not linked to a shop' });
@@ -212,7 +218,7 @@ router.get('/:id/orders', async (req, res) => {
 
 // ── Update ────────────────────────────────────────────────────────────────────
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', requireAdmin, async (req, res) => {
   try {
     const shopId = await getShopId(req.user.username);
     if (!shopId) return res.status(404).json({ error: 'User not linked to a shop' });
@@ -236,7 +242,7 @@ router.put('/:id', async (req, res) => {
 
 // ── Delete ────────────────────────────────────────────────────────────────────
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requireAdmin, async (req, res) => {
   try {
     const shopId = await getShopId(req.user.username);
     if (!shopId) return res.status(404).json({ error: 'User not linked to a shop' });

@@ -2,6 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import PageWrapper from "../components/PageWrapper";
 import dashboardBg from "../assets/dashboard-bg.jpg";
+import { useGlassTypes } from "../api/glassTypeApi";
 import {
   createCustomer,
   getQuotations,
@@ -1323,19 +1324,8 @@ function StaffQuotationManagement() {
     setStockDropdownType({ ...stockDropdownType, [index]: null });
   };
 
-  // Glass type options
-  const glassTypeOptions = [
-    "Plan",
-    "Extra Clear",
-    "Grey Tinted",
-    "Brown Tinted",
-    "One Way",
-    "Star",
-    "Karakachi",
-    "Bajari",
-    "Diomand",
-    "Mirror"
-  ];
+  // Glass type options (dynamic — from the Glass Type master)
+  const { names: glassTypeOptions } = useGlassTypes();
 
   return (
     <PageWrapper backgroundImage={dashboardBg}>
@@ -2134,7 +2124,7 @@ function StaffQuotationManagement() {
                             width: "32px",
                             height: "32px",
                             borderRadius: "50%",
-                            backgroundcolor: "#818CF8",
+                            backgroundColor: "#818CF8",
                             color: "white",
                             display: "flex",
                             alignItems: "center",
@@ -3347,7 +3337,7 @@ function StaffQuotationManagement() {
                     onClick={handleAddItem}
                     style={{
                       padding: "12px 24px",
-                      backgroundcolor: "#818CF8",
+                      backgroundColor: "#818CF8",
                       color: "white",
                       border: "none",
                       borderRadius: "8px",
@@ -3393,7 +3383,7 @@ function StaffQuotationManagement() {
                   }}
                   style={{
                     padding: "12px 24px",
-                    backgroundcolor: "#7180A6",
+                    backgroundColor: "#7180A6",
                     color: "white",
                     border: "none",
                     borderRadius: "8px",

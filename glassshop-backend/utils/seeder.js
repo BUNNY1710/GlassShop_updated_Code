@@ -15,7 +15,13 @@
 'use strict';
 
 const bcrypt = require('bcryptjs');
-const { Shop, User, Customer, Architect, Glass, Stock, GlassPriceMaster } = require('../models');
+const { Shop, User, Customer, Architect, Glass, Stock, GlassPriceMaster, GlassType } = require('../models');
+
+// Default glass-type catalogue seeded for every shop.
+const DEFAULT_GLASS_TYPES = [
+  'Plain', 'Extra Clear', 'Grey Tinted', 'Brown Tinted', 'One Way',
+  'Star', 'Karakachi', 'Bajari', 'Diomand', 'Mirror', 'Toughened', 'Lacquered',
+];
 
 // ─── default shop ─────────────────────────────────────────────────────────────
 
@@ -31,6 +37,17 @@ async function seedShop() {
   });
   if (created) console.log('  ✅ Default shop created');
   return shop;
+}
+
+// ─── glass type master (always seeded for every shop) ───────────────────────────
+
+async function seedGlassTypes(shopId) {
+  for (const name of DEFAULT_GLASS_TYPES) {
+    await GlassType.findOrCreate({
+      where:    { shopId, name },
+      defaults: { shopId, name, isActive: true },
+    });
+  }
 }
 
 // ─── admin user ───────────────────────────────────────────────────────────────
@@ -84,10 +101,10 @@ async function seedSampleData(shopId) {
 
   // --- sample glass (Glass has NO shopId — it is shared across shops) ---
   const [glass, glassCreated] = await Glass.findOrCreate({
-    where:    { type: 'Plan', thickness: 5, unit: 'MM' },
-    defaults: { type: 'Plan', thickness: 5, unit: 'MM' },
+    where:    { type: 'Plain', thickness: 5, unit: 'MM' },
+    defaults: { type: 'Plain', thickness: 5, unit: 'MM' },
   });
-  if (glassCreated) console.log('  ✅ Sample Glass created  (Plan 5MM)');
+  if (glassCreated) console.log('  ✅ Sample Glass created  (Plain 5MM)');
 
   // --- sample stock entry ---
   const [, stockCreated] = await Stock.findOrCreate({
@@ -105,14 +122,14 @@ async function seedSampleData(shopId) {
       sellingPrice:  120,
     },
   });
-  if (stockCreated) console.log('  ✅ Sample Stock created  (Stand 1, Plan 5MM, Qty 10)');
+  if (stockCreated) console.log('  ✅ Sample Stock created  (Stand 1, Plain 5MM, Qty 10)');
 
   // --- sample price master entry ---
   const [, pmCreated] = await GlassPriceMaster.findOrCreate({
-    where:    { shopId, glassType: 'Plan', thickness: 5 },
+    where:    { shopId, glassType: 'Plain', thickness: 5 },
     defaults: {
       shopId,
-      glassType:     'Plan',
+      glassType:     'Plain',
       thickness:     5,
       purchasePrice: 80,
       sellingPrice:  120,
@@ -129,6 +146,7 @@ async function runSeeder() {
   try {
     const shop = await seedShop();
     await seedAdmin(shop.id);
+    await seedGlassTypes(shop.id);
 
     const isDev      = process.env.NODE_ENV !== 'production';
     const forceSeed  = process.env.SEED_SAMPLE_DATA === 'true';

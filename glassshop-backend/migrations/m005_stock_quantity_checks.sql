@@ -8,22 +8,11 @@
 --   * stock_history.quantity — the entered add/remove amount, always >= 1
 --                              -> CHECK (quantity >= 1)
 --
--- Both added NOT VALID so the migration never fails on pre-existing legacy
--- rows; the constraints are still enforced for all new and updated rows.
+-- NOTE: the migration runner splits on ";\n", so DO/$$ blocks cannot be used.
+-- Idempotent via DROP ... IF EXISTS + ADD. NOT VALID so pre-existing legacy
+-- rows never block the migration; enforced for new/updated rows.
 
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_constraint WHERE conname = 'chk_stock_quantity_nonneg'
-  ) THEN
-    ALTER TABLE stock
-      ADD CONSTRAINT chk_stock_quantity_nonneg CHECK (quantity >= 0) NOT VALID;
-  END IF;
-
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_constraint WHERE conname = 'chk_stock_history_quantity_positive'
-  ) THEN
-    ALTER TABLE stock_history
-      ADD CONSTRAINT chk_stock_history_quantity_positive CHECK (quantity >= 1) NOT VALID;
-  END IF;
-END $$;
+ALTER TABLE stock DROP CONSTRAINT IF EXISTS chk_stock_quantity_nonneg;
+ALTER TABLE stock ADD CONSTRAINT chk_stock_quantity_nonneg CHECK (quantity >= 0) NOT VALID;
+ALTER TABLE stock_history DROP CONSTRAINT IF EXISTS chk_stock_history_quantity_positive;
+ALTER TABLE stock_history ADD CONSTRAINT chk_stock_history_quantity_positive CHECK (quantity >= 1) NOT VALID;

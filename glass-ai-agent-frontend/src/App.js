@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "./auth/ProtectedRoute";
+import { hasAnyPermission } from "./utils/permissions";
 
 import Dashboard from "./pages/Dashboard";
 import StockManager from "./pages/StockManager";
@@ -29,6 +30,14 @@ const RequireAdmin = ({ children }) => {
     : <Navigate to="/access-denied" />;
 };
 
+// Permission-based route guard. Admin always passes (implicit ALL permissions);
+// staff must hold at least one of `anyOf`, else they hit Access Denied.
+const RequirePermission = ({ anyOf, children }) => {
+  const token = sessionStorage.getItem("token");
+  if (!token) return <Navigate to="/login" />;
+  return hasAnyPermission(anyOf) ? children : <Navigate to="/access-denied" />;
+};
+
 
 function App() {
   const isLoggedIn = sessionStorage.getItem("token");
@@ -43,17 +52,17 @@ function App() {
       <Route element={<Layout />}>
         <Route
           path="/dashboard"
-          element={<ProtectedRoute><Dashboard /></ProtectedRoute>}
+          element={<ProtectedRoute><RequirePermission anyOf={["VIEW_DASHBOARD"]}><Dashboard /></RequirePermission></ProtectedRoute>}
         />
 
         <Route
           path="/manage-stock"
-          element={<ProtectedRoute><StockManager /></ProtectedRoute>}
+          element={<ProtectedRoute><RequirePermission anyOf={["VIEW_STOCK","ADD_STOCK","EDIT_STOCK","DELETE_STOCK"]}><StockManager /></RequirePermission></ProtectedRoute>}
         />
 
         <Route
           path="/view-stock"
-          element={<ProtectedRoute><StockDashboard /></ProtectedRoute>}
+          element={<ProtectedRoute><RequirePermission anyOf={["VIEW_STOCK"]}><StockDashboard /></RequirePermission></ProtectedRoute>}
         />
 
         <Route
@@ -83,8 +92,8 @@ function App() {
         <Route
           path="/customers"
           element={
-            <ProtectedRoute allowedRoles={["ROLE_ADMIN"]}>
-              <CustomerManagement />
+            <ProtectedRoute>
+              <RequirePermission anyOf={["VIEW_CUSTOMER"]}><CustomerManagement /></RequirePermission>
             </ProtectedRoute>
           }
         />
@@ -92,8 +101,8 @@ function App() {
         <Route
           path="/quotations"
           element={
-            <ProtectedRoute allowedRoles={["ROLE_ADMIN"]}>
-              <QuotationManagement />
+            <ProtectedRoute>
+              <RequirePermission anyOf={["VIEW_QUOTATION"]}><QuotationManagement /></RequirePermission>
             </ProtectedRoute>
           }
         />
@@ -101,15 +110,15 @@ function App() {
         <Route
           path="/invoices"
           element={
-            <ProtectedRoute allowedRoles={["ROLE_ADMIN"]}>
-              <InvoiceManagement />
+            <ProtectedRoute>
+              <RequirePermission anyOf={["VIEW_INVOICE"]}><InvoiceManagement /></RequirePermission>
             </ProtectedRoute>
           }
         />
 
         <Route
           path="/stock-transfer"
-          element={<ProtectedRoute><StockTransfer /></ProtectedRoute>}
+          element={<ProtectedRoute><RequirePermission anyOf={["VIEW_TRANSFER","CREATE_TRANSFER"]}><StockTransfer /></RequirePermission></ProtectedRoute>}
         />
 
         <Route
@@ -120,7 +129,7 @@ function App() {
         {/* Optimization — accessible to both ROLE_ADMIN and ROLE_STAFF */}
         <Route
           path="/optimization"
-          element={<ProtectedRoute><OptimizationPage /></ProtectedRoute>}
+          element={<ProtectedRoute><RequirePermission anyOf={["VIEW_OPTIMIZATION","RUN_OPTIMIZATION","VIEW_PLANS"]}><OptimizationPage /></RequirePermission></ProtectedRoute>}
         />
 
         <Route

@@ -1,14 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const { Invoice, InvoiceItem, Payment, Quotation, QuotationItem, Customer, Architect, User, Shop } = require('../models');
-const { requireAdmin } = require('../middleware/auth');
+const { requirePermission } = require('../middleware/auth');
 const { generateInvoicePdf, generateBasicInvoicePdf, generateChallanPdf } = require('../services/pdfService');
 
-// Apply admin-only middleware
-router.use(requireAdmin);
+// Baseline: any invoice access requires VIEW_INVOICE (admin bypasses).
+// Mutating endpoints add a stricter permission below.
+router.use(requirePermission('VIEW_INVOICE'));
 
 // Create invoice from quotation
-router.post('/from-quotation', async (req, res) => {
+router.post('/from-quotation', requirePermission('CREATE_INVOICE'), async (req, res) => {
   try {
     const user = await User.findOne({
       where: { userName: req.user.username },
@@ -234,7 +235,7 @@ router.get('/payment-status/:status', async (req, res) => {
 });
 
 // Add payment
-router.post('/:id/payments', async (req, res) => {
+router.post('/:id/payments', requirePermission('EDIT_INVOICE'), async (req, res) => {
   try {
     const user = await User.findOne({
       where: { userName: req.user.username },

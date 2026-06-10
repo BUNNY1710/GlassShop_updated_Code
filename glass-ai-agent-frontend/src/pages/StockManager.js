@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import api from "../api/api";
 import ConfirmModal from "../components/ConfirmModal";
+import GlassTypeManager from "../components/GlassTypeManager";
+import { useGlassTypes } from "../api/glassTypeApi";
+import { hasPermission } from "../utils/permissions";
 import "../styles/design-system.css";
 
 function StockManager() {
@@ -23,9 +26,13 @@ function StockManager() {
   const [showUndo, setShowUndo] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
+  // Glass-type master (dynamic — no hardcoded dropdown values)
+  const { names: glassTypeNames, reload: reloadGlassTypes } = useGlassTypes();
+  const [showGlassMgr, setShowGlassMgr] = useState(false);
+
   // Default glass type options
   const defaultGlassTypeOptions = [
-    "Plan",
+    "Plain",
     "Extra Clear",
     "Grey Tinted",
     "Brown Tinted",
@@ -314,7 +321,17 @@ function StockManager() {
           {/* Glass Type value */}
           {glassTypeMode === "SELECT" ? (
             <div>
-              <label style={fieldLabel}>Glass Type <span style={{ color: "#FF6B81" }}>*</span></label>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                <label style={fieldLabel}>Glass Type <span style={{ color: "#FF6B81" }}>*</span></label>
+                <button
+                  type="button"
+                  onClick={() => setShowGlassMgr(true)}
+                  style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "rgba(79,93,255,0.12)", border: "1px solid rgba(79,93,255,0.3)", color: "#818CF8", borderRadius: 7, padding: "3px 9px", fontSize: 11.5, fontWeight: 700, cursor: "pointer", marginBottom: 6 }}
+                  title="Add, edit or delete glass types"
+                >
+                  ⚙ Manage
+                </button>
+              </div>
               <div>
                 <select
                   value={glassType}
@@ -323,7 +340,7 @@ function StockManager() {
                   required
                 >
                   <option value="">Select glass type</option>
-                  {defaultGlassTypeOptions.map((type) => (
+                  {glassTypeNames.map((type) => (
                     <option key={type} value={type}>{type}</option>
                   ))}
                   {customGlassTypes.length > 0 && (
@@ -583,6 +600,7 @@ function StockManager() {
 
       {/* ACTION BUTTONS */}
       <div style={{ display: "flex", gap: 12, marginBottom: 12 }}>
+        {hasPermission("ADD_STOCK") && (
         <button
           onClick={() => updateStock("ADD")}
           disabled={formInvalid}
@@ -591,6 +609,8 @@ function StockManager() {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Add Stock
         </button>
+        )}
+        {hasPermission("EDIT_STOCK") && (
         <button
           onClick={() => updateStock("REMOVE")}
           disabled={formInvalid}
@@ -599,6 +619,7 @@ function StockManager() {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Remove Stock
         </button>
+        )}
       </div>
 
       {showUndo && (
@@ -637,6 +658,12 @@ function StockManager() {
         payload={pendingPayload || {}}
         onCancel={() => setShowConfirm(false)}
         onConfirm={confirmSaveStock}
+      />
+
+      <GlassTypeManager
+        open={showGlassMgr}
+        onClose={() => setShowGlassMgr(false)}
+        onChanged={reloadGlassTypes}
       />
     </div>
   );

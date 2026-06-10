@@ -49,6 +49,7 @@ api.interceptors.response.use(
       // Clear token and role
       sessionStorage.removeItem("token");
       sessionStorage.removeItem("role");
+      sessionStorage.removeItem("permissions");
       
       // Redirect to login (only if not already on login page)
       if (window.location.pathname !== "/login") {

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/api";
 import { useResponsive } from "../hooks/useResponsive";
+import { storePermissions } from "../utils/permissions";
 import "../styles/design-system.css";
 
 /* ── Inline SVG helpers ─────────────────────────────────────────────────── */
@@ -46,6 +47,7 @@ function Login() {
       const res = await api.post("/api/auth/login", form);
       sessionStorage.setItem("token", res.data.token);
       sessionStorage.setItem("role", res.data.role);
+      storePermissions(res.data.permissions);
       navigate("/dashboard");
     } catch (err) {
       let errorMessage = "Invalid username or password";

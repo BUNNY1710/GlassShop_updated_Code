@@ -17,6 +17,8 @@ const AuditLog = require('./AuditLog')(sequelize);
 const Installation = require('./Installation')(sequelize);
 const Site = require('./Site')(sequelize);
 const GlassPriceMaster = require('./GlassPriceMaster')(sequelize);
+const GlassType = require('./GlassType')(sequelize);
+const StaffPermission = require('./StaffPermission')(sequelize);
 
 // Define associations
 // Shop associations
@@ -24,11 +26,15 @@ Shop.hasMany(Architect, { foreignKey: 'shopId', as: 'architects' });
 Shop.hasMany(User, { foreignKey: 'shopId', as: 'users' });
 Shop.hasMany(Stock, { foreignKey: 'shopId', as: 'stocks' });
 Shop.hasMany(Customer, { foreignKey: 'shopId', as: 'customers' });
+Shop.hasMany(GlassType, { foreignKey: 'shopId', as: 'glassTypes' });
+GlassType.belongsTo(Shop, { foreignKey: 'shopId', as: 'shop' });
 Shop.hasMany(Quotation, { foreignKey: 'shopId', as: 'quotations' });
 Shop.hasMany(Invoice, { foreignKey: 'shopId', as: 'invoices' });
 
 // User associations
 User.belongsTo(Shop, { foreignKey: 'shopId', as: 'shop' });
+User.hasMany(StaffPermission, { foreignKey: 'userId', as: 'permissions', onDelete: 'CASCADE' });
+StaffPermission.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
 // Stock associations
 Stock.belongsTo(Shop, { foreignKey: 'shopId', as: 'shop' });
@@ -104,5 +110,7 @@ module.exports = {
   AuditLog,
   Installation,
   Site,
-  GlassPriceMaster
+  GlassPriceMaster,
+  GlassType,
+  StaffPermission
 };

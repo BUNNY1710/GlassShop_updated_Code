@@ -1,9 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
-const { User, Shop } = require('../models');
+const { User, Shop, StaffPermission } = require('../models');
 const { generateToken } = require('../utils/jwt');
-const { authMiddleware, requireAdmin } = require('../middleware/auth');
+const { authMiddleware, requireAdmin, getUserPermissions } = require('../middleware/auth');
+const { PERMISSION_GROUPS, ALL_PERMISSIONS, isValidPermission } = require('../config/permissions');
+
+// Keep only valid, de-duplicated permission keys from a client-supplied array.
+const sanitizePermissions = (arr) =>
+  Array.isArray(arr) ? [...new Set(arr.filter(isValidPermission))] : [];
 
 // Register shop (Public)
 router.post('/register-shop', async (req, res) => {
@@ -87,14 +92,22 @@ router.post('/create-staff', authMiddleware, requireAdmin, async (req, res) => {
 
     // Create staff user
     const hashedPassword = await bcrypt.hash(password.trim(), 10);
-    await User.create({
+    const staff = await User.create({
       userName: username.trim(),
       password: hashedPassword,
       role: 'ROLE_STAFF',
       shopId: admin.shopId
     });
 
-    res.json({ message: 'Staff created successfully' });
+    // Save selected permissions
+    const perms = sanitizePermissions(req.body.permissions);
+    if (perms.length) {
+      await StaffPermission.bulkCreate(
+        perms.map(permissionKey => ({ userId: staff.id, permissionKey }))
+      );
+    }
+
+    res.json({ message: 'Staff created successfully', id: staff.id, permissions: perms });
   } catch (error) {
     console.error('Error creating staff:', error);
     // Handle Sequelize unique constraint error
@@ -132,10 +145,12 @@ router.post('/login', async (req, res) => {
     }
 
     const token = generateToken(user.userName, user.role);
+    const permissions = await getUserPermissions(user);
 
     res.json({
       token,
-      role: user.role
+      role: user.role,
+      permissions
     });
   } catch (error) {
     res.status(500).json({ error: 'Login failed: ' + error.message });
@@ -160,11 +175,14 @@ router.get('/profile', authMiddleware, async (req, res) => {
       return res.status(404).json({ error: `User not found: ${username}. Please register or log in again.` });
     }
 
+    const permissions = await getUserPermissions(user);
+
     res.json({
       username: user.userName,
       role: user.role,
       shopId: user.shop ? user.shop.id : null,
-      shopName: user.shop ? user.shop.shopName : null
+      shopName: user.shop ? user.shop.shopName : null,
+      permissions
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -217,10 +235,21 @@ router.get('/staff', authMiddleware, requireAdmin, async (req, res) => {
       where: {
         shopId: admin.shopId,
         role: 'ROLE_STAFF'
-      }
+      },
+      include: [{ model: StaffPermission, as: 'permissions' }]
     });
 
-    res.json(staff);
+    res.json(staff.map(s => {
+      const perms = (s.permissions || []).map(p => p.permissionKey);
+      return {
+        id: s.id,
+        userName: s.userName,
+        role: s.role,
+        shopId: s.shopId,
+        permissions: perms,
+        permissionCount: perms.length
+      };
+    }));
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -252,6 +281,52 @@ router.delete('/staff/:id', authMiddleware, requireAdmin, async (req, res) => {
     res.json({ message: 'Staff removed' });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+// Permission catalogue (Admin only) — drives the staff permission UI.
+router.get('/permissions/catalog', authMiddleware, requireAdmin, (req, res) => {
+  res.json({ groups: PERMISSION_GROUPS, all: ALL_PERMISSIONS });
+});
+
+// Get a staff member's permissions (Admin only)
+router.get('/staff/:id/permissions', authMiddleware, requireAdmin, async (req, res) => {
+  try {
+    const admin = await User.findOne({ where: { userName: req.user.username } });
+    if (!admin) return res.status(404).json({ error: 'Admin not found' });
+
+    const staff = await User.findOne({ where: { id: req.params.id, shopId: admin.shopId } });
+    if (!staff) return res.status(404).json({ error: 'Staff not found or not in your shop' });
+
+    const rows = await StaffPermission.findAll({ where: { userId: staff.id } });
+    res.json({ id: staff.id, username: staff.userName, permissions: rows.map(r => r.permissionKey) });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Replace a staff member's permissions (Admin only)
+router.put('/staff/:id/permissions', authMiddleware, requireAdmin, async (req, res) => {
+  try {
+    const admin = await User.findOne({ where: { userName: req.user.username } });
+    if (!admin) return res.status(404).json({ error: 'Admin not found' });
+
+    const staff = await User.findOne({ where: { id: req.params.id, shopId: admin.shopId } });
+    if (!staff) return res.status(404).json({ error: 'Staff not found or not in your shop' });
+    if (staff.role !== 'ROLE_STAFF') {
+      return res.status(400).json({ error: 'Permissions can only be set on staff users (admins have all permissions)' });
+    }
+
+    const perms = sanitizePermissions(req.body.permissions);
+    // Replace the full set.
+    await StaffPermission.destroy({ where: { userId: staff.id } });
+    if (perms.length) {
+      await StaffPermission.bulkCreate(perms.map(permissionKey => ({ userId: staff.id, permissionKey })));
+    }
+
+    res.json({ message: 'Permissions updated', permissions: perms, permissionCount: perms.length });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update permissions: ' + error.message });
   }
 });
 

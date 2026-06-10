@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import PageWrapper from "../components/PageWrapper";
 import api from "../api/api";
 import { useResponsive } from "../hooks/useResponsive";
+import PermissionSelector from "../components/PermissionSelector";
 
 /* ─── helpers ─────────────────────────────────────────────────────────────── */
 const initials = (name) => name ? name.charAt(0).toUpperCase() : "?";
@@ -142,6 +143,12 @@ export default function StaffManagement() {
 
   const [delBusy, setDelBusy] = useState(false);
 
+  // Edit-permissions modal
+  const [permTarget, setPermTarget]   = useState(null);
+  const [permList, setPermList]       = useState([]);
+  const [permLoading, setPermLoading] = useState(false);
+  const [permBusy, setPermBusy]       = useState(false);
+
   const [cp, setCp]         = useState({ old: "", newPw: "", confirm: "" });
   const [cpMsg, setCpMsg]   = useState("");
   const [cpBusy, setCpBusy] = useState(false);
@@ -215,6 +222,34 @@ export default function StaffManagement() {
       setDelTarget(null);
     } finally {
       setDelBusy(false);
+    }
+  };
+
+  const openPerms = async (s) => {
+    setPermTarget(s);
+    setPermList([]);
+    setPermLoading(true);
+    try {
+      const r = await api.get(`/api/auth/staff/${s.id}/permissions`);
+      setPermList(r.data?.permissions || []);
+    } catch {
+      toast("Failed to load permissions", false);
+    } finally {
+      setPermLoading(false);
+    }
+  };
+
+  const savePerms = async () => {
+    setPermBusy(true);
+    try {
+      await api.put(`/api/auth/staff/${permTarget.id}/permissions`, { permissions: permList });
+      toast(`✅ Permissions updated for ${permTarget.userName}`);
+      setPermTarget(null);
+      loadStaff();
+    } catch (err) {
+      toast(err.response?.data?.error || "Failed to update permissions", false);
+    } finally {
+      setPermBusy(false);
     }
   };
 
@@ -325,10 +360,17 @@ export default function StaffManagement() {
                         <div style={{ fontSize: 13.5, fontWeight: 600, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {s.userName}
                         </div>
-                        <div style={{ marginTop: 3 }}><RoleBadge role={s.role} /></div>
+                        <div style={{ marginTop: 3, display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+                          <RoleBadge role={s.role} />
+                          <span style={{ padding: "2px 8px", borderRadius: 99, fontSize: 11, fontWeight: 700, background: "rgba(79,93,255,0.15)", color: "#818CF8", border: "1px solid rgba(79,93,255,0.3)" }}>
+                            {s.permissionCount ?? (s.permissions?.length || 0)} Perms
+                          </span>
+                        </div>
                       </div>
                     </div>
                     <div style={{ display: "flex", gap: 7, borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 9 }}>
+                      <IconBtn title="Edit Permissions" icon="🛡" hoverBg="rgba(79,93,255,0.15)" hoverColor="#818CF8"
+                        onClick={() => openPerms(s)} />
                       <IconBtn title="Reset Password" icon="🔑" hoverBg="rgba(255,185,94,0.15)" hoverColor="#FFB95E"
                         onClick={() => { setResetTarget(s); setRfErr(""); setRf({ password: "", confirm: "" }); }} />
                       <IconBtn title="Delete Staff" icon="🗑" hoverBg="rgba(255,107,129,0.15)" hoverColor="#FF6B81"
@@ -341,7 +383,7 @@ export default function StaffManagement() {
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5, background: "transparent" }}>
                 <thead>
                   <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-                    {["Avatar", "Name", "Role", "Actions"].map((h) => (
+                    {["Avatar", "Name", "Role", "Permissions", "Actions"].map((h) => (
                       <th key={h} style={{
                         padding: "9px 12px", textAlign: "left", fontSize: 10.5,
                         fontWeight: 700, color: "#7180A6", textTransform: "uppercase", letterSpacing: "0.08em",
@@ -367,7 +409,14 @@ export default function StaffManagement() {
                       <td style={{ padding: "11px 12px", fontWeight: 700, color: "#E2E8F0" }}>{s.userName || <span style={{ color: "#7180A6", fontStyle: "italic" }}>—</span>}</td>
                       <td style={{ padding: "11px 12px" }}><RoleBadge role={s.role} /></td>
                       <td style={{ padding: "11px 12px" }}>
+                        <span style={{ display: "inline-block", padding: "2px 9px", borderRadius: 99, fontSize: 11.5, fontWeight: 700, background: "rgba(79,93,255,0.15)", color: "#818CF8", border: "1px solid rgba(79,93,255,0.3)" }}>
+                          {s.permissionCount ?? (s.permissions?.length || 0)} Permission{(s.permissionCount ?? (s.permissions?.length || 0)) !== 1 ? "s" : ""}
+                        </span>
+                      </td>
+                      <td style={{ padding: "11px 12px" }}>
                         <div style={{ display: "flex", gap: 6 }}>
+                          <IconBtn title="Edit Permissions" icon="🛡" hoverBg="rgba(79,93,255,0.15)" hoverColor="#818CF8"
+                            onClick={() => openPerms(s)} />
                           <IconBtn title="Reset Password" icon="🔑" hoverBg="rgba(255,185,94,0.15)" hoverColor="#FFB95E"
                             onClick={() => { setResetTarget(s); setRfErr(""); setRf({ password: "", confirm: "" }); }} />
                           <IconBtn title="Delete Staff" icon="🗑" hoverBg="rgba(255,107,129,0.15)" hoverColor="#FF6B81"
@@ -462,6 +511,40 @@ export default function StaffManagement() {
             </button>
           </div>
         </Modal>
+      )}
+
+      {/* ════ EDIT PERMISSIONS MODAL (wide) ════ */}
+      {permTarget && (
+        <div
+          onClick={() => setPermTarget(null)}
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "flex-start", justifyContent: "center", zIndex: 10060, padding: "24px 16px", overflowY: "auto" }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ background: "rgba(17,27,53,0.98)", borderRadius: 14, width: "100%", maxWidth: 820, border: "1px solid rgba(255,255,255,0.1)", boxShadow: "0 20px 60px rgba(0,0,0,0.6)" }}
+          >
+            <div style={{ padding: "16px 20px", borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: "#fff" }}>🛡 Edit Permissions</div>
+                <div style={{ fontSize: 12.5, color: "#7180A6", marginTop: 2 }}>{permTarget.userName} · {permList.length} selected</div>
+              </div>
+              <button onClick={() => setPermTarget(null)} style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(255,255,255,0.08)", border: "none", color: "#A9B3D1", cursor: "pointer", fontSize: 14 }}>✕</button>
+            </div>
+            <div style={{ padding: "18px 20px" }}>
+              {permLoading ? (
+                <div style={{ textAlign: "center", color: "#7180A6", padding: "30px 0" }}>Loading permissions…</div>
+              ) : (
+                <PermissionSelector value={permList} onChange={setPermList} />
+              )}
+            </div>
+            <div style={{ padding: "14px 20px", borderTop: "1px solid rgba(255,255,255,0.08)", display: "flex", gap: 10, justifyContent: "flex-end" }}>
+              <button onClick={() => setPermTarget(null)} style={ghostBtn}>Cancel</button>
+              <button onClick={savePerms} disabled={permBusy || permLoading} style={primaryBtn(permBusy || permLoading)}>
+                {permBusy ? "Saving…" : "Save Permissions"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </PageWrapper>
   );

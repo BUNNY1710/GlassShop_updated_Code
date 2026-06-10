@@ -2,10 +2,19 @@ const express = require('express');
 const router = express.Router();
 const { Stock, Glass, StockHistory, User, Shop, AuditLog, GlassPriceMaster } = require('../models');
 const { Op } = require('sequelize');
-const { requireStaff } = require('../middleware/auth');
+const { requireStaff, requirePermission, requireAnyPermission } = require('../middleware/auth');
 
-// Apply auth middleware for all routes (staff and admin)
+// Stock data is consumed by several modules (optimization, transfers,
+// dashboard). Allow read access to anyone who can view a consuming page so a
+// visible page never 403s. Mutating endpoints below add a strict per-action
+// permission. Admin bypasses everything.
 router.use(requireStaff);
+router.use(requireAnyPermission(
+  'VIEW_STOCK', 'ADD_STOCK', 'EDIT_STOCK', 'DELETE_STOCK',
+  'VIEW_TRANSFER', 'CREATE_TRANSFER', 'APPROVE_TRANSFER',
+  'VIEW_OPTIMIZATION', 'RUN_OPTIMIZATION', 'VIEW_PLANS',
+  'VIEW_DASHBOARD'
+));
 
 // Get all stock
 router.get('/all', async (req, res) => {
@@ -111,7 +120,7 @@ router.get('/recent', async (req, res) => {
 });
 
 // Update stock (add/remove)
-router.post('/update', async (req, res) => {
+router.post('/update', requirePermission('ADD_STOCK'), async (req, res) => {
   try {
     const { glassType, thickness, unit, standNo, quantity, action, height, width } = req.body;
 
@@ -277,7 +286,7 @@ router.post('/update', async (req, res) => {
 });
 
 // Edit stock (glass type, thickness, height, width, quantity)
-router.post('/edit/:id', async (req, res) => {
+router.post('/edit/:id', requirePermission('EDIT_STOCK'), async (req, res) => {
   try {
     const { glassType, thickness, height, width, quantity, unit } = req.body;
     const stockId = req.params.id;
@@ -353,7 +362,7 @@ router.post('/edit/:id', async (req, res) => {
 });
 
 // Transfer stock
-router.post('/transfer', async (req, res) => {
+router.post('/transfer', requirePermission('CREATE_TRANSFER'), async (req, res) => {
   try {
     const { glassType, thickness, unit, fromStand, toStand, quantity, height, width } = req.body;
 
@@ -516,7 +525,7 @@ router.post('/transfer', async (req, res) => {
 });
 
 // Update stock price
-router.post('/update-price', async (req, res) => {
+router.post('/update-price', requirePermission('EDIT_STOCK'), async (req, res) => {
   try {
     const { stockId, purchasePrice, sellingPrice } = req.body;
 

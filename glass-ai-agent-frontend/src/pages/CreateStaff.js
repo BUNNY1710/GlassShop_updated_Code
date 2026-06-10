@@ -53,10 +53,12 @@
 import api from "../api/api";
 import { useState } from "react";
 import PageWrapper from "../components/PageWrapper";
+import PermissionSelector from "../components/PermissionSelector";
 
 function CreateStaff() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [permissions, setPermissions] = useState([]);
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -69,14 +71,16 @@ function CreateStaff() {
     try {
       setLoading(true);
       setMsg(""); // Clear previous messages
-      const response = await api.post("/api/auth/create-staff", {
+      await api.post("/api/auth/create-staff", {
         username: username.trim(),
         password: password.trim(),
+        permissions,
       });
 
       setMsg("✅ Staff created successfully");
       setUsername("");
       setPassword("");
+      setPermissions([]);
     } catch (err) {
       console.error("Error creating staff:", err);
       // Extract error message from response
@@ -117,9 +121,19 @@ function CreateStaff() {
             />
           </div>
 
-          <button 
-            style={button} 
-            onClick={createStaff} 
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ ...label, fontSize: 13, fontWeight: 700, opacity: 1, color: "#fff", display: "block", marginBottom: 4 }}>
+              Permissions
+            </label>
+            <p style={{ fontSize: 12, color: "#A9B3D1", margin: "0 0 12px" }}>
+              Choose exactly which modules and actions this staff member can access. ({permissions.length} selected)
+            </p>
+            <PermissionSelector value={permissions} onChange={setPermissions} />
+          </div>
+
+          <button
+            style={button}
+            onClick={createStaff}
             disabled={loading}
           >
             {loading ? "⏳ Creating..." : "➕ Create Staff"}
@@ -153,7 +167,8 @@ const page = {
   minHeight: "calc(100vh - 80px)",
   display: "flex",
   justifyContent: "center",
-  alignItems: "center",
+  alignItems: "flex-start",
+  padding: "24px 0",
 };
 
 // const card = {
@@ -168,8 +183,8 @@ const page = {
 
 const card = {
   width: "100%",
-  maxWidth: "420px",
-  padding: "22px",
+  maxWidth: "780px",
+  padding: "26px",
   borderRadius: "18px",
   background: "rgba(0,0,0,0.65)",
   backdropFilter: "blur(14px)",
