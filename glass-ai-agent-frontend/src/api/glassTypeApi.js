@@ -5,8 +5,9 @@ import api from "./api";
 export const getGlassTypes   = () => api.get("/api/glass-types").then(r => r.data);
 export const createGlassType = (name) => api.post("/api/glass-types", { name }).then(r => r.data);
 export const updateGlassType = (id, name) => api.put(`/api/glass-types/${id}`, { name }).then(r => r.data);
-export const deleteGlassType = (id, replaceWith) =>
-  api.delete(`/api/glass-types/${id}`, { data: replaceWith ? { replaceWith } : {} }).then(r => r.data);
+export const deleteGlassType = (id) => api.delete(`/api/glass-types/${id}`).then(r => r.data);
+export const getGlassTypeDeleteInfo = (id) => api.get(`/api/glass-types/${id}/delete-info`).then(r => r.data);
+export const restoreGlassType = (id) => api.post(`/api/glass-types/${id}/restore`).then(r => r.data);
 
 // Fallback catalogue so dropdowns never go empty if the API is briefly unreachable.
 export const DEFAULT_GLASS_TYPES = [

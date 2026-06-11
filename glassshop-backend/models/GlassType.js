@@ -27,6 +27,12 @@ module.exports = (sequelize) => {
       allowNull: false,
       defaultValue: true,
       field: 'is_active'
+    },
+    // Soft delete — set on delete, cleared on undo/restore.
+    deletedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      field: 'deleted_at'
     }
   }, {
     tableName: 'glass_types',

@@ -118,7 +118,12 @@ export default function StandManagement() {
 
   const card = { background: "#111B35", borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 4px 24px rgba(0,0,0,0.4)" };
   const inp = { background: "rgba(255,255,255,0.06)", border: "1.5px solid rgba(255,255,255,0.12)", borderRadius: 9, height: 40, padding: "0 12px", color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box", width: "100%" };
+  // Compact input/label for the mobile add-form.
+  const mInp = { ...inp, height: isMobile ? 38 : 40, fontSize: isMobile ? 13 : 14, borderRadius: isMobile ? 8 : 9 };
+  const mLbl = { ...lbl, marginBottom: isMobile ? 3 : 5, fontSize: isMobile ? 10.5 : 11 };
   const btn = (bg, col, bd) => ({ height: 36, padding: "0 16px", borderRadius: 8, background: bg, color: col, border: bd || "none", fontSize: 13, fontWeight: 700, cursor: busy ? "default" : "pointer", opacity: busy ? 0.7 : 1 });
+  // Compact mobile action button — equal-width, single row, no wrap.
+  const mbtn = (bg, col, bd) => ({ flex: 1, minWidth: 0, height: 32, padding: "0 4px", borderRadius: 7, background: bg, color: col, border: bd || "none", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap", display: "flex", alignItems: "center", justifyContent: "center", gap: 3, overflow: "hidden" });
   const th = { padding: "9px 12px", textAlign: "left", fontSize: 10.5, fontWeight: 700, color: "#7180A6", textTransform: "uppercase", letterSpacing: "0.08em", background: "rgba(255,255,255,0.04)", borderBottom: "1px solid rgba(255,255,255,0.07)" };
   const td = { padding: "11px 12px", fontSize: 13.5, color: "#E2E8F0", borderBottom: "1px solid rgba(255,255,255,0.05)" };
 
@@ -133,27 +138,29 @@ export default function StandManagement() {
         )}
 
         {/* Header + stats */}
-        <div style={{ ...card, padding: "16px 20px", marginBottom: 16 }}>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: "#fff" }}>🗄 Stand Management</h2>
-          <p style={{ margin: "2px 0 12px", fontSize: 12.5, color: "#7180A6" }}>Define the physical stands where stock can be stored. Only these stands are selectable in Manage Stock, Transfers, and Remnant Storage.</p>
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            {[{ l: "Total Stands", v: total, c: "#4F5DFF" }, { l: "Active", v: active, c: "#37E3A5" }, { l: "Inactive", v: total - active, c: "#FFB95E" }].map(x => (
-              <div key={x.l} style={{ background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: "10px 18px", textAlign: "center" }}>
-                <div style={{ fontSize: 22, fontWeight: 800, color: x.c }}>{x.v}</div>
-                <div style={{ fontSize: 10.5, color: "#7180A6", textTransform: "uppercase", letterSpacing: "0.05em" }}>{x.l}</div>
+        <div style={{ ...card, padding: isMobile ? "12px 14px" : "16px 20px", marginBottom: isMobile ? 10 : 16 }}>
+          <h2 style={{ margin: 0, fontSize: isMobile ? 16 : 18, fontWeight: 800, color: "#fff" }}>🗄 Stand Management</h2>
+          <p style={{ margin: isMobile ? "2px 0 10px" : "2px 0 12px", fontSize: isMobile ? 11.5 : 12.5, color: "#7180A6", lineHeight: 1.4 }}>
+            {isMobile ? "Only these stands are selectable in Manage Stock, Transfers & Remnants." : "Define the physical stands where stock can be stored. Only these stands are selectable in Manage Stock, Transfers, and Remnant Storage."}
+          </p>
+          <div style={{ display: isMobile ? "grid" : "flex", gridTemplateColumns: isMobile ? "repeat(3, 1fr)" : undefined, gap: isMobile ? 8 : 12, flexWrap: isMobile ? undefined : "wrap" }}>
+            {[{ l: "Total", v: total, c: "#4F5DFF" }, { l: "Active", v: active, c: "#37E3A5" }, { l: "Inactive", v: total - active, c: "#FFB95E" }].map(x => (
+              <div key={x.l} style={{ background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: isMobile ? "7px 4px" : "10px 18px", textAlign: "center" }}>
+                <div style={{ fontSize: isMobile ? 18 : 22, fontWeight: 800, color: x.c, lineHeight: 1.1 }}>{x.v}</div>
+                <div style={{ fontSize: isMobile ? 9 : 10.5, color: "#7180A6", textTransform: "uppercase", letterSpacing: "0.04em" }}>{x.l}</div>
               </div>
             ))}
           </div>
         </div>
 
         {/* Add stand */}
-        <div style={{ ...card, padding: "16px 20px", marginBottom: 16 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 10 }}>+ Add Stand</div>
-          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "120px 1fr 1fr auto", gap: 10, alignItems: "end" }}>
-            <div><div style={lbl}>Stand Number *</div><input type="number" min="1" step="1" value={num} onChange={e => setNum(e.target.value)} style={inp} placeholder="e.g. 6" /></div>
-            <div><div style={lbl}>Name (optional)</div><input value={name} onChange={e => setName(e.target.value)} style={inp} placeholder="e.g. Back wall" /></div>
-            <div><div style={lbl}>Description (optional)</div><input value={desc} onChange={e => setDesc(e.target.value)} style={inp} placeholder="Notes" /></div>
-            <button onClick={handleAdd} disabled={busy} style={btn("#4F5DFF", "#fff")}>Add</button>
+        <div style={{ ...card, padding: isMobile ? "12px 14px" : "16px 20px", marginBottom: isMobile ? 10 : 16 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: isMobile ? 8 : 10 }}>+ Add Stand</div>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "120px 1fr 1fr auto", gap: isMobile ? 8 : 10, alignItems: "end" }}>
+            <div><div style={mLbl}>Stand No *</div><input type="number" min="1" step="1" value={num} onChange={e => setNum(e.target.value)} style={mInp} placeholder="e.g. 6" /></div>
+            <div><div style={mLbl}>Name</div><input value={name} onChange={e => setName(e.target.value)} style={mInp} placeholder="e.g. Wall" /></div>
+            <div style={{ gridColumn: isMobile ? "1 / -1" : "auto" }}><div style={mLbl}>Description</div><input value={desc} onChange={e => setDesc(e.target.value)} style={mInp} placeholder="Notes" /></div>
+            <button onClick={handleAdd} disabled={busy} style={{ ...btn("#4F5DFF", "#fff"), ...(isMobile ? { gridColumn: "1 / -1", height: 38 } : {}) }}>Add</button>
           </div>
         </div>
 
@@ -163,6 +170,23 @@ export default function StandManagement() {
             <div style={{ textAlign: "center", padding: "40px 0", color: "#7180A6" }}>Loading…</div>
           ) : stands.length === 0 ? (
             <div style={{ textAlign: "center", padding: "40px 0", color: "#7180A6" }}>No stands yet. Add one above.</div>
+          ) : isMobile ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: 12 }}>
+              {stands.map(s => (
+                <div key={s.id} style={{ border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, background: "rgba(255,255,255,0.03)", padding: "10px 12px" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: s.standName ? 2 : 9 }}>
+                    <span style={{ fontSize: 15, fontWeight: 800, color: "#fff" }}>Stand #{s.standNumber}</span>
+                    <span style={{ padding: "2px 9px", borderRadius: 99, fontSize: 11, fontWeight: 700, background: s.isActive ? "rgba(55,227,165,0.15)" : "rgba(255,185,94,0.15)", color: s.isActive ? "#37E3A5" : "#FFB95E" }}>{s.isActive ? "Active" : "Inactive"}</span>
+                  </div>
+                  {s.standName && <div style={{ fontSize: 12, color: "#7180A6", marginBottom: 9 }}>{s.standName}</div>}
+                  <div style={{ display: "flex", gap: 6, flexWrap: "nowrap" }}>
+                    <button onClick={() => setEdit({ ...s })} style={mbtn("rgba(79,93,255,0.15)", "#818CF8", "1px solid rgba(79,93,255,0.3)")}>✏ Edit</button>
+                    <button onClick={() => toggleActive(s)} style={mbtn("rgba(255,255,255,0.07)", "#A9B3D1", "1px solid rgba(255,255,255,0.12)")}>{s.isActive ? "⏸ Disable" : "▶ Enable"}</button>
+                    <button onClick={() => onDeleteClick(s)} disabled={delInfoLoading} style={mbtn("rgba(255,107,129,0.12)", "#FF6B81", "1px solid rgba(255,107,129,0.3)")}>🗑 Delete</button>
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : (
             <div style={{ overflowX: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse" }}>

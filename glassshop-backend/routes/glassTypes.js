@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { sequelize, GlassType, User, Shop } = require('../models');
+const { sequelize, GlassType, User, Shop, AuditLog } = require('../models');
 const { Op, QueryTypes } = require('sequelize');
 const { requireStaff } = require('../middleware/auth');
 
@@ -75,7 +75,7 @@ router.get('/', async (req, res) => {
     const shopId = await getShopId(req, res);
     if (shopId === null) return;
     const types = await GlassType.findAll({
-      where: { shopId, isActive: true },
+      where: { shopId, isActive: true, deletedAt: null },
       order: [['name', 'ASC']]
     });
     res.json(types.map(t => ({ id: t.id, name: t.name, isActive: t.isActive })));
@@ -100,6 +100,13 @@ router.post('/', async (req, res) => {
       where: { shopId, name: { [Op.iLike]: name } }
     });
     if (existing) {
+      // A soft-deleted type with this name → revive it (avoids unique collision).
+      if (existing.deletedAt) {
+        existing.deletedAt = null;
+        existing.isActive = true;
+        await existing.save();
+        return res.status(201).json({ success: true, id: existing.id, name: existing.name });
+      }
       return res.status(409).json({ success: false, message: 'Glass Type already exists' });
     }
 
@@ -158,56 +165,100 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// DELETE /api/glass-types/:id — blocked if in use, unless ?replaceWith=<name>
-// is supplied, in which case existing records are migrated first.
+// GET /api/glass-types/:id/delete-info — stock summary used by the delete modal.
+router.get('/:id/delete-info', async (req, res) => {
+  try {
+    const shopId = await getShopId(req, res);
+    if (shopId === null) return;
+    const type = await GlassType.findOne({ where: { id: req.params.id, shopId } });
+    if (!type) return res.status(404).json({ success: false, message: 'Glass type not found' });
+
+    const repl = { shopId, name: type.name };
+    const q = (sql) => sequelize.query(sql, { replacements: repl, type: QueryTypes.SELECT });
+
+    const stands = await q(`
+      SELECT s.stand_no AS "standNo", COUNT(*)::int AS items, COALESCE(SUM(s.quantity),0)::int AS qty
+      FROM stock s JOIN glass g ON g.id = s.glass_id
+      WHERE s.shop_id = :shopId AND g.type = :name AND s.quantity > 0
+      GROUP BY s.stand_no ORDER BY s.stand_no`);
+    const [orders] = await q(`
+      SELECT COUNT(*)::int AS c FROM quotation_items qi
+      JOIN quotations q ON q.id = qi.quotation_id
+      WHERE q.shop_id = :shopId AND qi.glass_type = :name`);
+
+    const totalSheets   = stands.reduce((a, s) => a + (s.items || 0), 0);
+    const totalQuantity = stands.reduce((a, s) => a + (s.qty || 0), 0);
+
+    res.json({
+      name: type.name,
+      totalSheets, totalQuantity,
+      standCount: stands.length,
+      stands,
+      usedInOrders: orders.c || 0,
+    });
+  } catch (error) {
+    console.error('Error loading glass-type delete info:', error);
+    res.status(500).json({ success: false, message: error.message || 'Failed to load delete info' });
+  }
+});
+
+// DELETE /api/glass-types/:id — SOFT delete (recoverable via Undo). Stock keeps
+// its glass-type string; the type is just hidden from dropdowns.
 router.delete('/:id', async (req, res) => {
   const t = await sequelize.transaction();
   try {
-    const shopId = await getShopId(req, res);
-    if (shopId === null) { await t.rollback(); return; }
+    const user = await User.findOne({ where: { userName: req.user.username } });
+    if (!user || !user.shopId) { await t.rollback(); return res.status(404).json({ success: false, message: 'User not linked to a shop' }); }
+    const shopId = user.shopId;
 
     const type = await GlassType.findOne({ where: { id: req.params.id, shopId }, transaction: t });
-    if (!type) {
-      await t.rollback();
-      return res.status(404).json({ success: false, message: 'Glass type not found' });
-    }
+    if (!type) { await t.rollback(); return res.status(404).json({ success: false, message: 'Glass type not found' }); }
 
-    const replaceWith = (req.body?.replaceWith || req.query?.replaceWith || '').trim();
     const usage = await countUsage(shopId, type.name);
+    type.deletedAt = new Date();
+    type.isActive = false;
+    await type.save({ transaction: t });
 
-    if (usage > 0 && !replaceWith) {
-      await t.rollback();
-      return res.status(409).json({
-        success: false,
-        inUse: true,
-        usage,
-        message: 'This Glass Type is already in use and cannot be deleted.'
-      });
-    }
+    await AuditLog.create({
+      username: user.userName, role: user.role, action: 'DELETE_GLASS_TYPE',
+      glassType: type.name, quantity: usage, shopId, timestamp: new Date(),
+    }, { transaction: t });
 
-    if (usage > 0 && replaceWith) {
-      const target = await GlassType.findOne({
-        where: { shopId, name: { [Op.iLike]: replaceWith } },
-        transaction: t
-      });
-      if (!target) {
-        await t.rollback();
-        return res.status(400).json({ success: false, message: 'Replacement glass type does not exist' });
-      }
-      if (target.id === type.id) {
-        await t.rollback();
-        return res.status(400).json({ success: false, message: 'Cannot replace a glass type with itself' });
-      }
-      await cascadeRename(shopId, type.name, target.name, t);
-    }
-
-    await type.destroy({ transaction: t });
     await t.commit();
-    res.json({ success: true, message: 'Glass type deleted' });
+    res.json({ success: true, id: type.id, name: type.name, message: 'Glass type deleted' });
   } catch (error) {
     await t.rollback();
     console.error('Error deleting glass type:', error);
     res.status(500).json({ success: false, message: error.message || 'Failed to delete glass type' });
+  }
+});
+
+// POST /api/glass-types/:id/restore — undo a soft delete.
+router.post('/:id/restore', async (req, res) => {
+  const t = await sequelize.transaction();
+  try {
+    const user = await User.findOne({ where: { userName: req.user.username } });
+    if (!user || !user.shopId) { await t.rollback(); return res.status(404).json({ success: false, message: 'User not linked to a shop' }); }
+    const shopId = user.shopId;
+
+    const type = await GlassType.findOne({ where: { id: req.params.id, shopId }, transaction: t });
+    if (!type) { await t.rollback(); return res.status(404).json({ success: false, message: 'Glass type not found' }); }
+
+    type.deletedAt = null;
+    type.isActive = true;
+    await type.save({ transaction: t });
+
+    await AuditLog.create({
+      username: user.userName, role: user.role, action: 'RESTORE_GLASS_TYPE',
+      glassType: type.name, quantity: 0, shopId, timestamp: new Date(),
+    }, { transaction: t });
+
+    await t.commit();
+    res.json({ success: true, id: type.id, name: type.name, message: 'Glass type restored' });
+  } catch (error) {
+    await t.rollback();
+    console.error('Error restoring glass type:', error);
+    res.status(500).json({ success: false, message: error.message || 'Failed to restore glass type' });
   }
 });
 

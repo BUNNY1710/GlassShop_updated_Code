@@ -662,47 +662,53 @@ function StockDashboard() {
         </p>
       </div>
 
-      {/* KPI CARDS — compact strip, ~1/3 screen on desktop */}
-      <div style={{ display: "flex", gap: isMobile ? 6 : 8, marginBottom: isMobile ? 10 : 12, maxWidth: isMobile ? "100%" : "34%" }}>
+      {/* KPI CARDS — compact strip on desktop; 3-col grid on mobile (no overflow) */}
+      <div style={{ display: isMobile ? "grid" : "flex", gridTemplateColumns: isMobile ? "repeat(3, 1fr)" : undefined, gap: isMobile ? 6 : 8, marginBottom: isMobile ? 10 : 12, maxWidth: isMobile ? "100%" : "34%" }}>
 
         {/* TOTAL STOCK */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: isMobile ? "7px 10px" : "8px 12px", background: "rgba(17,27,53,0.9)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, flex: 1 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 2 : 8, padding: isMobile ? "8px 6px" : "8px 12px", background: "rgba(17,27,53,0.9)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, flex: 1, minWidth: 0, ...(isMobile ? { flexDirection: "column", textAlign: "center" } : {}) }}>
+          {!isMobile && (
           <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(79,93,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#4F5DFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
           </div>
+          )}
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 10.5, fontWeight: 700, color: "#A9B3D1", textTransform: "uppercase", letterSpacing: "0.06em", lineHeight: 1, marginBottom: 4, whiteSpace: "nowrap" }}>Total Stock</div>
+            <div style={{ fontSize: isMobile ? 9 : 10.5, fontWeight: 700, color: "#A9B3D1", textTransform: "uppercase", letterSpacing: "0.05em", lineHeight: 1.15, marginBottom: 3, whiteSpace: isMobile ? "normal" : "nowrap" }}>Total Stock</div>
             {loading
-              ? <div style={{ height: 16, width: 48, borderRadius: 4, background: "rgba(255,255,255,0.06)" }} />
-              : <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 800, color: "#fff", letterSpacing: "-0.03em", lineHeight: 1, whiteSpace: "nowrap" }}>{totalQuantity.toLocaleString()} <span style={{ fontSize: 11, fontWeight: 500, color: "#A9B3D1" }}>units</span></div>
+              ? <div style={{ height: 16, width: 48, borderRadius: 4, background: "rgba(255,255,255,0.06)", margin: isMobile ? "0 auto" : 0 }} />
+              : <div style={{ fontSize: isMobile ? 15 : 18, fontWeight: 800, color: "#fff", letterSpacing: "-0.03em", lineHeight: 1, whiteSpace: "nowrap" }}>{totalQuantity.toLocaleString()} <span style={{ fontSize: isMobile ? 9.5 : 11, fontWeight: 500, color: "#A9B3D1" }}>units</span></div>
             }
           </div>
         </div>
 
         {/* LOW STOCK */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: isMobile ? "7px 10px" : "8px 12px", background: lowStockCount > 0 ? "rgba(255,107,129,0.08)" : "rgba(17,27,53,0.9)", border: lowStockCount > 0 ? "1px solid rgba(255,107,129,0.3)" : "1px solid rgba(255,255,255,0.08)", borderRadius: 10, flex: 1 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 2 : 8, padding: isMobile ? "8px 6px" : "8px 12px", background: lowStockCount > 0 ? "rgba(255,107,129,0.08)" : "rgba(17,27,53,0.9)", border: lowStockCount > 0 ? "1px solid rgba(255,107,129,0.3)" : "1px solid rgba(255,255,255,0.08)", borderRadius: 10, flex: 1, minWidth: 0, ...(isMobile ? { flexDirection: "column", textAlign: "center" } : {}) }}>
+          {!isMobile && (
           <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(255,107,129,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FF6B81" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
           </div>
+          )}
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 10.5, fontWeight: 700, color: "#A9B3D1", textTransform: "uppercase", letterSpacing: "0.06em", lineHeight: 1, marginBottom: 4, whiteSpace: "nowrap" }}>Low Stock</div>
+            <div style={{ fontSize: isMobile ? 9 : 10.5, fontWeight: 700, color: "#A9B3D1", textTransform: "uppercase", letterSpacing: "0.05em", lineHeight: 1.15, marginBottom: 3, whiteSpace: isMobile ? "normal" : "nowrap" }}>Low Stock</div>
             {loading
-              ? <div style={{ height: 16, width: 32, borderRadius: 4, background: "rgba(255,255,255,0.06)" }} />
-              : <div style={{ fontSize: isMobile ? 15 : 17, fontWeight: 800, color: lowStockCount > 0 ? "#FF6B81" : "#fff", letterSpacing: "-0.03em", lineHeight: 1, whiteSpace: "nowrap" }}>{lowStockCount} <span style={{ fontSize: 11, fontWeight: 500, color: "#A9B3D1" }}>stands</span></div>
+              ? <div style={{ height: 16, width: 32, borderRadius: 4, background: "rgba(255,255,255,0.06)", margin: isMobile ? "0 auto" : 0 }} />
+              : <div style={{ fontSize: isMobile ? 15 : 17, fontWeight: 800, color: lowStockCount > 0 ? "#FF6B81" : "#fff", letterSpacing: "-0.03em", lineHeight: 1, whiteSpace: "nowrap" }}>{lowStockCount} <span style={{ fontSize: isMobile ? 9.5 : 11, fontWeight: 500, color: "#A9B3D1" }}>stands</span></div>
             }
           </div>
         </div>
 
         {/* ITEMS */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: isMobile ? "7px 10px" : "8px 12px", background: "rgba(17,27,53,0.9)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, flex: 1 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 2 : 8, padding: isMobile ? "8px 6px" : "8px 12px", background: "rgba(17,27,53,0.9)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, flex: 1, minWidth: 0, ...(isMobile ? { flexDirection: "column", textAlign: "center" } : {}) }}>
+          {!isMobile && (
           <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(55,227,165,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#37E3A5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
           </div>
+          )}
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 10.5, fontWeight: 700, color: "#A9B3D1", textTransform: "uppercase", letterSpacing: "0.06em", lineHeight: 1, marginBottom: 4, whiteSpace: "nowrap" }}>Items</div>
+            <div style={{ fontSize: isMobile ? 9 : 10.5, fontWeight: 700, color: "#A9B3D1", textTransform: "uppercase", letterSpacing: "0.05em", lineHeight: 1.15, marginBottom: 3, whiteSpace: isMobile ? "normal" : "nowrap" }}>Items</div>
             {loading
-              ? <div style={{ height: 16, width: 28, borderRadius: 4, background: "rgba(255,255,255,0.06)" }} />
-              : <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 800, color: "#fff", letterSpacing: "-0.03em", lineHeight: 1, whiteSpace: "nowrap" }}>{totalStock} <span style={{ fontSize: 11, fontWeight: 500, color: "#A9B3D1" }}>types</span></div>
+              ? <div style={{ height: 16, width: 28, borderRadius: 4, background: "rgba(255,255,255,0.06)", margin: isMobile ? "0 auto" : 0 }} />
+              : <div style={{ fontSize: isMobile ? 15 : 18, fontWeight: 800, color: "#fff", letterSpacing: "-0.03em", lineHeight: 1, whiteSpace: "nowrap" }}>{totalStock} <span style={{ fontSize: isMobile ? 9.5 : 11, fontWeight: 500, color: "#A9B3D1" }}>types</span></div>
             }
           </div>
         </div>
@@ -749,15 +755,17 @@ function StockDashboard() {
           <option value="FEET">FT</option>
         </select>
 
-        {/* Remnants only */}
+        {/* Remnants only — its own full-width row on mobile so nothing overlaps */}
         <label
           title="Show only optimization remnants"
-          style={{ display: "flex", alignItems: "center", gap: 6, height: 36, padding: "0 11px", borderRadius: 8, cursor: "pointer", flexShrink: 0,
+          style={{ display: "flex", alignItems: "center", gap: 7, height: 36, padding: "0 12px", borderRadius: 8, cursor: "pointer", whiteSpace: "nowrap", boxSizing: "border-box",
             background: showRemnantsOnly ? "rgba(255,159,64,0.18)" : "rgba(17,27,53,0.9)",
             border: `1px solid ${showRemnantsOnly ? "rgba(255,159,64,0.5)" : "rgba(255,255,255,0.1)"}`,
-            color: showRemnantsOnly ? "#FF9F40" : "#A9B3D1", fontSize: 12, fontWeight: 700, ...(isMobile ? { flex: 1, minWidth: 0, justifyContent: "center" } : {}) }}>
-          <input type="checkbox" checked={showRemnantsOnly} onChange={e => setShowRemnantsOnly(e.target.checked)} style={{ width: 15, height: 15, accentColor: "#FF9F40", cursor: "pointer" }} />
-          🟠 Remnants{totalRemnants > 0 ? ` (${totalRemnants})` : ""}
+            color: showRemnantsOnly ? "#FF9F40" : "#A9B3D1", fontSize: 12, fontWeight: 700,
+            ...(isMobile ? { width: "100%", justifyContent: "center" } : { flexShrink: 0 }) }}>
+          <input type="checkbox" checked={showRemnantsOnly} onChange={e => setShowRemnantsOnly(e.target.checked)} style={{ width: 15, height: 15, accentColor: "#FF9F40", cursor: "pointer", flexShrink: 0 }} />
+          <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#FF9F40", display: "inline-block", flexShrink: 0 }} />
+          Remnants{totalRemnants > 0 ? ` (${totalRemnants})` : ""}
         </label>
 
         {/* Clear */}

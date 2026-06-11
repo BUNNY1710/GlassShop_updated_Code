@@ -15,6 +15,8 @@ const ACTION_STYLES = {
   ADD_REMNANT:      { bg: "rgba(255,159,64,0.18)",  color: "#FF9F40", dot: "#FF9F40" },
   OPTIMIZE_CONFIRM: { bg: "rgba(124,58,237,0.18)",  color: "#A78BFA", dot: "#A78BFA" },
   DELETE_STAND:     { bg: "rgba(255,107,129,0.15)", color: "#FF6B81", dot: "#FF6B81" },
+  DELETE_GLASS_TYPE:  { bg: "rgba(255,107,129,0.15)", color: "#FF6B81", dot: "#FF6B81" },
+  RESTORE_GLASS_TYPE: { bg: "rgba(55,227,165,0.15)",  color: "#37E3A5", dot: "#37E3A5" },
   CREATE:   { bg: "rgba(79,93,255,0.15)",   color: "#818CF8", dot: "#818CF8" },
   DELETE:   { bg: "rgba(255,107,129,0.15)", color: "#FF6B81", dot: "#FF6B81" },
   APPROVE:  { bg: "rgba(55,227,165,0.15)",  color: "#37E3A5", dot: "#37E3A5" },
@@ -113,6 +115,10 @@ function buildDescription(log) {
       return log.toStand
         ? `Transferred ${qty || "0 units"} from Stand #${log.fromStand} to Stand #${log.toStand}, then deleted Stand #${log.fromStand}`
         : `Deleted Stand #${log.fromStand || log.standNo || "?"}`;
+    case "DELETE_GLASS_TYPE":
+      return `Deleted Glass Type “${log.glassType || "?"}”${log.quantity ? ` · ${log.quantity} record${+log.quantity !== 1 ? "s" : ""} referenced` : ""}`;
+    case "RESTORE_GLASS_TYPE":
+      return `Restored Glass Type “${log.glassType || "?"}” within the undo window`;
     default:
       return `${log.action || "Action"}${glass ? ` on ${glass}` : ""}${size ? ` (${size})` : ""}`;
   }
