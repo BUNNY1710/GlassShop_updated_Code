@@ -5,14 +5,24 @@ const { User, Shop, StaffPermission } = require('../models');
 const { generateToken } = require('../utils/jwt');
 const { authMiddleware, requireAdmin, getUserPermissions } = require('../middleware/auth');
 const { PERMISSION_GROUPS, ALL_PERMISSIONS, isValidPermission } = require('../config/permissions');
+const rateLimit = require('../middleware/rateLimit');
+
+// Throttle credential endpoints to slow brute-force (per IP).
+const loginLimiter = rateLimit({ windowMs: 5 * 60_000, max: 20, message: 'Too many login attempts. Try again in a few minutes.' });
 
 // Keep only valid, de-duplicated permission keys from a client-supplied array.
 const sanitizePermissions = (arr) =>
   Array.isArray(arr) ? [...new Set(arr.filter(isValidPermission))] : [];
 
-// Register shop (Public)
+// Register shop (Public in dev; gated in production).
+// SECURITY: unauthenticated tenant creation is disabled in production unless
+// ALLOW_PUBLIC_REGISTRATION=true is explicitly set. Behaviour in development is
+// unchanged so local setup/seeding keeps working.
 router.post('/register-shop', async (req, res) => {
   try {
+    if (process.env.NODE_ENV === 'production' && process.env.ALLOW_PUBLIC_REGISTRATION !== 'true') {
+      return res.status(403).json({ error: 'Public registration is disabled. Contact an administrator to create a shop.' });
+    }
     const { username, password, shopName, email } = req.body;
 
     if (!username || !username.trim()) {
@@ -123,7 +133,7 @@ router.post('/create-staff', authMiddleware, requireAdmin, async (req, res) => {
 });
 
 // Login
-router.post('/login', async (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
   try {
     const { username, password } = req.body;
 

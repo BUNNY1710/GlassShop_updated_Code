@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { sequelize, Stand, Stock, User, Shop, AuditLog } = require('../models');
+const { sequelize, Stand, Stock, User, Shop, AuditLog, Glass } = require('../models');
 const { Op } = require('sequelize');
 const { requireStaff, requireAdmin } = require('../middleware/auth');
 
@@ -197,10 +197,21 @@ router.post('/:id/transfer-and-delete', requireAdmin, async (req, res) => {
 
     // Move every stock row off the source stand, merging into a matching row on
     // the target (same glass + dimensions) so the unique index isn't violated.
-    const sourceStock = await Stock.findAll({ where: { shopId, standNo: stand.standNumber }, transaction: t });
+    // Glass is loaded so we can record what was transferred on the audit row.
+    const sourceStock = await Stock.findAll({
+      where: { shopId, standNo: stand.standNumber },
+      include: [{ model: Glass, as: 'glass' }],
+      transaction: t,
+    });
     let moved = 0, qtyMoved = 0;
+    const distinct = new Map(); // type|h|w|unit -> { type, height, width, unit, qty }
     for (const s of sourceStock) {
       qtyMoved += (s.quantity || 0);
+      const g = s.glass;
+      const key = `${g?.type || ''}|${s.height || ''}|${s.width || ''}|${(g?.unit || 'MM')}`;
+      if (!distinct.has(key)) distinct.set(key, { type: g?.type || '', height: s.height, width: s.width, unit: (g?.unit || 'MM'), qty: 0 });
+      distinct.get(key).qty += (s.quantity || 0);
+
       const match = await Stock.findOne({
         where: { shopId, standNo: toStandNumber, glassId: s.glassId, height: s.height, width: s.width, id: { [Op.ne]: s.id } },
         transaction: t,
@@ -216,8 +227,20 @@ router.post('/:id/transfer-and-delete', requireAdmin, async (req, res) => {
       moved += 1;
     }
 
+    // Record glass/size on the audit row: full detail for a single glass type,
+    // a compact "N Glass Types" summary when the stand held several.
+    const items = [...distinct.values()];
+    let auditGlass = {};
+    if (items.length === 1) {
+      const d = items[0];
+      auditGlass = { glassType: d.type, height: d.height, width: d.width, unit: d.unit };
+    } else if (items.length > 1) {
+      auditGlass = { glassType: `${items.length} Glass Types` };
+    }
+
     // Audit + delete stand.
     await AuditLog.create({
+      ...auditGlass,
       username: user.userName, role: user.role, action: 'DELETE_STAND',
       fromStand: stand.standNumber, toStand: toStandNumber,
       quantity: qtyMoved, shopId, timestamp: new Date(),

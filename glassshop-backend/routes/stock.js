@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { Stock, Glass, StockHistory, User, Shop, AuditLog, GlassPriceMaster, Stand } = require('../models');
 const { Op } = require('sequelize');
-const { requireStaff, requirePermission, requireAnyPermission } = require('../middleware/auth');
+const { requireStaff, requirePermission, requireAnyPermission, getUserPermissions } = require('../middleware/auth');
 
 // Stock data is consumed by several modules (optimization, transfers,
 // dashboard). Allow read access to anyone who can view a consuming page so a
@@ -51,7 +51,8 @@ router.get('/all', async (req, res) => {
     const stocks = await Stock.findAll({
       where: { shopId: user.shopId },
       include: [{ model: Glass, as: 'glass' }],
-      attributes: { include: ['purchasePrice', 'sellingPrice'] } // Ensure price fields are included
+      attributes: { include: ['purchasePrice', 'sellingPrice'] }, // Ensure price fields are included
+      order: [['standNo', 'ASC']] // numeric (stand_no is INTEGER) — warehouse-friendly default
     });
 
     res.json(stocks);
@@ -140,6 +141,19 @@ router.post('/update', requirePermission('ADD_STOCK'), async (req, res) => {
 
     if (!user || !user.shopId) {
       return res.status(404).json('❌ User not found or not linked to a shop');
+    }
+
+    // SECURITY: this single endpoint performs both ADD and REMOVE. The route
+    // guard checks ADD_STOCK; a stock-reducing REMOVE additionally requires
+    // EDIT_STOCK (admin bypasses — admins hold all permissions).
+    if (action === 'REMOVE') {
+      const role = (req.user.role || '').replace('ROLE_', '').toUpperCase();
+      if (role !== 'ADMIN') {
+        const perms = await getUserPermissions(user);
+        if (!perms.includes('EDIT_STOCK')) {
+          return res.status(403).json('❌ You do not have permission to remove stock');
+        }
+      }
     }
 
     // Validate inputs

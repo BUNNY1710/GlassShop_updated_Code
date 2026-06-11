@@ -3,8 +3,14 @@ const router = express.Router();
 const { AuditLog, User, Shop } = require('../models');
 const { Op } = require('sequelize');
 const { requireAdmin, requireStaff } = require('../middleware/auth');
+const rateLimit = require('../middleware/rateLimit');
 
-// Get recent audit logs (Admin only)
+// Throttle the audit endpoints (per IP) to prevent log-scraping abuse.
+router.use(rateLimit({ windowMs: 60_000, max: 120 }));
+
+// Get recent audit logs (Admin only).
+// Backward compatible: with no query params it returns the same array (≤100).
+// Opt-in pagination via ?page=&size=&sort=asc|desc returns { data, page, size, total }.
 router.get('/recent', requireAdmin, async (req, res) => {
   try {
     const username = req.user?.username;
@@ -22,21 +28,29 @@ router.get('/recent', requireAdmin, async (req, res) => {
       return res.status(404).json({ error: `User not found: ${username}. Please register or log in again.` });
     }
 
+    const order = [['timestamp', (req.query.sort || 'desc').toLowerCase() === 'asc' ? 'ASC' : 'DESC']];
+
     if (!user.shopId) {
-      // Return empty array if user doesn't have a shop
-      return res.json([]);
+      return res.json(req.query.page !== undefined ? { data: [], page: 1, size: 0, total: 0, totalPages: 0 } : []);
     }
 
-    const logs = await AuditLog.findAll({
-      where: { shopId: user.shopId },
-      order: [['timestamp', 'DESC']],
-      limit: 100
-    });
+    // Default (no ?page): unchanged array response, capped at 100.
+    if (req.query.page === undefined) {
+      const logs = await AuditLog.findAll({ where: { shopId: user.shopId }, order, limit: 100 });
+      return res.json(logs || []);
+    }
 
-    res.json(logs || []);
+    // Opt-in pagination.
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const size = Math.min(200, Math.max(1, parseInt(req.query.size, 10) || 50));
+    const { rows, count } = await AuditLog.findAndCountAll({
+      where: { shopId: user.shopId }, order, limit: size, offset: (page - 1) * size,
+    });
+    res.json({ data: rows, page, size, total: count, totalPages: Math.ceil(count / size) });
   } catch (error) {
     console.error('Error fetching audit logs:', error);
-    res.status(500).json({ error: error.message, details: error.stack });
+    // SECURITY: do not leak the stack trace to the client.
+    res.status(500).json({ error: 'Failed to fetch audit logs' });
   }
 });
 

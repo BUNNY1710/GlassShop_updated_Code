@@ -81,6 +81,7 @@ function StockDashboard() {
   const [filterWidth, setFilterWidth] = useState("");
   const [searchUnit, setSearchUnit] = useState("MM");
   const [showRemnantsOnly, setShowRemnantsOnly] = useState(false);
+  const [sortBy, setSortBy] = useState("stand_asc"); // default: Stand # ascending
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const isMobile  = windowWidth < 768;
   const gridCols  = windowWidth < 768  ? "1fr"
@@ -542,18 +543,36 @@ function StockDashboard() {
       ? filtered.filter(s => s.source === "Optimization Remnant")
       : filtered;
 
+    // Tiebreak by dimensions (then stand) so same-stand cards stay tidy.
+    const dimTiebreak = (a, b) => {
+      const aH = parseDimension(a.height) !== null ? convertToMM(parseDimension(a.height), a.glass?.unit) : 0;
+      const bH = parseDimension(b.height) !== null ? convertToMM(parseDimension(b.height), b.glass?.unit) : 0;
+      const aW = parseDimension(a.width) !== null ? convertToMM(parseDimension(a.width), a.glass?.unit) : 0;
+      const bW = parseDimension(b.width) !== null ? convertToMM(parseDimension(b.width), b.glass?.unit) : 0;
+      return aH !== bH ? aH - bH : aW - bW;
+    };
+    const stand = (s) => Number(s.standNo) || 0;
+
     return afterRemnant.sort((a, b) => {
+      // Search matches always float to the top.
       if (a.isReverseMatch !== b.isReverseMatch) return a.isReverseMatch ? -1 : 1;
 
-      const aHeightMM = parseDimension(a.height) !== null ? convertToMM(parseDimension(a.height), a.glass?.unit) : 0;
-      const bHeightMM = parseDimension(b.height) !== null ? convertToMM(parseDimension(b.height), b.glass?.unit) : 0;
-      const aWidthMM = parseDimension(a.width) !== null ? convertToMM(parseDimension(a.width), a.glass?.unit) : 0;
-      const bWidthMM = parseDimension(b.width) !== null ? convertToMM(parseDimension(b.width), b.glass?.unit) : 0;
-
-      if (aHeightMM !== bHeightMM) return aHeightMM - bHeightMM;
-      return aWidthMM - bWidthMM;
+      switch (sortBy) {
+        case "stand_desc":
+          return stand(b) - stand(a) || dimTiebreak(a, b);
+        case "glass":
+          return (a.glass?.type || "").localeCompare(b.glass?.type || "") || stand(a) - stand(b);
+        case "qty":
+          return (b.quantity || 0) - (a.quantity || 0) || stand(a) - stand(b);
+        case "recent":
+          return (Number(b.id) || 0) - (Number(a.id) || 0);
+        case "stand_asc":
+        default:
+          // Numeric ascending by stand number (Stand #10 after #9, not after #1).
+          return stand(a) - stand(b) || dimTiebreak(a, b);
+      }
     });
-  }, [allStock, globalSearch, filterThickness, filterHeight, filterWidth, searchUnit, showRemnantsOnly]);
+  }, [allStock, globalSearch, filterThickness, filterHeight, filterWidth, searchUnit, showRemnantsOnly, sortBy]);
 
   // Total remnants in inventory (independent of the remnants-only toggle)
   const totalRemnants = useMemo(
@@ -731,19 +750,19 @@ function StockDashboard() {
         </div>
 
         {/* Thickness */}
-        <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "0 9px", height: 36, borderRadius: 8, background: "rgba(17,27,53,0.9)", border: "1px solid rgba(255,255,255,0.1)", width: isMobile ? undefined : 115, flexShrink: 0, ...(isMobile ? { flex: 1, minWidth: 0 } : {}) }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "0 9px", height: 36, borderRadius: 8, background: "rgba(17,27,53,0.9)", border: "1px solid rgba(255,255,255,0.1)", width: isMobile ? undefined : 115, flexShrink: 0, ...(isMobile ? { flex: "1 1 62px", minWidth: 58 } : {}) }}>
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#A9B3D1" strokeWidth="2" style={{ flexShrink: 0 }}><path d="M21 3H3v7l9 11 9-11V3z"/></svg>
           <input style={{ background: "transparent", border: "none", color: "#A9B3D1", fontSize: 12, fontWeight: 500, width: "100%", outline: "none", minWidth: 0 }} placeholder={isMobile ? "T" : "Thickness"} value={filterThickness} onChange={e => setFilterThickness(e.target.value)} />
         </div>
 
         {/* Height */}
-        <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "0 9px", height: 36, borderRadius: 8, background: "rgba(17,27,53,0.9)", border: "1px solid rgba(255,255,255,0.1)", width: isMobile ? undefined : 100, flexShrink: 0, ...(isMobile ? { flex: 1, minWidth: 0 } : {}) }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "0 9px", height: 36, borderRadius: 8, background: "rgba(17,27,53,0.9)", border: "1px solid rgba(255,255,255,0.1)", width: isMobile ? undefined : 100, flexShrink: 0, ...(isMobile ? { flex: "1 1 62px", minWidth: 58 } : {}) }}>
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#A9B3D1" strokeWidth="2" style={{ flexShrink: 0 }}><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
           <input style={{ background: "transparent", border: "none", color: "#A9B3D1", fontSize: 12, fontWeight: 500, width: "100%", outline: "none", minWidth: 0 }} placeholder={isMobile ? "H" : "Height"} value={filterHeight} onChange={e => setFilterHeight(e.target.value)} />
         </div>
 
         {/* Width */}
-        <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "0 9px", height: 36, borderRadius: 8, background: "rgba(17,27,53,0.9)", border: "1px solid rgba(255,255,255,0.1)", width: isMobile ? undefined : 100, flexShrink: 0, ...(isMobile ? { flex: 1, minWidth: 0 } : {}) }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "0 9px", height: 36, borderRadius: 8, background: "rgba(17,27,53,0.9)", border: "1px solid rgba(255,255,255,0.1)", width: isMobile ? undefined : 100, flexShrink: 0, ...(isMobile ? { flex: "1 1 62px", minWidth: 58 } : {}) }}>
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#A9B3D1" strokeWidth="2" style={{ flexShrink: 0 }}><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           <input style={{ background: "transparent", border: "none", color: "#A9B3D1", fontSize: 12, fontWeight: 500, width: "100%", outline: "none", minWidth: 0 }} placeholder={isMobile ? "W" : "Width"} value={filterWidth} onChange={e => setFilterWidth(e.target.value)} />
         </div>
@@ -753,6 +772,17 @@ function StockDashboard() {
           <option value="MM">MM</option>
           <option value="INCH">IN</option>
           <option value="FEET">FT</option>
+        </select>
+
+        {/* Sort by */}
+        <select value={sortBy} onChange={e => setSortBy(e.target.value)}
+          title="Sort stock cards"
+          style={{ height: 36, padding: "0 8px", borderRadius: 8, background: "rgba(17,27,53,0.9)", border: "1px solid rgba(255,255,255,0.1)", color: "#A9B3D1", fontSize: 12, fontWeight: 500, cursor: "pointer", outline: "none", ...(isMobile ? { flex: "1 1 130px", minWidth: 118 } : { width: 150, flexShrink: 0 }) }}>
+          <option value="stand_asc">Stand # ↑</option>
+          <option value="stand_desc">Stand # ↓</option>
+          <option value="glass">Glass Name</option>
+          <option value="qty">Quantity</option>
+          <option value="recent">Recently Added</option>
         </select>
 
         {/* Remnants only — its own full-width row on mobile so nothing overlaps */}

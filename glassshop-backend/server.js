@@ -65,11 +65,26 @@ const PORT = process.env.PORT || 8080;
 const EC2_IP = process.env.EC2_IP || '16.16.73.29';
 
 // ==================== REQUEST LOGGING MIDDLEWARE ====================
-// Log ALL incoming requests FIRST (before CORS)
+// Log ALL incoming requests FIRST (before CORS).
+// SECURITY: never log the Authorization header / cookies / tokens — they were
+// previously dumped in full on every request, leaking JWTs into the logs.
+const SENSITIVE_HEADERS = new Set(['authorization', 'cookie', 'set-cookie', 'x-access-token', 'x-refresh-token']);
+function redactHeaders(headers) {
+  const safe = {};
+  for (const [k, v] of Object.entries(headers || {})) {
+    safe[k] = SENSITIVE_HEADERS.has(k.toLowerCase()) ? '***REDACTED***' : v;
+  }
+  return safe;
+}
 app.use((req, res, next) => {
-  console.log('📥 [REQUEST]', req.method, req.path);
-  console.log('   Headers:', JSON.stringify(req.headers, null, 2));
-  console.log('   IP:', req.ip, '| X-Forwarded-For:', req.get('X-Forwarded-For'));
+  console.log('📥 [REQUEST]', req.method, req.path,
+    '| origin:', req.headers.origin || '-',
+    '| auth:', req.headers.authorization ? 'present' : 'none',
+    '| IP:', req.ip);
+  // Full (redacted) header dump only when explicitly debugging.
+  if (process.env.LOG_HEADERS === 'true') {
+    console.log('   Headers:', JSON.stringify(redactHeaders(req.headers), null, 2));
+  }
   next();
 });
 
@@ -117,8 +132,10 @@ app.use(cors({
   maxAge: 86400
 }));
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+// SECURITY: cap request body size to mitigate large-payload abuse. 1MB is far
+// above any legitimate JSON payload this API receives.
+app.use(bodyParser.json({ limit: '1mb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '1mb' }));
 
 // Public routes (no auth required)
 app.use('/api/auth', authRoutes);

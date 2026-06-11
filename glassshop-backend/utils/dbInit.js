@@ -267,6 +267,21 @@ async function runMigrations(sequelize) {
 async function syncSchema(sequelize) {
   console.log('🔄 Syncing Sequelize models to database schema …');
 
+  // PRODUCTION SAFETY: alter:true rewrites columns on every boot (slow + risky —
+  // it can change types / drop defaults). In production rely on the SQL
+  // migrations only and use create-only sync. Dev keeps alter for convenience.
+  const isProd = process.env.NODE_ENV === 'production';
+  if (isProd) {
+    try {
+      await sequelize.sync({ force: false }); // create missing tables only; never alter/drop
+      console.log('✅ Schema sync complete (production create-only mode).\n');
+      return;
+    } catch (prodErr) {
+      console.error('❌ Schema sync failed:', (prodErr.message || '').split('\n')[0]);
+      throw prodErr;
+    }
+  }
+
   // alter:true  → adds missing tables and columns; never drops anything
   // Falls back to force:false (create-only) if alter triggers a Sequelize bug
   try {

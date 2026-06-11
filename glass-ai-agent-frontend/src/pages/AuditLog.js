@@ -111,10 +111,13 @@ function buildDescription(log) {
       return glass
         ? `Optimization confirmed · ${qty} of ${glass}${size ? ` (${size})` : ""} from Stand #${log.standNo || "?"}`
         : "Optimization confirmed";
-    case "DELETE_STAND":
-      return log.toStand
-        ? `Transferred ${qty || "0 units"} from Stand #${log.fromStand} to Stand #${log.toStand}, then deleted Stand #${log.fromStand}`
-        : `Deleted Stand #${log.fromStand || log.standNo || "?"}`;
+    case "DELETE_STAND": {
+      if (!log.toStand) return `Deleted Stand #${log.fromStand || log.standNo || "?"}`;
+      const what = glass
+        ? `${qty || "0 units"} of ${glass}${size ? ` (${size})` : ""}`
+        : (qty || "0 units");
+      return `Transferred ${what} from Stand #${log.fromStand} to Stand #${log.toStand}, then deleted Stand #${log.fromStand}`;
+    }
     case "DELETE_GLASS_TYPE":
       return `Deleted Glass Type “${log.glassType || "?"}”${log.quantity ? ` · ${log.quantity} record${+log.quantity !== 1 ? "s" : ""} referenced` : ""}`;
     case "RESTORE_GLASS_TYPE":
