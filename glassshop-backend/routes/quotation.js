@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { Quotation, QuotationItem, Customer, Architect, User, Shop, Stock, Glass } = require('../models');
 const { requirePermission, requireAnyPermission } = require('../middleware/auth');
+const { logActivity } = require('../utils/activity');
 const pdfService = require('../services/pdfService');
 
 // Baseline: quotation data is consumed by several modules (optimization,
@@ -162,6 +163,11 @@ router.post('/', requirePermission('CREATE_QUOTATION'), async (req, res) => {
         { model: QuotationItem, as: 'items', separate: true, order: [['itemOrder', 'ASC']] },
         { model: Architect, as: 'referenceArchitect', required: false, attributes: ['id', 'name', 'mobile', 'email'] },
       ]
+    });
+
+    await logActivity(req, {
+      action: 'CREATE_QUOTATION', shopId: user.shopId,
+      details: `Created Quotation ${quotationNumber} for ${customer.name} · ₹${Number(grandTotal || 0).toLocaleString('en-IN')}`,
     });
 
     res.status(201).json(fullQuotation);
@@ -352,6 +358,11 @@ router.put('/:id/confirm', requirePermission('EDIT_QUOTATION'), async (req, res)
       include: [{ model: QuotationItem, as: 'items' }]
     });
 
+    await logActivity(req, {
+      action: 'EDIT_QUOTATION', shopId: user.shopId,
+      details: `${isConfirmed ? 'Confirmed' : 'Rejected'} Quotation ${quotation.quotationNumber || '#' + quotation.id}`,
+    });
+
     res.json(updatedQuotation);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -381,7 +392,9 @@ router.delete('/:id', requirePermission('DELETE_QUOTATION'), async (req, res) =>
       return res.status(404).json({ error: 'Quotation not found' });
     }
 
+    const qno = quotation.quotationNumber || '#' + quotation.id;
     await quotation.destroy();
+    await logActivity(req, { action: 'DELETE_QUOTATION', shopId: user.shopId, details: `Deleted Quotation ${qno}` });
     res.status(204).send();
   } catch (error) {
     res.status(500).json({ error: error.message });

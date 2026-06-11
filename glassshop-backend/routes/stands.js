@@ -3,6 +3,7 @@ const router = express.Router();
 const { sequelize, Stand, Stock, User, Shop, AuditLog, Glass } = require('../models');
 const { Op } = require('sequelize');
 const { requireStaff, requireAdmin } = require('../middleware/auth');
+const { logActivity } = require('../utils/activity');
 
 // Staff and admin can read (for dropdowns); only admin mutates.
 router.use(requireStaff);
@@ -58,6 +59,7 @@ router.post('/', requireAdmin, async (req, res) => {
       description: (req.body.description || '').trim() || null,
       isActive: true
     });
+    await logActivity(req, { action: 'ADD_STAND', shopId, standNo: created.standNumber, details: `Added Stand #${created.standNumber}${created.standName ? ' (' + created.standName + ')' : ''}` });
     res.status(201).json({ success: true, id: created.id, standNumber: created.standNumber });
   } catch (error) {
     if (error.name === 'SequelizeUniqueConstraintError') {
@@ -94,6 +96,7 @@ router.put('/:id', requireAdmin, async (req, res) => {
     if (req.body.standName !== undefined)   stand.standName   = (req.body.standName || '').trim() || null;
     if (req.body.description !== undefined)  stand.description = (req.body.description || '').trim() || null;
     await stand.save();
+    await logActivity(req, { action: 'EDIT_STAND', shopId, standNo: stand.standNumber, details: `Edited Stand #${stand.standNumber}` });
     res.json({ success: true, id: stand.id, standNumber: stand.standNumber });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message || 'Failed to update stand' });
@@ -109,6 +112,7 @@ router.patch('/:id/active', requireAdmin, async (req, res) => {
     if (!stand) return res.status(404).json({ success: false, message: 'Stand not found' });
     stand.isActive = !!req.body.isActive;
     await stand.save();
+    await logActivity(req, { action: stand.isActive ? 'EDIT_STAND' : 'DISABLE_STAND', shopId, standNo: stand.standNumber, details: `${stand.isActive ? 'Enabled' : 'Disabled'} Stand #${stand.standNumber}` });
     res.json({ success: true, id: stand.id, isActive: stand.isActive });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message || 'Failed to update stand' });
@@ -130,7 +134,9 @@ router.delete('/:id', requireAdmin, async (req, res) => {
         message: 'Cannot delete stand. Stock is currently stored in this stand.'
       });
     }
+    const sn = stand.standNumber;
     await stand.destroy();
+    await logActivity(req, { action: 'DELETE_STAND', shopId, fromStand: sn, details: `Deleted empty Stand #${sn}` });
     res.json({ success: true, message: 'Stand deleted' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message || 'Failed to delete stand' });

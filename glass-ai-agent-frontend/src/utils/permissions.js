@@ -29,6 +29,11 @@ export const PERMISSION_GROUPS = [
     { key: "EDIT_STOCK",   label: "Edit Stock" },
     { key: "DELETE_STOCK", label: "Delete Stock" },
   ]},
+  { module: "Glass Type Management", permissions: [
+    { key: "VIEW_GLASS_TYPE",   label: "View Glass Types" },
+    { key: "EDIT_GLASS_TYPE",   label: "Add / Edit Glass Types" },
+    { key: "DELETE_GLASS_TYPE", label: "Delete Glass Types" },
+  ]},
   { module: "Optimization", permissions: [
     { key: "VIEW_OPTIMIZATION", label: "View Optimization" },
     { key: "RUN_OPTIMIZATION",  label: "Run Optimization" },
@@ -49,6 +54,13 @@ export const PERMISSION_GROUPS = [
   { module: "Reports", permissions: [
     { key: "VIEW_REPORTS",   label: "View Reports" },
     { key: "EXPORT_REPORTS", label: "Export Reports" },
+  ]},
+  { module: "Financial", permissions: [
+    { key: "VIEW_PURCHASE_PRICE",    label: "View Purchase / Cost Price" },
+    { key: "VIEW_PROFIT",            label: "View Profit Amount" },
+    { key: "VIEW_MARGIN",            label: "View Margin %" },
+    { key: "VIEW_FINANCIAL_REPORTS", label: "View Financial Reports" },
+    { key: "VIEW_INVENTORY_COST",    label: "View Inventory Cost / Valuation" },
   ]},
   { module: "Staff Management", permissions: [
     { key: "VIEW_STAFF",   label: "View Staff" },
@@ -85,6 +97,12 @@ export function hasAnyPermission(keys = []) {
   const mine = getPermissions();
   return keys.some(k => mine.includes(k));
 }
+
+// Financial-data gates. Admin implicitly true.
+export const canViewCost       = () => hasPermission("VIEW_PURCHASE_PRICE") || hasPermission("VIEW_INVENTORY_COST");
+export const canViewProfit     = () => hasPermission("VIEW_PROFIT");
+export const canViewMargin     = () => hasPermission("VIEW_MARGIN");
+export const canViewFinancials = () => isAdmin() || canViewCost() || canViewProfit() || canViewMargin();
 
 // Persist permissions returned by /login. Call on successful login.
 export function storePermissions(permissions) {

@@ -1,8 +1,86 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
-const { User, Shop, StaffPermission } = require('../models');
+const { sequelize, User, Shop, StaffPermission, AuditLog } = require('../models');
+const { Op } = require('sequelize');
 const { generateToken } = require('../utils/jwt');
+
+// Activity-type → audit actions, so the Activities tab can filter by module.
+const ACTIVITY_TYPE_ACTIONS = {
+  stock:        ['ADD', 'REMOVE', 'EDIT', 'ADD_REMNANT'],
+  transfers:    ['TRANSFER'],
+  optimization: ['OPTIMIZE_CONFIRM'],
+  quotations:   ['CREATE_QUOTATION', 'EDIT_QUOTATION', 'DELETE_QUOTATION'],
+  orders:       ['CREATE_INVOICE', 'EDIT_INVOICE', 'DELETE_INVOICE'],
+  stands:       ['ADD_STAND', 'EDIT_STAND', 'DISABLE_STAND', 'DELETE_STAND'],
+  glass:        ['ADD_GLASS_TYPE', 'EDIT_GLASS_TYPE', 'DELETE_GLASS_TYPE', 'RESTORE_GLASS_TYPE'],
+  users:        ['USER_LOGIN', 'USER_LOGOUT', 'PASSWORD_CHANGE'],
+};
+function rangeStart(range, from) {
+  const now = new Date();
+  if (range === 'today') return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  if (range === 'week')  { const d = new Date(now); d.setDate(d.getDate() - 7); return d; }
+  if (range === 'month') { const d = new Date(now); d.setMonth(d.getMonth() - 1); return d; }
+  if (range === 'custom' && from) { const d = new Date(from); return isNaN(d) ? null : d; }
+  return null;
+}
+// Roll up grouped action counts into the summary cards.
+function buildSummary(grouped) {
+  const sum = { total: 0, stock: 0, transfers: 0, optimization: 0, quotations: 0, orders: 0, stands: 0, glass: 0, users: 0 };
+  const cat = (action) => Object.keys(ACTIVITY_TYPE_ACTIONS).find(k => ACTIVITY_TYPE_ACTIONS[k].includes(action));
+  for (const g of grouped) {
+    const n = parseInt(g.cnt, 10) || 0;
+    sum.total += n;
+    const c = cat(g.action);
+    if (c) sum[c] += n;
+  }
+  return sum;
+}
+
+// Shared handler for "activities of a user" (admin viewing staff, or self).
+async function listActivities(req, res, targetUsername, shopId) {
+  const { type, range, from, to, search } = req.query;
+  const where = { username: targetUsername, shopId };
+
+  if (type && type !== 'all' && ACTIVITY_TYPE_ACTIONS[type]) {
+    where.action = { [Op.in]: ACTIVITY_TYPE_ACTIONS[type] };
+  }
+  const start = rangeStart(range, from);
+  if (start || (range === 'custom' && to)) {
+    where.timestamp = {};
+    if (start) where.timestamp[Op.gte] = start;
+    if (range === 'custom' && to) { const d = new Date(to); if (!isNaN(d)) where.timestamp[Op.lte] = d; }
+  }
+  if (search && search.trim()) {
+    const q = `%${search.trim()}%`;
+    where[Op.or] = [
+      { glassType: { [Op.iLike]: q } },
+      { details:   { [Op.iLike]: q } },
+      { action:    { [Op.iLike]: q } },
+    ];
+  }
+
+  const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+  const size = Math.min(200, Math.max(1, parseInt(req.query.size, 10) || 50));
+
+  const { rows, count } = await AuditLog.findAndCountAll({
+    where, order: [['timestamp', 'DESC']], limit: size, offset: (page - 1) * size,
+  });
+
+  // Summary respects date/search but NOT type (so cards always show the breakdown).
+  const summaryWhere = { ...where };
+  delete summaryWhere.action;
+  const grouped = await AuditLog.findAll({
+    where: summaryWhere,
+    attributes: ['action', [sequelize.fn('COUNT', sequelize.col('id')), 'cnt']],
+    group: ['action'], raw: true,
+  });
+
+  res.json({
+    data: rows, page, size, total: count, totalPages: Math.ceil(count / size),
+    summary: buildSummary(grouped),
+  });
+}
 const { authMiddleware, requireAdmin, getUserPermissions } = require('../middleware/auth');
 const { PERMISSION_GROUPS, ALL_PERMISSIONS, isValidPermission } = require('../config/permissions');
 const rateLimit = require('../middleware/rateLimit');
@@ -117,6 +195,12 @@ router.post('/create-staff', authMiddleware, requireAdmin, async (req, res) => {
       );
     }
 
+    AuditLog.create({
+      username: admin.userName, role: admin.role, action: 'CREATE_STAFF',
+      quantity: 0, shopId: admin.shopId, timestamp: new Date(),
+      details: `Created staff "${staff.userName}"${perms.length ? ` with ${perms.length} permission(s)` : ''}`,
+    }).catch(() => {});
+
     res.json({ message: 'Staff created successfully', id: staff.id, permissions: perms });
   } catch (error) {
     console.error('Error creating staff:', error);
@@ -157,6 +241,15 @@ router.post('/login', loginLimiter, async (req, res) => {
     const token = generateToken(user.userName, user.role);
     const permissions = await getUserPermissions(user);
 
+    // Audit the login (best-effort — never block login on an audit failure).
+    if (user.shopId) {
+      AuditLog.create({
+        username: user.userName, role: user.role, action: 'USER_LOGIN',
+        quantity: 0, shopId: user.shopId, timestamp: new Date(),
+        details: `${user.userName} logged in`,
+      }).catch(() => {});
+    }
+
     res.json({
       token,
       role: user.role,
@@ -164,6 +257,23 @@ router.post('/login', loginLimiter, async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: 'Login failed: ' + error.message });
+  }
+});
+
+// Logout — audits the event (stateless JWT; client also clears its token).
+router.post('/logout', authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findOne({ where: { userName: req.user.username } });
+    if (user?.shopId) {
+      AuditLog.create({
+        username: user.userName, role: user.role, action: 'USER_LOGOUT',
+        quantity: 0, shopId: user.shopId, timestamp: new Date(),
+        details: `${user.userName} logged out`,
+      }).catch(() => {});
+    }
+    res.json({ message: 'Logged out' });
+  } catch {
+    res.json({ message: 'Logged out' });
   }
 });
 
@@ -216,6 +326,14 @@ router.post('/change-password', authMiddleware, async (req, res) => {
 
     user.password = await bcrypt.hash(newPassword, 10);
     await user.save();
+
+    if (user.shopId) {
+      AuditLog.create({
+        username: user.userName, role: user.role, action: 'PASSWORD_CHANGE',
+        quantity: 0, shopId: user.shopId, timestamp: new Date(),
+        details: `${user.userName} changed their password`,
+      }).catch(() => {});
+    }
 
     res.json({ message: 'Password changed successfully' });
   } catch (error) {
@@ -328,10 +446,30 @@ router.put('/staff/:id/permissions', authMiddleware, requireAdmin, async (req, r
     }
 
     const perms = sanitizePermissions(req.body.permissions);
+
+    // Capture the previous set so we can audit what changed.
+    const before = (await StaffPermission.findAll({ where: { userId: staff.id } })).map(p => p.permissionKey);
+    const beforeSet = new Set(before);
+    const afterSet = new Set(perms);
+    const granted = perms.filter(p => !beforeSet.has(p));
+    const revoked = before.filter(p => !afterSet.has(p));
+
     // Replace the full set.
     await StaffPermission.destroy({ where: { userId: staff.id } });
     if (perms.length) {
       await StaffPermission.bulkCreate(perms.map(permissionKey => ({ userId: staff.id, permissionKey })));
+    }
+
+    // Audit the change (only if something actually changed).
+    if (granted.length || revoked.length) {
+      const parts = [];
+      if (granted.length) parts.push(`granted ${granted.join(', ')}`);
+      if (revoked.length) parts.push(`revoked ${revoked.join(', ')}`);
+      await AuditLog.create({
+        username: admin.userName, role: admin.role, action: 'STAFF_PERMISSION_UPDATED',
+        quantity: perms.length, shopId: admin.shopId, timestamp: new Date(),
+        details: `Updated permissions for staff "${staff.userName}": ${parts.join('; ')}.`,
+      });
     }
 
     res.json({ message: 'Permissions updated', permissions: perms, permissionCount: perms.length });
@@ -363,6 +501,35 @@ router.put('/staff/:id/password', authMiddleware, requireAdmin, async (req, res)
     res.json({ message: 'Password reset successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to reset password: ' + error.message });
+  }
+});
+
+// GET /api/auth/staff/:id/activities — a specific staff member's activity feed
+// + performance summary (Admin only). Supports ?type=&range=&from=&to=&search=&page=&size=
+router.get('/staff/:id/activities', authMiddleware, requireAdmin, async (req, res) => {
+  try {
+    const admin = await User.findOne({ where: { userName: req.user.username } });
+    if (!admin || !admin.shopId) return res.status(404).json({ error: 'Admin not linked to a shop' });
+
+    const staff = await User.findOne({ where: { id: req.params.id, shopId: admin.shopId } });
+    if (!staff) return res.status(404).json({ error: 'Staff not found or not in your shop' });
+
+    await listActivities(req, res, staff.userName, admin.shopId);
+  } catch (error) {
+    console.error('Error fetching staff activities:', error);
+    res.status(500).json({ error: 'Failed to fetch activities' });
+  }
+});
+
+// GET /api/auth/my-activities — the current user's own activity feed (any role).
+router.get('/my-activities', authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findOne({ where: { userName: req.user.username } });
+    if (!user || !user.shopId) return res.status(404).json({ error: 'User not linked to a shop' });
+    await listActivities(req, res, user.userName, user.shopId);
+  } catch (error) {
+    console.error('Error fetching my activities:', error);
+    res.status(500).json({ error: 'Failed to fetch activities' });
   }
 });
 

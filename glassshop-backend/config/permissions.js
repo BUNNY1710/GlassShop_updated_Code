@@ -28,6 +28,11 @@ const PERMISSION_GROUPS = [
     ['EDIT_STOCK',   'Edit Stock'],
     ['DELETE_STOCK', 'Delete Stock'],
   ]},
+  { module: 'Glass Type Management', permissions: [
+    ['VIEW_GLASS_TYPE',   'View Glass Types'],
+    ['EDIT_GLASS_TYPE',   'Add / Edit Glass Types'],
+    ['DELETE_GLASS_TYPE', 'Delete Glass Types'],
+  ]},
   { module: 'Optimization', permissions: [
     ['VIEW_OPTIMIZATION', 'View Optimization'],
     ['RUN_OPTIMIZATION',  'Run Optimization'],
@@ -48,6 +53,13 @@ const PERMISSION_GROUPS = [
   { module: 'Reports', permissions: [
     ['VIEW_REPORTS',   'View Reports'],
     ['EXPORT_REPORTS', 'Export Reports'],
+  ]},
+  { module: 'Financial', permissions: [
+    ['VIEW_PURCHASE_PRICE',    'View Purchase / Cost Price'],
+    ['VIEW_PROFIT',            'View Profit Amount'],
+    ['VIEW_MARGIN',            'View Margin %'],
+    ['VIEW_FINANCIAL_REPORTS', 'View Financial Reports'],
+    ['VIEW_INVENTORY_COST',    'View Inventory Cost / Valuation'],
   ]},
   { module: 'Staff Management', permissions: [
     ['VIEW_STAFF',   'View Staff'],

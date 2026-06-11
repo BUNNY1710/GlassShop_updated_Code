@@ -2,9 +2,12 @@ const express = require('express');
 const router = express.Router();
 const { sequelize, GlassType, User, Shop, AuditLog } = require('../models');
 const { Op, QueryTypes } = require('sequelize');
-const { requireStaff } = require('../middleware/auth');
+const { requireStaff, requirePermission } = require('../middleware/auth');
+const { logActivity } = require('../utils/activity');
 
-// Staff and admin can read + manage glass types (the manager lives in Manage Stock).
+// Any staff/admin can READ glass types (dropdowns everywhere need this).
+// Mutations are gated per-permission below — staff need EDIT_GLASS_TYPE /
+// DELETE_GLASS_TYPE granted by an admin; admins bypass (hold all permissions).
 router.use(requireStaff);
 
 // Resolve the authenticated user's shop.
@@ -86,7 +89,7 @@ router.get('/', async (req, res) => {
 });
 
 // POST /api/glass-types — add a glass type. { name }
-router.post('/', async (req, res) => {
+router.post('/', requirePermission('EDIT_GLASS_TYPE'), async (req, res) => {
   try {
     const shopId = await getShopId(req, res);
     if (shopId === null) return;
@@ -111,6 +114,7 @@ router.post('/', async (req, res) => {
     }
 
     const created = await GlassType.create({ shopId, name, isActive: true });
+    await logActivity(req, { action: 'ADD_GLASS_TYPE', shopId, glassType: created.name, details: `Added Glass Type “${created.name}”` });
     res.status(201).json({ success: true, id: created.id, name: created.name });
   } catch (error) {
     if (error.name === 'SequelizeUniqueConstraintError') {
@@ -122,7 +126,7 @@ router.post('/', async (req, res) => {
 });
 
 // PUT /api/glass-types/:id — rename a glass type and cascade to existing records.
-router.put('/:id', async (req, res) => {
+router.put('/:id', requirePermission('EDIT_GLASS_TYPE'), async (req, res) => {
   const t = await sequelize.transaction();
   try {
     const shopId = await getShopId(req, res);
@@ -157,6 +161,7 @@ router.put('/:id', async (req, res) => {
     if (oldName !== newName) await cascadeRename(shopId, oldName, newName, t);
 
     await t.commit();
+    await logActivity(req, { action: 'EDIT_GLASS_TYPE', shopId, glassType: type.name, details: oldName !== newName ? `Renamed Glass Type “${oldName}” → “${newName}”` : `Edited Glass Type “${type.name}”` });
     res.json({ success: true, id: type.id, name: type.name });
   } catch (error) {
     await t.rollback();
@@ -204,7 +209,7 @@ router.get('/:id/delete-info', async (req, res) => {
 
 // DELETE /api/glass-types/:id — SOFT delete (recoverable via Undo). Stock keeps
 // its glass-type string; the type is just hidden from dropdowns.
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requirePermission('DELETE_GLASS_TYPE'), async (req, res) => {
   const t = await sequelize.transaction();
   try {
     const user = await User.findOne({ where: { userName: req.user.username } });
@@ -225,6 +230,7 @@ router.delete('/:id', async (req, res) => {
     }, { transaction: t });
 
     await t.commit();
+    await logActivity(req, { action: 'DELETE_GLASS_TYPE', shopId, glassType: type.name, quantity: usage, details: `Deleted Glass Type “${type.name}”` });
     res.json({ success: true, id: type.id, name: type.name, message: 'Glass type deleted' });
   } catch (error) {
     await t.rollback();
@@ -234,7 +240,7 @@ router.delete('/:id', async (req, res) => {
 });
 
 // POST /api/glass-types/:id/restore — undo a soft delete.
-router.post('/:id/restore', async (req, res) => {
+router.post('/:id/restore', requirePermission('DELETE_GLASS_TYPE'), async (req, res) => {
   const t = await sequelize.transaction();
   try {
     const user = await User.findOne({ where: { userName: req.user.username } });
@@ -254,6 +260,7 @@ router.post('/:id/restore', async (req, res) => {
     }, { transaction: t });
 
     await t.commit();
+    await logActivity(req, { action: 'RESTORE_GLASS_TYPE', shopId, glassType: type.name, details: `Restored Glass Type “${type.name}”` });
     res.json({ success: true, id: type.id, name: type.name, message: 'Glass type restored' });
   } catch (error) {
     await t.rollback();

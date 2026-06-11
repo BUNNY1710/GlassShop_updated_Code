@@ -17,6 +17,19 @@ const ACTION_STYLES = {
   DELETE_STAND:     { bg: "rgba(255,107,129,0.15)", color: "#FF6B81", dot: "#FF6B81" },
   DELETE_GLASS_TYPE:  { bg: "rgba(255,107,129,0.15)", color: "#FF6B81", dot: "#FF6B81" },
   RESTORE_GLASS_TYPE: { bg: "rgba(55,227,165,0.15)",  color: "#37E3A5", dot: "#37E3A5" },
+  STAFF_PERMISSION_UPDATED: { bg: "rgba(79,93,255,0.15)", color: "#818CF8", dot: "#818CF8" },
+  CREATE_QUOTATION: { bg: "rgba(55,227,165,0.15)", color: "#37E3A5", dot: "#37E3A5" },
+  EDIT_QUOTATION:   { bg: "rgba(79,93,255,0.15)",  color: "#818CF8", dot: "#818CF8" },
+  DELETE_QUOTATION: { bg: "rgba(255,107,129,0.15)", color: "#FF6B81", dot: "#FF6B81" },
+  CREATE_INVOICE:   { bg: "rgba(55,227,165,0.15)", color: "#37E3A5", dot: "#37E3A5" },
+  ADD_STAND:        { bg: "rgba(55,227,165,0.15)", color: "#37E3A5", dot: "#37E3A5" },
+  EDIT_STAND:       { bg: "rgba(79,93,255,0.15)",  color: "#818CF8", dot: "#818CF8" },
+  DISABLE_STAND:    { bg: "rgba(255,185,94,0.15)", color: "#FFB95E", dot: "#FFB95E" },
+  ADD_GLASS_TYPE:   { bg: "rgba(55,227,165,0.15)", color: "#37E3A5", dot: "#37E3A5" },
+  EDIT_GLASS_TYPE:  { bg: "rgba(79,93,255,0.15)",  color: "#818CF8", dot: "#818CF8" },
+  CREATE_STAFF:     { bg: "rgba(55,227,165,0.15)", color: "#37E3A5", dot: "#37E3A5" },
+  USER_LOGIN:       { bg: "rgba(113,128,166,0.15)", color: "#A9B3D1", dot: "#7180A6" },
+  USER_LOGOUT:      { bg: "rgba(113,128,166,0.15)", color: "#A9B3D1", dot: "#7180A6" },
   CREATE:   { bg: "rgba(79,93,255,0.15)",   color: "#818CF8", dot: "#818CF8" },
   DELETE:   { bg: "rgba(255,107,129,0.15)", color: "#FF6B81", dot: "#FF6B81" },
   APPROVE:  { bg: "rgba(55,227,165,0.15)",  color: "#37E3A5", dot: "#37E3A5" },
@@ -88,6 +101,8 @@ function isToday(ts) {
 }
 
 function buildDescription(log) {
+  // A stored free-text description (e.g. permission changes) wins over derived text.
+  if (log.details) return log.details;
   const glass = [log.glassType, log.thickness ? `${+log.thickness}MM` : ""].filter(Boolean).join(" ");
   const size  = log.height && log.width
     ? `${log.height}×${log.width} ${log.unit || "MM"}`

@@ -405,6 +405,7 @@ function ProfileMenu() {
   }, [open]);
 
   const logout = () => {
+    api.post("/api/auth/logout").catch(() => {}); // audit, best-effort
     sessionStorage.clear();
     navigate("/login");
   };

@@ -37,6 +37,7 @@ if (!process.env.DB_PASSWORD) {
 
 const { sequelize } = require('./models');
 const { authMiddleware } = require('./middleware/auth');
+const financialFilter = require('./middleware/financialFilter');
 const { initDatabase }   = require('./utils/dbInit');
 const { runSeeder }      = require('./utils/seeder');
 
@@ -140,14 +141,15 @@ app.use(bodyParser.urlencoded({ extended: true, limit: '1mb' }));
 // Public routes (no auth required)
 app.use('/api/auth', authRoutes);
 
-// Protected routes (auth required)
-app.use('/api/stock', authMiddleware, stockRoutes);
+// Protected routes (auth required). financialFilter strips cost data
+// (purchasePrice) for users without VIEW_PURCHASE_PRICE / VIEW_INVENTORY_COST.
+app.use('/api/stock', authMiddleware, financialFilter, stockRoutes);
 app.use('/api/customers', authMiddleware, customerRoutes);
-app.use('/api/quotations', authMiddleware, quotationRoutes);
-app.use('/api/invoices', authMiddleware, invoiceRoutes);
+app.use('/api/quotations', authMiddleware, financialFilter, quotationRoutes);
+app.use('/api/invoices', authMiddleware, financialFilter, invoiceRoutes);
 app.use('/api/audit', authMiddleware, auditRoutes);
 app.use('/api/ai', authMiddleware, aiRoutes);
-app.use('/api/glass-price-master', authMiddleware, glassPriceMasterRoutes);
+app.use('/api/glass-price-master', authMiddleware, financialFilter, glassPriceMasterRoutes);
 app.use('/api/glass-types', authMiddleware, glassTypeRoutes);
 app.use('/api/optimization', authMiddleware, optimizationRoutes);
 app.use('/api/stands', authMiddleware, standRoutes);

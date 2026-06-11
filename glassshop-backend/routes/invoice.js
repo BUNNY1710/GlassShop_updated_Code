@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { Invoice, InvoiceItem, Payment, Quotation, QuotationItem, Customer, Architect, User, Shop } = require('../models');
 const { requirePermission } = require('../middleware/auth');
+const { logActivity } = require('../utils/activity');
 const { generateInvoicePdf, generateBasicInvoicePdf, generateChallanPdf } = require('../services/pdfService');
 
 // Baseline: any invoice access requires VIEW_INVOICE (admin bypasses).
@@ -129,6 +130,11 @@ router.post('/from-quotation', requirePermission('CREATE_INVOICE'), async (req, 
         { model: InvoiceItem, as: 'items' },
         { model: Payment, as: 'payments' }
       ]
+    });
+
+    await logActivity(req, {
+      action: 'CREATE_INVOICE', shopId: user.shopId,
+      details: `Created Order ${invoiceNumber}${invoice.customerName ? ' for ' + invoice.customerName : ''}`,
     });
 
     res.status(201).json(fullInvoice);

@@ -24,6 +24,12 @@ module.exports = (sequelize) => {
       allowNull: true,
       field: 'glass_type'
     },
+    // Optional human-readable description (e.g. permission changes). When set,
+    // the UI shows it verbatim; otherwise the description is derived from fields.
+    details: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
     quantity: {
       type: DataTypes.INTEGER,
       allowNull: false

@@ -3,6 +3,7 @@ import PageWrapper from "../components/PageWrapper";
 import api from "../api/api";
 import { useResponsive } from "../hooks/useResponsive";
 import PermissionSelector from "../components/PermissionSelector";
+import StaffActivities from "../components/StaffActivities";
 
 /* ─── helpers ─────────────────────────────────────────────────────────────── */
 const initials = (name) => name ? name.charAt(0).toUpperCase() : "?";
@@ -148,6 +149,9 @@ export default function StaffManagement() {
   const [permList, setPermList]       = useState([]);
   const [permLoading, setPermLoading] = useState(false);
   const [permBusy, setPermBusy]       = useState(false);
+
+  // Activities modal target staff
+  const [actTarget, setActTarget] = useState(null);
 
   const [cp, setCp]         = useState({ old: "", newPw: "", confirm: "" });
   const [cpMsg, setCpMsg]   = useState("");
@@ -415,6 +419,8 @@ export default function StaffManagement() {
                       </td>
                       <td style={{ padding: "11px 12px" }}>
                         <div style={{ display: "flex", gap: 6 }}>
+                          <IconBtn title="View Activities" icon="📊" hoverBg="rgba(55,227,165,0.15)" hoverColor="#37E3A5"
+                            onClick={() => setActTarget(s)} />
                           <IconBtn title="Edit Permissions" icon="🛡" hoverBg="rgba(79,93,255,0.15)" hoverColor="#818CF8"
                             onClick={() => openPerms(s)} />
                           <IconBtn title="Reset Password" icon="🔑" hoverBg="rgba(255,185,94,0.15)" hoverColor="#FFB95E"
@@ -546,6 +552,13 @@ export default function StaffManagement() {
           </div>
         </div>
       )}
+
+      <StaffActivities
+        open={!!actTarget}
+        staffId={actTarget?.id}
+        staffName={actTarget?.userName}
+        onClose={() => setActTarget(null)}
+      />
     </PageWrapper>
   );
 }

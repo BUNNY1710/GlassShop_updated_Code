@@ -2,6 +2,7 @@ import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { hasPermission, hasAnyPermission, isAdmin } from "../utils/permissions";
+import api from "../api/api";
 
 function getUsername() {
   try {
@@ -263,6 +264,7 @@ function ProfileArea({ username, role, onNavClick }) {
   }, [menuOpen]);
 
   const handleLogout = () => {
+    api.post("/api/auth/logout").catch(() => {}); // audit, best-effort
     sessionStorage.clear();
     navigate("/login");
   };

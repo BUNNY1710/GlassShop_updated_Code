@@ -4,6 +4,7 @@ import {
   getGlassTypes, createGlassType, updateGlassType,
   deleteGlassType, getGlassTypeDeleteInfo, restoreGlassType,
 } from "../api/glassTypeApi";
+import { hasPermission } from "../utils/permissions";
 
 /* Toast body with a live 5-second Undo countdown. */
 function UndoToast({ name, onUndo, closeToast }) {
@@ -64,6 +65,10 @@ export default function GlassTypeManager({ open, onClose, onChanged }) {
   }, [open, load]);
 
   if (!open) return null;
+
+  // Admin bypasses (has all). Staff need EDIT_GLASS_TYPE / DELETE_GLASS_TYPE.
+  const canEdit = hasPermission("EDIT_GLASS_TYPE");
+  const canDelete = hasPermission("DELETE_GLASS_TYPE");
 
   const errMsg = (e, fallback) =>
     e?.response?.data?.message || e?.response?.data?.error || fallback;
@@ -176,11 +181,17 @@ export default function GlassTypeManager({ open, onClose, onChanged }) {
         </div>
 
         <div style={{ padding: "16px 18px" }}>
-          <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
-            <input style={inp} placeholder="New glass type name…" value={newName}
-              onChange={e => setNewName(e.target.value)} onKeyDown={e => { if (e.key === "Enter") handleAdd(); }} />
-            <button onClick={handleAdd} disabled={busy} style={btn("#4F5DFF", "#fff")}>+ Add</button>
-          </div>
+          {canEdit ? (
+            <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+              <input style={inp} placeholder="New glass type name…" value={newName}
+                onChange={e => setNewName(e.target.value)} onKeyDown={e => { if (e.key === "Enter") handleAdd(); }} />
+              <button onClick={handleAdd} disabled={busy} style={btn("#4F5DFF", "#fff")}>+ Add</button>
+            </div>
+          ) : (
+            <div style={{ marginBottom: 14, padding: "9px 12px", borderRadius: 9, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "#7180A6", fontSize: 12.5 }}>
+              👁 View only — you don’t have permission to add, edit, or delete glass types. Ask an admin.
+            </div>
+          )}
 
           {error && (
             <div style={{ marginBottom: 12, padding: "9px 12px", borderRadius: 9, background: "rgba(255,107,129,0.1)", border: "1px solid rgba(255,107,129,0.3)", color: "#FF6B81", fontSize: 12.5 }}>
@@ -206,8 +217,8 @@ export default function GlassTypeManager({ open, onClose, onChanged }) {
                   ) : (
                     <>
                       <span style={{ flex: 1, fontSize: 13.5, color: "#fff", fontWeight: 500 }}>{t.name}</span>
-                      <button onClick={() => { setEditId(t.id); setEditName(t.name); setError(""); }} style={btn("rgba(79,93,255,0.15)", "#818CF8", "1px solid rgba(79,93,255,0.3)")}>Edit</button>
-                      <button onClick={() => onDeleteClick(t)} style={btn("rgba(255,107,129,0.12)", "#FF6B81", "1px solid rgba(255,107,129,0.3)")}>Delete</button>
+                      {canEdit && <button onClick={() => { setEditId(t.id); setEditName(t.name); setError(""); }} style={btn("rgba(79,93,255,0.15)", "#818CF8", "1px solid rgba(79,93,255,0.3)")}>Edit</button>}
+                      {canDelete && <button onClick={() => onDeleteClick(t)} style={btn("rgba(255,107,129,0.12)", "#FF6B81", "1px solid rgba(255,107,129,0.3)")}>Delete</button>}
                     </>
                   )}
                 </div>
