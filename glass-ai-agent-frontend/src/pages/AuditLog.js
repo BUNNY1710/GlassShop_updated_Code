@@ -22,6 +22,7 @@ const ACTION_STYLES = {
   EDIT_QUOTATION:   { bg: "rgba(79,93,255,0.15)",  color: "#818CF8", dot: "#818CF8" },
   DELETE_QUOTATION: { bg: "rgba(255,107,129,0.15)", color: "#FF6B81", dot: "#FF6B81" },
   CREATE_INVOICE:   { bg: "rgba(55,227,165,0.15)", color: "#37E3A5", dot: "#37E3A5" },
+  UPDATE_STOCK_ALERT: { bg: "rgba(255,185,94,0.15)", color: "#FFB95E", dot: "#FFB95E" },
   CREATE_CUSTOMER:  { bg: "rgba(55,227,165,0.15)", color: "#37E3A5", dot: "#37E3A5" },
   UPDATE_CUSTOMER:  { bg: "rgba(79,93,255,0.15)",  color: "#818CF8", dot: "#818CF8" },
   DELETE_CUSTOMER:  { bg: "rgba(255,107,129,0.15)", color: "#FF6B81", dot: "#FF6B81" },

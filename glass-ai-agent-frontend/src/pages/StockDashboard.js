@@ -3,7 +3,7 @@ import { toast } from "react-toastify";
 import api from "../api/api";
 import ConfirmModal from "../components/ConfirmModal";
 import { getUserRole } from "../utils/auth";
-import { useGlassTypes } from "../api/glassTypeApi";
+import { useGlassTypes, getGlassTypeAlerts } from "../api/glassTypeApi";
 import "../styles/design-system.css";
 
 // Short unit label: INCH→in, FEET→ft, MM→mm
@@ -75,6 +75,7 @@ function StockDashboard() {
   // Glass type options (dynamic — from the Glass Type master)
   const { names: glassTypeOptionsDyn } = useGlassTypes();
   const [allStock, setAllStock] = useState([]);
+  const [alertMap, setAlertMap] = useState({}); // glass type name -> { status, threshold }
   const [globalSearch, setGlobalSearch] = useState("");
   const [filterThickness, setFilterThickness] = useState("");
   const [filterHeight, setFilterHeight] = useState("");
@@ -135,6 +136,14 @@ function StockDashboard() {
         item.quantity != null && item.quantity > 0
       );
       setAllStock(stockWithQuantity);
+
+      // Per-glass-type low-stock thresholds (drives card severity below).
+      try {
+        const a = await getGlassTypeAlerts();
+        const m = {};
+        (a.alerts || []).forEach(x => { m[x.name] = x; });
+        setAlertMap(m);
+      } catch { /* non-fatal */ }
 
       stockWithQuantity.forEach(item => {
         if (item.quantity < item.minQuantity) {
@@ -822,7 +831,13 @@ function StockDashboard() {
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: gridCols, gap: isMobile ? 8 : 10, alignItems: "start" }}>
           {filteredStock.map((s, i) => {
-            const isLow = s.quantity < s.minQuantity;
+            // Severity from the glass type's configured threshold (falls back to
+            // the per-row minQuantity when no type alert config is available).
+            const typeAlert = alertMap[s.glass?.type];
+            const isOut = typeAlert ? typeAlert.status === "OUT" : (s.quantity === 0);
+            const isLow = typeAlert ? (typeAlert.status === "LOW" || typeAlert.status === "OUT") : (s.quantity < s.minQuantity);
+            const sevColor = isOut ? "#FF6B81" : isLow ? "#FFB95E" : "#37E3A5";
+            const sevLabel = isOut ? "OUT" : isLow ? "LOW" : "OK";
             const isReverseMatch = s.isReverseMatch || false;
             const isRemnant = s.source === "Optimization Remnant";
             const unit = s.glass?.unit || "MM";
@@ -854,8 +869,8 @@ function StockDashboard() {
                       )}
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: isLow ? "#FF6B81" : "#37E3A5", display: "inline-block", boxShadow: isLow ? "0 0 5px #FF6B81" : "0 0 5px #37E3A5" }} />
-                      <span style={{ fontSize: 11, fontWeight: 700, color: isLow ? "#FF6B81" : "#37E3A5" }}>{isLow ? "LOW" : "OK"}</span>
+                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: sevColor, display: "inline-block", boxShadow: `0 0 5px ${sevColor}` }} />
+                      <span style={{ fontSize: 11, fontWeight: 700, color: sevColor }}>{sevLabel}</span>
                     </div>
                   </div>
 
@@ -927,8 +942,8 @@ function StockDashboard() {
                     )}
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
-                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: isLow ? "#FF6B81" : "#37E3A5", display: "inline-block", boxShadow: isLow ? "0 0 5px #FF6B81" : "0 0 5px #37E3A5" }} />
-                    <span style={{ fontSize: 11, fontWeight: 700, color: isLow ? "#FF6B81" : "#37E3A5" }}>{isLow ? "LOW" : "OK"}</span>
+                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: sevColor, display: "inline-block", boxShadow: `0 0 5px ${sevColor}` }} />
+                    <span style={{ fontSize: 11, fontWeight: 700, color: sevColor }}>{sevLabel}</span>
                   </div>
                 </div>
 

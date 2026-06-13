@@ -81,10 +81,94 @@ router.get('/', async (req, res) => {
       where: { shopId, isActive: true, deletedAt: null },
       order: [['name', 'ASC']]
     });
-    res.json(types.map(t => ({ id: t.id, name: t.name, isActive: t.isActive })));
+    res.json(types.map(t => ({
+      id: t.id, name: t.name, isActive: t.isActive,
+      lowStockEnabled: t.lowStockEnabled, lowStockThreshold: t.lowStockThreshold,
+    })));
   } catch (error) {
     console.error('Error listing glass types:', error);
     res.status(500).json({ success: false, message: error.message || 'Failed to load glass types' });
+  }
+});
+
+// GET /api/glass-types/alerts — per-type stock status (current vs threshold).
+// Readable by any staff/admin (view). Threshold falls back to the shop global.
+router.get('/alerts', async (req, res) => {
+  try {
+    const username = req.user?.username;
+    const user = await User.findOne({ where: { userName: username }, include: [{ model: Shop, as: 'shop' }] });
+    if (!user || !user.shopId) return res.status(404).json({ success: false, message: 'User not linked to a shop' });
+    const shopId = user.shopId;
+    const globalThreshold = user.shop?.lowStockThreshold ?? 5;
+
+    const types = await GlassType.findAll({ where: { shopId, isActive: true, deletedAt: null }, order: [['name', 'ASC']] });
+
+    // Current stock per glass type (sum of quantities).
+    const rows = await sequelize.query(`
+      SELECT g.type AS name, COALESCE(SUM(s.quantity),0)::int AS qty
+      FROM stock s JOIN glass g ON g.id = s.glass_id
+      WHERE s.shop_id = :shopId
+      GROUP BY g.type`, { replacements: { shopId }, type: QueryTypes.SELECT });
+    const stockByName = {};
+    rows.forEach(r => { stockByName[r.name] = r.qty; });
+
+    const alerts = types.map(t => {
+      const currentStock = stockByName[t.name] || 0;
+      const threshold = (t.lowStockThreshold != null) ? t.lowStockThreshold : globalThreshold;
+      let status = 'SAFE';
+      if (currentStock === 0) status = 'OUT';
+      else if (t.lowStockEnabled && currentStock < threshold) status = 'LOW';
+      return {
+        id: t.id, name: t.name, currentStock, threshold,
+        enabled: t.lowStockEnabled, status,
+        shortage: status === 'SAFE' ? 0 : Math.max(0, threshold - currentStock),
+      };
+    });
+
+    res.json({ globalThreshold, alerts });
+  } catch (error) {
+    console.error('Error computing stock alerts:', error);
+    res.status(500).json({ success: false, message: error.message || 'Failed to load alerts' });
+  }
+});
+
+// PATCH /api/glass-types/:id/alert — set per-type low-stock config (admin/owner).
+router.patch('/:id/alert', requirePermission('EDIT_GLASS_TYPE'), async (req, res) => {
+  try {
+    const shopId = await getShopId(req, res);
+    if (shopId === null) return;
+    const type = await GlassType.findOne({ where: { id: req.params.id, shopId } });
+    if (!type) return res.status(404).json({ success: false, message: 'Glass type not found' });
+
+    const oldThreshold = type.lowStockThreshold;
+    const oldEnabled = type.lowStockEnabled;
+
+    if (req.body.enabled !== undefined) type.lowStockEnabled = !!req.body.enabled;
+    if (req.body.threshold !== undefined) {
+      if (req.body.threshold === null || req.body.threshold === '') {
+        type.lowStockThreshold = null;
+      } else {
+        const v = parseInt(req.body.threshold, 10);
+        if (!Number.isInteger(v) || v < 0 || v > 99999) {
+          return res.status(400).json({ success: false, message: 'Threshold must be between 0 and 99999' });
+        }
+        type.lowStockThreshold = v;
+      }
+    }
+    await type.save();
+
+    const changes = [];
+    if (oldThreshold !== type.lowStockThreshold) changes.push(`threshold ${oldThreshold ?? 'default'} → ${type.lowStockThreshold ?? 'default'}`);
+    if (oldEnabled !== type.lowStockEnabled) changes.push(`alert ${type.lowStockEnabled ? 'enabled' : 'disabled'}`);
+    await logActivity(req, {
+      action: 'UPDATE_STOCK_ALERT', shopId, glassType: type.name,
+      details: `Low-stock alert for “${type.name}”${changes.length ? ': ' + changes.join('; ') : ' updated'}`,
+    });
+
+    res.json({ success: true, id: type.id, name: type.name, lowStockEnabled: type.lowStockEnabled, lowStockThreshold: type.lowStockThreshold });
+  } catch (error) {
+    console.error('Error updating alert config:', error);
+    res.status(500).json({ success: false, message: error.message || 'Failed to update alert' });
   }
 });
 

@@ -7,7 +7,7 @@ const { generateToken } = require('../utils/jwt');
 
 // Activity-type → audit actions, so the Activities tab can filter by module.
 const ACTIVITY_TYPE_ACTIONS = {
-  stock:        ['ADD', 'REMOVE', 'EDIT', 'ADD_REMNANT'],
+  stock:        ['ADD', 'REMOVE', 'EDIT', 'ADD_REMNANT', 'UPDATE_STOCK_ALERT'],
   transfers:    ['TRANSFER'],
   optimization: ['OPTIMIZE_CONFIRM'],
   quotations:   ['CREATE_QUOTATION', 'EDIT_QUOTATION', 'DELETE_QUOTATION'],

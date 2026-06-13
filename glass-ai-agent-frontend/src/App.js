@@ -18,6 +18,7 @@ import InvoiceManagement from "./pages/InvoiceManagement";
 import StockTransfer from "./pages/StockTransfer";
 import GlassPriceMaster from "./pages/GlassPriceMaster";
 import OptimizationPage from "./pages/OptimizationPage";
+import LowStockAlerts from "./pages/LowStockAlerts";
 import ArchitectManagement from "./pages/ArchitectManagement";
 import AccessDenied from "./pages/AccessDenied";
 import Login from "./auth/Login";
@@ -64,6 +65,11 @@ function App() {
         <Route
           path="/view-stock"
           element={<ProtectedRoute><RequirePermission anyOf={["VIEW_STOCK"]}><StockDashboard /></RequirePermission></ProtectedRoute>}
+        />
+
+        <Route
+          path="/low-stock-alerts"
+          element={<ProtectedRoute><RequirePermission anyOf={["VIEW_STOCK"]}><LowStockAlerts /></RequirePermission></ProtectedRoute>}
         />
 
         <Route

@@ -9,6 +9,10 @@ export const deleteGlassType = (id) => api.delete(`/api/glass-types/${id}`).then
 export const getGlassTypeDeleteInfo = (id) => api.get(`/api/glass-types/${id}/delete-info`).then(r => r.data);
 export const restoreGlassType = (id) => api.post(`/api/glass-types/${id}/restore`).then(r => r.data);
 
+// ─── Low-stock alerts ───────────────────────────────────────────────────────
+export const getGlassTypeAlerts = () => api.get("/api/glass-types/alerts").then(r => r.data);
+export const updateGlassTypeAlert = (id, body) => api.patch(`/api/glass-types/${id}/alert`, body).then(r => r.data);
+
 // Fallback catalogue so dropdowns never go empty if the API is briefly unreachable.
 export const DEFAULT_GLASS_TYPES = [
   "Plain", "Extra Clear", "Grey Tinted", "Brown Tinted", "One Way",

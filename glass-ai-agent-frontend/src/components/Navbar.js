@@ -494,6 +494,7 @@ function SidebarBody({ role, username, onNavClick }) {
 
             {showInventory && <Section label="Inventory" />}
             {showViewStock && <Item to="/view-stock"     icon={IC.stock_view}   label="View Stock"     onClick={onNavClick} />}
+            {showViewStock && <Item to="/low-stock-alerts" icon={IC.stock_view} label="Low Stock Alerts" onClick={onNavClick} />}
             {showManage    && <Item to="/manage-stock"   icon={IC.stock_manage} label="Manage Stock"   onClick={onNavClick} />}
             {showTransfer  && <Item to="/stock-transfer" icon={IC.transfer}     label="Transfer Stock" onClick={onNavClick} />}
 

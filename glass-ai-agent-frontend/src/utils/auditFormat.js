@@ -34,6 +34,7 @@ export const ACTION_META = {
   REMOVE:                  { label: "Removed Stock",          module: "Stock",        color: "#FF6B81" },
   EDIT:                    { label: "Edited Stock",           module: "Stock",        color: "#818CF8" },
   ADD_REMNANT:             { label: "Added Remnant",          module: "Stock",        color: "#FF9F40" },
+  UPDATE_STOCK_ALERT:      { label: "Updated Stock Alert",    module: "Stock",        color: "#FFB95E" },
   TRANSFER:                { label: "Transferred Stock",      module: "Transfers",    color: "#FFB95E" },
   OPTIMIZE_CONFIRM:        { label: "Confirmed Optimization", module: "Optimization", color: "#A78BFA" },
   CREATE_QUOTATION:        { label: "Created Quotation",      module: "Quotations",   color: "#37E3A5" },

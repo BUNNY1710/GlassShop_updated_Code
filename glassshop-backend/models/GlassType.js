@@ -33,6 +33,19 @@ module.exports = (sequelize) => {
       type: DataTypes.DATE,
       allowNull: true,
       field: 'deleted_at'
+    },
+    // Per-type low-stock alert config. Null threshold => fall back to the
+    // shop's global lowStockThreshold setting.
+    lowStockEnabled: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
+      field: 'low_stock_enabled'
+    },
+    lowStockThreshold: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      field: 'low_stock_threshold'
     }
   }, {
     tableName: 'glass_types',
