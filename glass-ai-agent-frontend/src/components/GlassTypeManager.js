@@ -4,7 +4,9 @@ import {
   getGlassTypes, createGlassType, updateGlassType,
   deleteGlassType, getGlassTypeDeleteInfo, restoreGlassType,
 } from "../api/glassTypeApi";
-import { hasPermission } from "../utils/permissions";
+import { hasPermission, isAdmin } from "../utils/permissions";
+
+const SKIP_CONFIRM_KEY = "glassType.skipCreateConfirm";
 
 /* Toast body with a live 5-second Undo countdown. */
 function UndoToast({ name, onUndo, closeToast }) {
@@ -45,6 +47,11 @@ export default function GlassTypeManager({ open, onClose, onChanged }) {
   const [del, setDel]         = useState(null);
   const [deleting, setDeleting] = useState(false);
 
+  // create confirmation modal
+  const [confirmName, setConfirmName] = useState(null);
+  const [adding, setAdding]   = useState(false);
+  const [dontAsk, setDontAsk] = useState(false);
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
@@ -75,18 +82,34 @@ export default function GlassTypeManager({ open, onClose, onChanged }) {
 
   const afterChange = async () => { await load(); onChanged && onChanged(); };
 
-  const handleAdd = async () => {
+  // Click "Add" → validate + duplicate-check, then open the confirm modal
+  // (unless the admin opted out of confirmation).
+  const handleAdd = () => {
     const name = newName.trim();
     setError("");
     if (!name) { setError("Glass type name cannot be empty"); return; }
-    setBusy(true);
+    if (types.some(t => (t.name || "").toLowerCase() === name.toLowerCase())) {
+      setError(`⚠ Glass Type "${name}" already exists`);
+      return;
+    }
+    if (localStorage.getItem(SKIP_CONFIRM_KEY) === "true") { doCreate(name); return; }
+    setDontAsk(false);
+    setConfirmName(name);
+  };
+
+  const doCreate = async (name) => {
+    setAdding(true); setError("");
     try {
       await createGlassType(name);
+      if (dontAsk && isAdmin()) localStorage.setItem(SKIP_CONFIRM_KEY, "true");
+      setConfirmName(null);
       setNewName("");
+      toast.success(`✅ Glass Type "${name}" created successfully`);
       await afterChange();
     } catch (e) {
       setError(errMsg(e, "Failed to add glass type"));
-    } finally { setBusy(false); }
+      setConfirmName(null);
+    } finally { setAdding(false); }
   };
 
   const handleSaveEdit = async () => {
@@ -227,6 +250,50 @@ export default function GlassTypeManager({ open, onClose, onChanged }) {
           )}
         </div>
       </div>
+
+      {/* ── Create confirmation modal ── */}
+      {confirmName && (
+        <div onClick={e => { e.stopPropagation(); if (!adding) setConfirmName(null); }}
+          style={{ position: "fixed", inset: 0, zIndex: 10010, display: "flex", alignItems: "center", justifyContent: "center", padding: 16, background: "rgba(5,11,31,0.6)", backdropFilter: "blur(6px)", animation: "fadeIn 0.18s ease-out" }}>
+          <div onClick={e => e.stopPropagation()}
+            style={{ width: "100%", maxWidth: 420, background: "linear-gradient(180deg, rgba(23,33,60,0.98), rgba(17,27,53,0.98))", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 18, boxShadow: "0 24px 70px rgba(0,0,0,0.6)", padding: "24px 22px", animation: "fadeIn 0.22s cubic-bezier(0.32,0.72,0,1)" }}>
+            <div style={{ width: 54, height: 54, borderRadius: 15, margin: "0 auto 14px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, background: "rgba(79,93,255,0.15)", border: "1px solid rgba(79,93,255,0.35)" }}>
+              🏷️
+            </div>
+            <h3 style={{ margin: "0 0 8px", textAlign: "center", fontSize: 18, fontWeight: 800, color: "#fff" }}>Create Glass Type</h3>
+            <p style={{ margin: "0 0 16px", textAlign: "center", fontSize: 13.5, color: "#A9B3D1", lineHeight: 1.5 }}>
+              Please review the details before creating.
+            </p>
+
+            <div style={{ marginBottom: 16, padding: "12px 14px", borderRadius: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+              <div style={{ fontSize: 10.5, color: "#7180A6", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 700 }}>Glass Type Name</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: "#fff", marginTop: 2 }}>{confirmName}</div>
+              <div style={{ fontSize: 11.5, color: "#7180A6", marginTop: 8 }}>
+                Low-stock alert defaults to <b style={{ color: "#A9B3D1" }}>Enabled</b> (shop threshold). Configure a custom threshold later in <b style={{ color: "#A9B3D1" }}>Low Stock Alerts</b>.
+              </div>
+            </div>
+
+            {isAdmin() && (
+              <label style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14, fontSize: 12.5, color: "#A9B3D1", cursor: "pointer" }}>
+                <input type="checkbox" checked={dontAsk} onChange={e => setDontAsk(e.target.checked)} style={{ width: 15, height: 15, accentColor: "#4F5DFF", cursor: "pointer" }} />
+                Don’t ask for confirmation again
+              </label>
+            )}
+
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={() => !adding && setConfirmName(null)} disabled={adding}
+                style={{ flex: 1, height: 44, borderRadius: 11, border: "1px solid rgba(255,255,255,0.14)", background: "rgba(255,255,255,0.06)", color: "#A9B3D1", fontSize: 14, fontWeight: 700, cursor: adding ? "default" : "pointer" }}>
+                Cancel
+              </button>
+              <button onClick={() => doCreate(confirmName)} disabled={adding}
+                style={{ flex: 1, height: 44, borderRadius: 11, border: "none", background: "linear-gradient(135deg,#4F5DFF,#4150E0)", color: "#fff", fontSize: 14, fontWeight: 800, cursor: adding ? "default" : "pointer", opacity: adding ? 0.7 : 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                {adding && <span style={{ width: 14, height: 14, border: "2px solid rgba(255,255,255,0.4)", borderTopColor: "#fff", borderRadius: "50%", display: "inline-block", animation: "spin 0.7s linear infinite" }} />}
+                {adding ? "Creating…" : "Create Glass Type"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Delete confirmation modal (with stock details) ── */}
       {del && (

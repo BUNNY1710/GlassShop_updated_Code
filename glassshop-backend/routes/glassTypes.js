@@ -308,12 +308,8 @@ router.delete('/:id', requirePermission('DELETE_GLASS_TYPE'), async (req, res) =
     type.isActive = false;
     await type.save({ transaction: t });
 
-    await AuditLog.create({
-      username: user.userName, role: user.role, action: 'DELETE_GLASS_TYPE',
-      glassType: type.name, quantity: usage, shopId, timestamp: new Date(),
-    }, { transaction: t });
-
     await t.commit();
+    // Single audit/activity entry (logActivity writes the one audit_log row).
     await logActivity(req, { action: 'DELETE_GLASS_TYPE', shopId, glassType: type.name, quantity: usage, details: `Deleted Glass Type “${type.name}”` });
     res.json({ success: true, id: type.id, name: type.name, message: 'Glass type deleted' });
   } catch (error) {
@@ -338,12 +334,8 @@ router.post('/:id/restore', requirePermission('DELETE_GLASS_TYPE'), async (req, 
     type.isActive = true;
     await type.save({ transaction: t });
 
-    await AuditLog.create({
-      username: user.userName, role: user.role, action: 'RESTORE_GLASS_TYPE',
-      glassType: type.name, quantity: 0, shopId, timestamp: new Date(),
-    }, { transaction: t });
-
     await t.commit();
+    // Single audit/activity entry.
     await logActivity(req, { action: 'RESTORE_GLASS_TYPE', shopId, glassType: type.name, details: `Restored Glass Type “${type.name}”` });
     res.json({ success: true, id: type.id, name: type.name, message: 'Glass type restored' });
   } catch (error) {
