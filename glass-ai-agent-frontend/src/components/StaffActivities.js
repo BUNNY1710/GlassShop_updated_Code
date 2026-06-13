@@ -6,7 +6,7 @@ const fmtDay  = (ts) => { try { return new Date(ts).toLocaleDateString("en-GB", 
 const fmtTime = (ts) => { try { return new Date(ts).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }); } catch { return ""; } };
 
 const RANGES = [["today", "Today"], ["week", "This Week"], ["month", "This Month"], ["all", "All"]];
-const TYPES  = [["all", "All"], ["stock", "Stock"], ["transfers", "Transfers"], ["optimization", "Optimization"], ["quotations", "Quotations"], ["orders", "Orders"], ["stands", "Stands"], ["glass", "Glass Types"], ["users", "User"]];
+const TYPES  = [["all", "All"], ["stock", "Stock"], ["transfers", "Transfers"], ["optimization", "Optimization"], ["quotations", "Quotations"], ["orders", "Orders"], ["customers", "Customers"], ["stands", "Stands"], ["glass", "Glass Types"], ["users", "User"]];
 
 export default function StaffActivities({ open, staffId, staffName, onClose }) {
   const [data, setData]       = useState([]);
@@ -54,6 +54,7 @@ export default function StaffActivities({ open, staffId, staffName, onClose }) {
     { l: "Total",         v: summary.total || 0,        c: "#4F5DFF" },
     { l: "Quotations",    v: summary.quotations || 0,   c: "#37E3A5" },
     { l: "Orders",        v: summary.orders || 0,       c: "#818CF8" },
+    { l: "Customers",     v: summary.customers || 0,    c: "#22D3EE" },
     { l: "Stock",         v: summary.stock || 0,        c: "#FFB95E" },
     { l: "Transfers",     v: summary.transfers || 0,    c: "#FF9F40" },
     { l: "Optimizations", v: summary.optimization || 0, c: "#A78BFA" },

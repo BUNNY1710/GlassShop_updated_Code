@@ -72,9 +72,15 @@ export const PERMISSION_GROUPS = [
 
 export const ALL_PERMISSIONS = PERMISSION_GROUPS.flatMap(g => g.permissions.map(p => p.key));
 
-// True for admins (implicit ALL permissions).
+// True for owners and admins (both have implicit ALL permissions).
 export function isAdmin() {
-  return sessionStorage.getItem("role") === "ROLE_ADMIN";
+  const r = sessionStorage.getItem("role");
+  return r === "ROLE_ADMIN" || r === "ROLE_OWNER";
+}
+
+// True only for the shop owner (super-admin: can create/delete admins).
+export function isOwner() {
+  return sessionStorage.getItem("role") === "ROLE_OWNER";
 }
 
 // The current user's granted permission keys. Admin => everything.

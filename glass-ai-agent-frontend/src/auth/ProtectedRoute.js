@@ -8,7 +8,12 @@ function ProtectedRoute({ children, allowedRoles }) {
     return <Navigate to="/login" />;
   }
 
-  if (allowedRoles && !allowedRoles.includes(role)) {
+  // OWNER has full admin access — treat it as ADMIN for any admin-gated route.
+  const effectiveRoles = allowedRoles && allowedRoles.includes("ROLE_ADMIN")
+    ? [...allowedRoles, "ROLE_OWNER"]
+    : allowedRoles;
+
+  if (effectiveRoles && !effectiveRoles.includes(role)) {
     return <Navigate to="/access-denied" />;
   }
 

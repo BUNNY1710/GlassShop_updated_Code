@@ -65,9 +65,9 @@ function GlassPriceMaster() {
   }, []);
 
   useEffect(() => {
-    // Check if user is admin
+    // Check if user is admin/owner
     const role = getUserRole();
-    if (role !== "ROLE_ADMIN") {
+    if (role !== "ROLE_ADMIN" && role !== "ROLE_OWNER") {
       navigate("/dashboard");
       return;
     }

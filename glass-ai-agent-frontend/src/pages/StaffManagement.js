@@ -4,12 +4,14 @@ import api from "../api/api";
 import { useResponsive } from "../hooks/useResponsive";
 import PermissionSelector from "../components/PermissionSelector";
 import StaffActivities from "../components/StaffActivities";
+import { isOwner } from "../utils/permissions";
 
 /* ─── helpers ─────────────────────────────────────────────────────────────── */
 const initials = (name) => name ? name.charAt(0).toUpperCase() : "?";
 
-const ROLE_LABEL = { ROLE_ADMIN: "Admin", ROLE_STAFF: "Staff" };
+const ROLE_LABEL = { ROLE_OWNER: "Owner", ROLE_ADMIN: "Admin", ROLE_STAFF: "Staff" };
 const ROLE_COLOR = {
+  ROLE_OWNER: { bg: "rgba(251,191,36,0.18)", color: "#FBBF24", border: "rgba(251,191,36,0.4)" },
   ROLE_ADMIN: { bg: "rgba(79,93,255,0.2)", color: "#818CF8", border: "rgba(79,93,255,0.3)" },
   ROLE_STAFF: { bg: "rgba(55,227,165,0.15)", color: "#37E3A5", border: "rgba(55,227,165,0.3)" },
 };
@@ -131,10 +133,11 @@ export default function StaffManagement() {
   const [flash, setFlash]     = useState({ text: "", ok: true });
 
   const [showCreate, setShowCreate]   = useState(false);
+  const [createRole, setCreateRole]   = useState("staff"); // "staff" | "admin"
   const [resetTarget, setResetTarget] = useState(null);
   const [delTarget, setDelTarget]     = useState(null);
 
-  const [cf, setCf]         = useState({ username: "", password: "", confirm: "" });
+  const [cf, setCf]         = useState({ username: "", password: "", confirm: "", mobile: "" });
   const [cfErr, setCfErr]   = useState("");
   const [cfBusy, setCfBusy] = useState(false);
 
@@ -165,10 +168,10 @@ export default function StaffManagement() {
   const loadStaff = async () => {
     try {
       setLoading(true);
-      const r = await api.get("/api/auth/staff");
+      const r = await api.get("/api/auth/users"); // all users: owner / admins / staff
       setStaff(r.data || []);
     } catch {
-      toast("Failed to load staff list", false);
+      toast("Failed to load users", false);
     } finally {
       setLoading(false);
     }
@@ -183,14 +186,16 @@ export default function StaffManagement() {
     if (cf.password.length < 4) return setCfErr("Password must be at least 4 characters");
     if (cf.password !== cf.confirm) return setCfErr("Passwords do not match");
     setCfBusy(true);
+    const isAdminRole = createRole === "admin";
     try {
-      await api.post("/api/auth/create-staff", { username: cf.username.trim(), password: cf.password });
+      await api.post(isAdminRole ? "/api/auth/create-admin" : "/api/auth/create-staff",
+        { username: cf.username.trim(), password: cf.password, whatsappNumber: cf.mobile || undefined });
       setShowCreate(false);
-      setCf({ username: "", password: "", confirm: "" });
-      toast("✅ Staff account created successfully");
+      setCf({ username: "", password: "", confirm: "", mobile: "" });
+      toast(`✅ ${isAdminRole ? "Admin" : "Staff"} account created successfully`);
       loadStaff();
     } catch (err) {
-      setCfErr(err.response?.data?.error || "Failed to create staff");
+      setCfErr(err.response?.data?.error || `Failed to create ${isAdminRole ? "admin" : "staff"}`);
     } finally {
       setCfBusy(false);
     }
@@ -216,13 +221,14 @@ export default function StaffManagement() {
 
   const handleDelete = async () => {
     setDelBusy(true);
+    const isAdminTarget = (delTarget.role || "").toUpperCase().includes("ADMIN");
     try {
-      await api.delete(`/api/auth/staff/${delTarget.id}`);
+      await api.delete(isAdminTarget ? `/api/auth/admin/${delTarget.id}` : `/api/auth/staff/${delTarget.id}`);
       toast(`✅ ${delTarget.userName} removed`);
       setDelTarget(null);
       loadStaff();
     } catch (err) {
-      toast(err.response?.data?.error || "Failed to delete staff", false);
+      toast(err.response?.data?.error || "Failed to delete user", false);
       setDelTarget(null);
     } finally {
       setDelBusy(false);
@@ -325,18 +331,28 @@ export default function StaffManagement() {
           }}>
             <div>
               <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: "#fff" }}>
-                👥 Staff Management
+                👥 User Management
               </h2>
               <p style={{ margin: "2px 0 0", fontSize: 12.5, color: "#7180A6" }}>
-                {loading ? "Loading…" : `${staff.length} staff account${staff.length !== 1 ? "s" : ""}`}
+                {loading ? "Loading…" : `${staff.length} user${staff.length !== 1 ? "s" : ""}`}
               </p>
             </div>
-            <button
-              onClick={() => { setShowCreate(true); setCfErr(""); setCf({ username: "", password: "", confirm: "" }); }}
-              style={primaryBtn(false)}
-            >
-              + Create Staff
-            </button>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {isOwner() && (
+                <button
+                  onClick={() => { setCreateRole("admin"); setShowCreate(true); setCfErr(""); setCf({ username: "", password: "", confirm: "", mobile: "" }); }}
+                  style={{ ...primaryBtn(false), background: "rgba(251,191,36,0.18)", color: "#FBBF24", border: "1px solid rgba(251,191,36,0.4)" }}
+                >
+                  + Add Admin
+                </button>
+              )}
+              <button
+                onClick={() => { setCreateRole("staff"); setShowCreate(true); setCfErr(""); setCf({ username: "", password: "", confirm: "", mobile: "" }); }}
+                style={primaryBtn(false)}
+              >
+                + Create Staff
+              </button>
+            </div>
           </div>
 
           <div style={{ padding: isMobile ? "12px" : "16px" }}>
@@ -373,12 +389,20 @@ export default function StaffManagement() {
                       </div>
                     </div>
                     <div style={{ display: "flex", gap: 7, borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 9 }}>
-                      <IconBtn title="Edit Permissions" icon="🛡" hoverBg="rgba(79,93,255,0.15)" hoverColor="#818CF8"
-                        onClick={() => openPerms(s)} />
-                      <IconBtn title="Reset Password" icon="🔑" hoverBg="rgba(255,185,94,0.15)" hoverColor="#FFB95E"
-                        onClick={() => { setResetTarget(s); setRfErr(""); setRf({ password: "", confirm: "" }); }} />
-                      <IconBtn title="Delete Staff" icon="🗑" hoverBg="rgba(255,107,129,0.15)" hoverColor="#FF6B81"
-                        onClick={() => setDelTarget(s)} />
+                      <IconBtn title="View Activities" icon="📊" hoverBg="rgba(55,227,165,0.15)" hoverColor="#37E3A5"
+                        onClick={() => setActTarget(s)} />
+                      {s.role === "ROLE_STAFF" && (
+                        <IconBtn title="Edit Permissions" icon="🛡" hoverBg="rgba(79,93,255,0.15)" hoverColor="#818CF8"
+                          onClick={() => openPerms(s)} />
+                      )}
+                      {s.role !== "ROLE_OWNER" && (
+                        <IconBtn title="Reset Password" icon="🔑" hoverBg="rgba(255,185,94,0.15)" hoverColor="#FFB95E"
+                          onClick={() => { setResetTarget(s); setRfErr(""); setRf({ password: "", confirm: "" }); }} />
+                      )}
+                      {(s.role === "ROLE_STAFF" || (s.role === "ROLE_ADMIN" && isOwner())) && (
+                        <IconBtn title="Delete User" icon="🗑" hoverBg="rgba(255,107,129,0.15)" hoverColor="#FF6B81"
+                          onClick={() => setDelTarget(s)} />
+                      )}
                     </div>
                   </div>
                 ))}
@@ -421,12 +445,18 @@ export default function StaffManagement() {
                         <div style={{ display: "flex", gap: 6 }}>
                           <IconBtn title="View Activities" icon="📊" hoverBg="rgba(55,227,165,0.15)" hoverColor="#37E3A5"
                             onClick={() => setActTarget(s)} />
-                          <IconBtn title="Edit Permissions" icon="🛡" hoverBg="rgba(79,93,255,0.15)" hoverColor="#818CF8"
-                            onClick={() => openPerms(s)} />
-                          <IconBtn title="Reset Password" icon="🔑" hoverBg="rgba(255,185,94,0.15)" hoverColor="#FFB95E"
-                            onClick={() => { setResetTarget(s); setRfErr(""); setRf({ password: "", confirm: "" }); }} />
-                          <IconBtn title="Delete Staff" icon="🗑" hoverBg="rgba(255,107,129,0.15)" hoverColor="#FF6B81"
-                            onClick={() => setDelTarget(s)} />
+                          {s.role === "ROLE_STAFF" && (
+                            <IconBtn title="Edit Permissions" icon="🛡" hoverBg="rgba(79,93,255,0.15)" hoverColor="#818CF8"
+                              onClick={() => openPerms(s)} />
+                          )}
+                          {s.role !== "ROLE_OWNER" && (
+                            <IconBtn title="Reset Password" icon="🔑" hoverBg="rgba(255,185,94,0.15)" hoverColor="#FFB95E"
+                              onClick={() => { setResetTarget(s); setRfErr(""); setRf({ password: "", confirm: "" }); }} />
+                          )}
+                          {(s.role === "ROLE_STAFF" || (s.role === "ROLE_ADMIN" && isOwner())) && (
+                            <IconBtn title="Delete User" icon="🗑" hoverBg="rgba(255,107,129,0.15)" hoverColor="#FF6B81"
+                              onClick={() => setDelTarget(s)} />
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -464,17 +494,22 @@ export default function StaffManagement() {
         </div>
       </div>
 
-      {/* ════ CREATE STAFF MODAL ════ */}
+      {/* ════ CREATE STAFF / ADMIN MODAL ════ */}
       {showCreate && (
-        <Modal title="Create Staff Account" subtitle="New staff will have ROLE_STAFF access" onClose={() => setShowCreate(false)}>
+        <Modal
+          title={createRole === "admin" ? "Create Admin Account" : "Create Staff Account"}
+          subtitle={createRole === "admin" ? "New admin will have full operational access (ROLE_ADMIN)" : "New staff will have ROLE_STAFF access"}
+          onClose={() => setShowCreate(false)}
+        >
           <Banner msg={cfErr ? `❌ ${cfErr}` : ""} />
           <form onSubmit={handleCreate}>
-            <Field label="Username" value={cf.username} onChange={(e) => setCf({ ...cf, username: e.target.value })} placeholder="e.g. john_staff" required autoComplete="off" />
+            <Field label="Username" value={cf.username} onChange={(e) => setCf({ ...cf, username: e.target.value })} placeholder={createRole === "admin" ? "e.g. rahul_admin" : "e.g. john_staff"} required autoComplete="off" />
+            <Field label="Mobile (optional)" value={cf.mobile} onChange={(e) => setCf({ ...cf, mobile: e.target.value })} placeholder="e.g. 9876543210" autoComplete="off" />
             <Field label="Password" type="password" value={cf.password} onChange={(e) => setCf({ ...cf, password: e.target.value })} placeholder="Min 4 characters" required autoComplete="new-password" />
             <Field label="Confirm Password" type="password" value={cf.confirm} onChange={(e) => setCf({ ...cf, confirm: e.target.value })} placeholder="Repeat password" required autoComplete="new-password" />
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 4 }}>
               <button type="button" onClick={() => setShowCreate(false)} style={ghostBtn}>Cancel</button>
-              <button type="submit" disabled={cfBusy} style={primaryBtn(cfBusy)}>{cfBusy ? "Creating…" : "Create Staff"}</button>
+              <button type="submit" disabled={cfBusy} style={primaryBtn(cfBusy)}>{cfBusy ? "Creating…" : (createRole === "admin" ? "Create Admin" : "Create Staff")}</button>
             </div>
           </form>
         </Modal>

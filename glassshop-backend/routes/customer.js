@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { Customer, Architect, User, Shop } = require('../models');
+const { Customer, Architect, User, Shop, Quotation, Invoice } = require('../models');
 const { Op } = require('sequelize');
 const { requirePermission } = require('../middleware/auth');
+const { logActivity } = require('../utils/activity');
 
 // Baseline: viewing customers requires VIEW_CUSTOMER (admin bypasses). Mutating
 // endpoints add a stricter permission below.
@@ -81,6 +82,11 @@ router.post('/', requirePermission('ADD_CUSTOMER'), async (req, res) => {
       referenceArchitectId: req.body.referenceArchitectId
         ? parseInt(req.body.referenceArchitectId, 10)
         : null,
+    });
+
+    await logActivity(req, {
+      action: 'CREATE_CUSTOMER', shopId: user.shopId,
+      details: `Created customer ${customer.name}${customer.mobile ? ' (' + customer.mobile + ')' : ''}${customer.city ? ' · ' + customer.city : ''}`,
     });
 
     res.status(201).json(customer);
@@ -219,6 +225,9 @@ router.put('/:id', requirePermission('EDIT_CUSTOMER'), async (req, res) => {
       }
     }
 
+    // Snapshot for change-diff in the activity log.
+    const before = { Name: customer.name, Mobile: customer.mobile, City: customer.city, Address: customer.address, GST: customer.gstNumber };
+
     const updatePayload = {
       ...req.body,
       referenceArchitectId: req.body.referenceArchitectId
@@ -226,6 +235,16 @@ router.put('/:id', requirePermission('EDIT_CUSTOMER'), async (req, res) => {
         : null,
     };
     await customer.update(updatePayload);
+
+    const after = { Name: customer.name, Mobile: customer.mobile, City: customer.city, Address: customer.address, GST: customer.gstNumber };
+    const changes = Object.keys(before)
+      .filter(k => String(before[k] || '') !== String(after[k] || ''))
+      .map(k => `${k}: ${before[k] || '—'} → ${after[k] || '—'}`);
+    await logActivity(req, {
+      action: 'UPDATE_CUSTOMER', shopId: user.shopId,
+      details: `Updated customer ${customer.name}${changes.length ? ' · ' + changes.join('; ') : ''}`,
+    });
+
     res.json(customer);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -256,7 +275,23 @@ router.delete('/:id', requirePermission('DELETE_CUSTOMER'), async (req, res) => 
       return res.status(404).json({ error: 'Customer not found' });
     }
 
+    // Block deletion if the customer has linked quotations/orders (avoid orphans).
+    const [linkedQ, linkedI] = await Promise.all([
+      Quotation.count({ where: { customerId: customer.id } }),
+      Invoice.count({ where: { customerId: customer.id } }),
+    ]);
+    if (linkedQ + linkedI > 0) {
+      return res.status(409).json({
+        error: `Cannot delete customer "${customer.name}" — linked to ${linkedQ} quotation(s) and ${linkedI} order(s). Remove those first.`,
+      });
+    }
+
+    const cName = customer.name, cMobile = customer.mobile;
     await customer.destroy();
+    await logActivity(req, {
+      action: 'DELETE_CUSTOMER', shopId: user.shopId,
+      details: `Deleted customer ${cName}${cMobile ? ' (' + cMobile + ')' : ''}`,
+    });
     res.status(204).send();
   } catch (error) {
     res.status(500).json({ error: error.message });

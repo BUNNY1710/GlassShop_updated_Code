@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "./auth/ProtectedRoute";
-import { hasAnyPermission } from "./utils/permissions";
+import { hasAnyPermission, isAdmin } from "./utils/permissions";
 
 import Dashboard from "./pages/Dashboard";
 import StockManager from "./pages/StockManager";
@@ -25,8 +25,8 @@ import Register from "./auth/Register";
 import Layout from "./layout/Layout";
 
 const RequireAdmin = ({ children }) => {
-  const role = sessionStorage.getItem("role");
-  return role === "ROLE_ADMIN"
+  // OWNER and ADMIN both have full admin access.
+  return isAdmin()
     ? children
     : <Navigate to="/access-denied" />;
 };
@@ -69,7 +69,7 @@ function App() {
         <Route
           path="/staff"
           element={
-            <ProtectedRoute allowedRoles={["ROLE_ADMIN"]}>
+            <ProtectedRoute allowedRoles={["ROLE_ADMIN", "ROLE_OWNER"]}>
               <ManageStaff />
             </ProtectedRoute>
           }

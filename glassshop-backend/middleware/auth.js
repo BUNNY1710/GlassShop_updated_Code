@@ -2,9 +2,12 @@ const { validateToken, extractUsername, extractRole } = require('../utils/jwt');
 const { User, StaffPermission } = require('../models');
 const { ALL_PERMISSIONS } = require('../config/permissions');
 
-const isAdminRole = (role) => (role || '').replace('ROLE_', '').toUpperCase() === 'ADMIN';
+// OWNER and ADMIN both have full operational access (all permissions). OWNER is
+// the super-admin (can additionally create/delete other admins).
+const isAdminRole = (role) => ['ADMIN', 'OWNER'].includes((role || '').replace('ROLE_', '').toUpperCase());
+const isOwnerRole = (role) => (role || '').replace('ROLE_', '').toUpperCase() === 'OWNER';
 
-// Resolve the full permission-key list for a user. Admin => everything.
+// Resolve the full permission-key list for a user. Owner/Admin => everything.
 async function getUserPermissions(user) {
   if (!user) return [];
   if (isAdminRole(user.role)) return [...ALL_PERMISSIONS];
@@ -67,8 +70,9 @@ const requireRole = (...roles) => {
   };
 };
 
-const requireAdmin = requireRole('ADMIN');
-const requireStaff = requireRole('STAFF', 'ADMIN');
+const requireAdmin = requireRole('ADMIN', 'OWNER');
+const requireStaff = requireRole('STAFF', 'ADMIN', 'OWNER');
+const requireOwner = requireRole('OWNER');
 
 // Gate an endpoint on a specific permission key. Admin always passes. Staff
 // must have the key in staff_permissions. Permissions resolved from the DB
@@ -127,7 +131,9 @@ module.exports = {
   requireRole,
   requireAdmin,
   requireStaff,
+  requireOwner,
   requirePermission,
   requireAnyPermission,
-  getUserPermissions
+  getUserPermissions,
+  isOwnerRole
 };

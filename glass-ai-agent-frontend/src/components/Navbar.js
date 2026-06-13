@@ -371,7 +371,7 @@ function ProfileArea({ username, role, onNavClick }) {
             {username}
           </div>
           <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.3)", lineHeight: 1.2 }}>
-            {role === "ROLE_ADMIN" ? "Administrator" : "Staff"}
+            {role === "ROLE_OWNER" ? "Owner" : isAdmin() ? "Administrator" : "Staff"}
           </div>
         </div>
 
@@ -398,7 +398,7 @@ function ProfileArea({ username, role, onNavClick }) {
           animation: "scaleIn 150ms cubic-bezier(0.4,0,0.2,1) both",
         }}>
           {menuItem(IC.profile, "My Profile", () => go("/profile"))}
-          {role === "ROLE_ADMIN" && menuItem(IC.staff, "Staff Management", () => go("/staff-management"))}
+          {isAdmin() && menuItem(IC.staff, "Staff Management", () => go("/staff-management"))}
           <div style={{ height: 1, background: "rgba(255,255,255,0.08)", margin: "4px 0" }} />
           {menuItem(IC.logout, "Sign out", () => { setMenuOpen(false); setShowLogout(true); }, true)}
         </div>
@@ -546,7 +546,7 @@ function BottomNav({ role }) {
     { key: "profile",    label: "Profile",    to: "/profile",           icon: BOTTOM_NAV_ICONS.profile },
   ];
 
-  const items = role === "ROLE_ADMIN" ? adminItems : staffItems;
+  const items = isAdmin() ? adminItems : staffItems;
 
   return (
     <div style={{

@@ -4096,9 +4096,9 @@ function QuotationManagement() {
                     </>
                   )}
                   {(() => {
-                    // Calculate profit for admin only
+                    // Calculate profit for admin/owner only
                     const userRole = getUserRole();
-                    if (userRole !== "ROLE_ADMIN") return null;
+                    if (userRole !== "ROLE_ADMIN" && userRole !== "ROLE_OWNER") return null;
                     
                     let totalPurchaseCost = 0;
                     let totalSellingPrice = 0;

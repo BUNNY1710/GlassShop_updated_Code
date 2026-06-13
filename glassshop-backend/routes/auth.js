@@ -12,9 +12,10 @@ const ACTIVITY_TYPE_ACTIONS = {
   optimization: ['OPTIMIZE_CONFIRM'],
   quotations:   ['CREATE_QUOTATION', 'EDIT_QUOTATION', 'DELETE_QUOTATION'],
   orders:       ['CREATE_INVOICE', 'EDIT_INVOICE', 'DELETE_INVOICE'],
+  customers:    ['CREATE_CUSTOMER', 'UPDATE_CUSTOMER', 'DELETE_CUSTOMER'],
   stands:       ['ADD_STAND', 'EDIT_STAND', 'DISABLE_STAND', 'DELETE_STAND'],
   glass:        ['ADD_GLASS_TYPE', 'EDIT_GLASS_TYPE', 'DELETE_GLASS_TYPE', 'RESTORE_GLASS_TYPE'],
-  users:        ['USER_LOGIN', 'USER_LOGOUT', 'PASSWORD_CHANGE'],
+  users:        ['USER_LOGIN', 'USER_LOGOUT', 'PASSWORD_CHANGE', 'CREATE_STAFF', 'CREATE_ADMIN', 'DELETE_ADMIN', 'STAFF_PERMISSION_UPDATED'],
 };
 function rangeStart(range, from) {
   const now = new Date();
@@ -26,7 +27,7 @@ function rangeStart(range, from) {
 }
 // Roll up grouped action counts into the summary cards.
 function buildSummary(grouped) {
-  const sum = { total: 0, stock: 0, transfers: 0, optimization: 0, quotations: 0, orders: 0, stands: 0, glass: 0, users: 0 };
+  const sum = { total: 0, stock: 0, transfers: 0, optimization: 0, quotations: 0, orders: 0, customers: 0, stands: 0, glass: 0, users: 0 };
   const cat = (action) => Object.keys(ACTIVITY_TYPE_ACTIONS).find(k => ACTIVITY_TYPE_ACTIONS[k].includes(action));
   for (const g of grouped) {
     const n = parseInt(g.cnt, 10) || 0;
@@ -81,7 +82,7 @@ async function listActivities(req, res, targetUsername, shopId) {
     summary: buildSummary(grouped),
   });
 }
-const { authMiddleware, requireAdmin, getUserPermissions } = require('../middleware/auth');
+const { authMiddleware, requireAdmin, requireOwner, getUserPermissions } = require('../middleware/auth');
 const { PERMISSION_GROUPS, ALL_PERMISSIONS, isValidPermission } = require('../config/permissions');
 const rateLimit = require('../middleware/rateLimit');
 
@@ -130,7 +131,7 @@ router.post('/register-shop', async (req, res) => {
     await User.create({
       userName: username,
       password: hashedPassword,
-      role: 'ROLE_ADMIN',
+      role: 'ROLE_OWNER', // the account that creates the shop is its owner
       shopId: shop.id
     });
 
@@ -530,6 +531,81 @@ router.get('/my-activities', authMiddleware, async (req, res) => {
   } catch (error) {
     console.error('Error fetching my activities:', error);
     res.status(500).json({ error: 'Failed to fetch activities' });
+  }
+});
+
+// Create admin (Owner only) — a full-access ADMIN account.
+router.post('/create-admin', authMiddleware, requireOwner, async (req, res) => {
+  try {
+    const owner = await User.findOne({ where: { userName: req.user.username } });
+    if (!owner || !owner.shopId) return res.status(404).json({ error: 'Owner not linked to a shop' });
+
+    const { username, password, whatsappNumber } = req.body;
+    if (!username || !username.trim()) return res.status(400).json({ error: 'Username is required' });
+    if (!password || password.length < 4) return res.status(400).json({ error: 'Password must be at least 4 characters' });
+
+    const exists = await User.findOne({ where: { userName: username.trim() } });
+    if (exists) return res.status(409).json({ error: 'Username already exists' });
+
+    const hashed = await bcrypt.hash(password, 10);
+    const admin = await User.create({
+      userName: username.trim(), password: hashed, role: 'ROLE_ADMIN',
+      whatsappNumber: whatsappNumber || null, shopId: owner.shopId,
+    });
+
+    AuditLog.create({
+      username: owner.userName, role: owner.role, action: 'CREATE_ADMIN',
+      quantity: 0, shopId: owner.shopId, timestamp: new Date(),
+      details: `Created Admin account: ${admin.userName}`,
+    }).catch(() => {});
+
+    res.status(201).json({ message: 'Admin created successfully', id: admin.id, role: admin.role });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create admin: ' + error.message });
+  }
+});
+
+// List all users in this shop (Owner + Admin) for the User Management screen.
+router.get('/users', authMiddleware, requireAdmin, async (req, res) => {
+  try {
+    const me = await User.findOne({ where: { userName: req.user.username } });
+    if (!me || !me.shopId) return res.status(404).json({ error: 'Not linked to a shop' });
+    const users = await User.findAll({
+      where: { shopId: me.shopId },
+      attributes: ['id', 'userName', 'role', 'whatsappNumber'],
+      order: [['id', 'ASC']],
+    });
+    res.json(users.map(u => ({ id: u.id, userName: u.userName, role: u.role, whatsappNumber: u.whatsappNumber })));
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch users: ' + error.message });
+  }
+});
+
+// Delete an admin (Owner only). Cannot delete the owner or yourself.
+router.delete('/admin/:id', authMiddleware, requireOwner, async (req, res) => {
+  try {
+    const owner = await User.findOne({ where: { userName: req.user.username } });
+    if (!owner || !owner.shopId) return res.status(404).json({ error: 'Owner not linked to a shop' });
+
+    const target = await User.findOne({ where: { id: req.params.id, shopId: owner.shopId } });
+    if (!target) return res.status(404).json({ error: 'User not found or not in your shop' });
+    if (target.id === owner.id) return res.status(400).json({ error: 'You cannot delete your own account' });
+    if ((target.role || '').toUpperCase().includes('OWNER')) return res.status(403).json({ error: 'The owner account cannot be deleted' });
+    if (!(target.role || '').toUpperCase().includes('ADMIN')) return res.status(400).json({ error: 'Use staff delete for staff users' });
+
+    const name = target.userName;
+    await StaffPermission.destroy({ where: { userId: target.id } }).catch(() => {});
+    await target.destroy();
+
+    AuditLog.create({
+      username: owner.userName, role: owner.role, action: 'DELETE_ADMIN',
+      quantity: 0, shopId: owner.shopId, timestamp: new Date(),
+      details: `Deleted Admin account: ${name}`,
+    }).catch(() => {});
+
+    res.json({ message: 'Admin deleted' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete admin: ' + error.message });
   }
 });
 

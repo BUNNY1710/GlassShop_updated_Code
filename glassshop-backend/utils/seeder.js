@@ -71,10 +71,10 @@ async function seedAdmin(shopId) {
   await User.create({
     userName: 'admin',
     password: hashed,
-    role:     'ROLE_ADMIN',
+    role:     'ROLE_OWNER', // primary account is the shop owner (super-admin)
     shopId,
   });
-  console.log('  ✅ Admin user created  (username: admin  /  password: admin123)');
+  console.log('  ✅ Owner user created  (username: admin  /  password: admin123)');
 }
 
 // ─── sample data (dev / SEED_SAMPLE_DATA=true) ───────────────────────────────

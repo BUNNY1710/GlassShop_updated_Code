@@ -90,7 +90,7 @@ function StockDashboard() {
                   :                      "repeat(4, 1fr)";
   const [loading, setLoading] = useState(true);
   const userRole = getUserRole();
-  const isAdmin = userRole === "ROLE_ADMIN";
+  const isAdmin = userRole === "ROLE_ADMIN" || userRole === "ROLE_OWNER";
 
   // Add/Remove Modal State
   const [showAddRemoveModal, setShowAddRemoveModal] = useState(false);

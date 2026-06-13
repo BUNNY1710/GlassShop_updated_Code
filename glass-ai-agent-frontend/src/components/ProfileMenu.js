@@ -431,7 +431,7 @@ function ProfileMenu() {
 
             <div style={divider} />
 
-            {profile.role === "ROLE_ADMIN" && (
+            {(profile.role === "ROLE_ADMIN" || profile.role === "ROLE_OWNER") && (
               <div
                 style={item}
                 onClick={() => {

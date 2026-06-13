@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import api from "../api/api";
 import { useResponsive } from "../hooks/useResponsive";
+import { isAdmin } from "../utils/permissions";
 import "../styles/design-system.css";
 
 // ─── Chart colours ────────────────────────────────────────────────────────────
@@ -215,19 +216,19 @@ function Dashboard() {
 
         const [stockRes, staffRes, auditRes, transferRes, quotationsRes, settingsRes] = await Promise.all([
           api.get("/api/stock/all").then(r => r.data).catch(() => []),
-          role === "ROLE_ADMIN" ? api.get("/api/auth/staff").then(r => r.data).catch(() => []) : [],
-          role === "ROLE_ADMIN" ? api.get("/api/audit/recent").then(r => r.data).catch(() => []) : [],
+          isAdmin() ? api.get("/api/auth/staff").then(r => r.data).catch(() => []) : [],
+          isAdmin() ? api.get("/api/audit/recent").then(r => r.data).catch(() => []) : [],
           api.get("/api/audit/transfer-count").then(r => {
             const d = r.data;
             return typeof d === "object" && "count" in d ? +d.count : +d || 0;
           }).catch(() => 0),
           api.get("/api/quotations").then(r => r.data).catch(() => []),
-          role === "ROLE_ADMIN"
+          isAdmin()
             ? api.get("/api/settings").then(r => r.data).catch(() => ({ lowStockThreshold: 5 }))
             : Promise.resolve({ lowStockThreshold: 5 }),
         ]);
 
-        if (role === "ROLE_ADMIN") setAuditLogs((auditRes || []).slice(0, 5));
+        if (isAdmin()) setAuditLogs((auditRes || []).slice(0, 5));
 
         const savedThreshold = settingsRes?.lowStockThreshold ?? 5;
         setThreshold(savedThreshold);
@@ -244,7 +245,7 @@ function Dashboard() {
         setStats({
           totalStock:      active.length,
           totalTransfers:  +transferRes || (Array.isArray(auditRes) ? auditRes.filter(l => l.action === "TRANSFER").length : 0),
-          totalStaff:      role === "ROLE_ADMIN" && Array.isArray(staffRes) ? staffRes.length : 0,
+          totalStaff:      isAdmin() && Array.isArray(staffRes) ? staffRes.length : 0,
           totalLogs:       Array.isArray(auditRes) ? auditRes.length : 0,
           totalQuantity:   totalQty,
           pendingCutting,
@@ -325,8 +326,8 @@ function Dashboard() {
         gridTemplateColumns: isMobile
           ? "1fr 1fr"
           : isTablet
-            ? `repeat(${role === "ROLE_ADMIN" ? 3 : 2}, 1fr)`
-            : `repeat(${role === "ROLE_ADMIN" ? 6 : 4}, 1fr)`,
+            ? `repeat(${isAdmin() ? 3 : 2}, 1fr)`
+            : `repeat(${isAdmin() ? 6 : 4}, 1fr)`,
         gap: isMobile ? 8 : 10,
         marginBottom: 14,
       }}>
@@ -362,7 +363,7 @@ function Dashboard() {
               compact={isMobile}
               iconPaths={["M3 3h7v7H3z","M14 3h7v7h-7z","M14 14h7v7h-7z","M3 14h7v7H3z"]}
             />
-            {role === "ROLE_ADMIN" && (
+            {isAdmin() && (
               <>
                 <KpiCard
                   label={isMobile ? "Moves" : "Transfers"}
@@ -428,8 +429,8 @@ function Dashboard() {
             ) : stockData.length === 0 ? (
               <EmptyState icon="📦" title="No stock items" subtitle="Add stock items to see your overview" />
             ) : (
-              <div style={{ height: 220 }}>
-                <ResponsiveContainer width="100%" height="100%">
+              <div style={{ width: "100%", height: 220, minHeight: 220 }}>
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={220}>
                   <PieChart>
                     <Pie
                       data={pieData}
@@ -484,7 +485,7 @@ function Dashboard() {
                   <h3 style={{ fontSize: 14, fontWeight: 700, color: "#FFB95E", margin: 0 }}>
                     🔔 Low Stock Alerts
                   </h3>
-                  {role === "ROLE_ADMIN" && (
+                  {isAdmin() && (
                     <button
                       title={`Threshold: ≤ ${threshold}. Click to change.`}
                       onClick={() => { setThresholdInput(String(threshold)); setShowThresholdModal(true); }}
@@ -577,7 +578,7 @@ function Dashboard() {
           )}
 
           {/* Recent Activity */}
-          {role === "ROLE_ADMIN" && (
+          {isAdmin() && (
             <div style={{
               background: "rgba(17,27,53,0.9)",
               border: "1px solid rgba(255,255,255,0.08)",
@@ -684,7 +685,7 @@ function Dashboard() {
                 to="/view-stock"
                 color="#4F5DFF"
               />
-              {role === "ROLE_ADMIN" && (
+              {isAdmin() && (
                 <>
                   <QuickCard
                     iconPaths={["M12 5v14","M5 12h14"]}
@@ -756,7 +757,7 @@ function Dashboard() {
                   { label: "Total Items",   value: stats.totalStock,    color: "#4F5DFF" },
                   { label: "Total Qty",     value: stats.totalQuantity, color: "#37E3A5" },
                   { label: "Low Stock",     value: lowStockCount,       color: lowStockCount > 0 ? "#FF6B81" : "#37E3A5" },
-                  ...(role === "ROLE_ADMIN" ? [
+                  ...(isAdmin() ? [
                     { label: "Transfers",   value: stats.totalTransfers, color: "#8B5CF6" },
                     { label: "Staff",       value: stats.totalStaff,     color: "#60A5FA" },
                   ] : [
