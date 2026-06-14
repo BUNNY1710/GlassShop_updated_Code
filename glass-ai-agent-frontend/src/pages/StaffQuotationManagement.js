@@ -2,6 +2,8 @@
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import PageWrapper from "../components/PageWrapper";
+import SearchableSelect from "../components/SearchableSelect";
+import { INDIAN_STATES, DEFAULT_STATE } from "../utils/indianStates";
 import dashboardBg from "../assets/dashboard-bg.jpg";
 import { useGlassTypes } from "../api/glassTypeApi";
 import {
@@ -46,7 +48,7 @@ function StaffQuotationManagement() {
     quotationDate: new Date().toISOString().split("T")[0],
     validUntil: getDefaultValidUntil(new Date().toISOString().split("T")[0]),
     gstPercentage: 18,
-    customerState: "",
+    customerState: DEFAULT_STATE,
     installationCharge: 0,
     transportCharge: 0,
     transportationRequired: false,
@@ -1123,7 +1125,7 @@ function StaffQuotationManagement() {
       quotationDate: today,
       validUntil: getDefaultValidUntil(today),
       gstPercentage: 18,
-      customerState: "",
+      customerState: DEFAULT_STATE,
       installationCharge: 0,
       transportCharge: 0,
       transportationRequired: false,
@@ -1799,25 +1801,14 @@ function StaffQuotationManagement() {
                     </div>
                     <div>
                       <label style={{ display: "block", marginBottom: "8px", color: "#A9B3D1", fontWeight: "500", fontSize: "14px" }}>
-                        Customer State (Optional)
+                        Customer State
                       </label>
-                      <input
-                        type="text"
+                      <SearchableSelect
+                        options={INDIAN_STATES}
                         value={formData.customerState}
-                        onChange={(e) => setFormData({ ...formData, customerState: e.target.value })}
-                        placeholder="e.g., Maharashtra, Karnataka"
-                        style={{
-                          width: "100%",
-                          padding: isMobile ? "14px 12px" : "12px",
-                          borderRadius: "8px",
-                          border: "1px solid rgba(255,255,255,0.1)",
-                          fontSize: "16px", // Prevent iOS zoom
-                          transition: "all 0.2s",
-                          minHeight: "44px", // Touch target
-                          boxSizing: "border-box",
-                        }}
-                        onFocus={(e) => (e.target.style.borderColor = "#4F5DFF")}
-                        onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
+                        onChange={(v) => setFormData({ ...formData, customerState: v })}
+                        placeholder="Search state…"
+                        isMobile={isMobile}
                       />
                       <p style={{ marginTop: "5px", color: "#7180A6", fontSize: "12px" }}>📍 For inter-state vs intra-state calculation</p>
                     </div>
