@@ -11,6 +11,22 @@ function AiAssistant() {
   const [showHistory, setShowHistory] = useState(false);
   const resultRef = useRef(null);
 
+  const [waste, setWaste] = useState(null);
+  const [wasteLoading, setWasteLoading] = useState(true);
+
+  // Load the AI waste analysis on mount.
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const r = await api.get("/api/ai/waste-analysis");
+        if (alive) setWaste(r.data);
+      } catch { /* keep null */ }
+      finally { if (alive) setWasteLoading(false); }
+    })();
+    return () => { alive = false; };
+  }, []);
+
   // Load history from localStorage
   useEffect(() => {
     const saved = localStorage.getItem("aiQueryHistory");
@@ -229,6 +245,98 @@ function AiAssistant() {
         >
           📜 History {queryHistory.length > 0 && `(${queryHistory.length})`}
         </button>
+      </div>
+
+      {/* ════ AI WASTE ANALYZER ════ */}
+      <div style={{ marginBottom: 24 }}>
+        <h2 style={{ fontSize: 18, fontWeight: 800, color: "#fff", margin: "0 0 12px" }}>♻️ AI Waste Analyzer</h2>
+        {wasteLoading ? (
+          <div style={{ padding: 30, textAlign: "center", color: "#7180A6", background: "rgba(17,27,53,0.9)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16 }}>Analyzing inventory…</div>
+        ) : !waste ? (
+          <div style={{ padding: 30, textAlign: "center", color: "#7180A6", background: "rgba(17,27,53,0.9)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16 }}>No waste data yet. Run optimizations to generate remnants.</div>
+        ) : (
+          <>
+            {/* Summary cards */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 14, marginBottom: 16 }}>
+              {[
+                { l: "Waste Generated", v: `${waste.summary.wasteArea} Sq.Ft`, c: "#FF6B81" },
+                { l: "Estimated Loss", v: `₹${Number(waste.summary.estLoss).toLocaleString("en-IN")}`, c: "#FFB95E" },
+                { l: "Waste %", v: `${waste.summary.wastePct}%`, c: "#A78BFA" },
+                { l: "Potential Savings", v: `₹${Number(waste.potentialSavings).toLocaleString("en-IN")}`, c: "#37E3A5" },
+              ].map(x => (
+                <div key={x.l} style={{ background: "rgba(17,27,53,0.9)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: 16, boxShadow: "0 4px 24px rgba(0,0,0,0.3)" }}>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: x.c, lineHeight: 1 }}>{x.v}</div>
+                  <div style={{ fontSize: 10.5, color: "#7180A6", textTransform: "uppercase", letterSpacing: "0.05em", marginTop: 5 }}>{x.l}</div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 14 }}>
+              {/* Top waste types + heatmap */}
+              <div style={{ background: "rgba(17,27,53,0.9)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: 16 }}>
+                <h3 style={{ fontSize: 14, fontWeight: 700, color: "#fff", margin: "0 0 12px" }}>🔥 Top Waste-Generating Glass</h3>
+                {waste.heat.length === 0 ? <div style={{ color: "#7180A6", fontSize: 13 }}>No remnant waste recorded.</div> :
+                  waste.heat.slice(0, 6).map(t => {
+                    const dot = t.level === "HIGH" ? "🔴" : t.level === "MEDIUM" ? "🟡" : "🟢";
+                    return (
+                      <div key={t.type} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 0", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+                        <span style={{ fontSize: 13, color: "#E2E8F0" }}>{dot} {t.type}</span>
+                        <span style={{ fontSize: 12.5, color: "#A9B3D1" }}>{t.waste} Sq.Ft · <b style={{ color: "#fff" }}>₹{Number(t.loss).toLocaleString("en-IN")}</b></span>
+                      </div>
+                    );
+                  })}
+              </div>
+
+              {/* Monthly trend */}
+              <div style={{ background: "rgba(17,27,53,0.9)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: 16 }}>
+                <h3 style={{ fontSize: 14, fontWeight: 700, color: "#fff", margin: "0 0 4px" }}>📉 Monthly Waste Trend</h3>
+                {waste.trendPct !== 0 && (
+                  <div style={{ fontSize: 12, color: waste.trendPct > 0 ? "#37E3A5" : "#FF6B81", marginBottom: 10 }}>
+                    {waste.trendPct > 0 ? `▼ Reduced ${waste.trendPct}% over 6 months` : `▲ Increased ${Math.abs(waste.trendPct)}% over 6 months`}
+                  </div>
+                )}
+                {(() => {
+                  const max = Math.max(1, ...waste.trend.map(m => m.waste));
+                  return waste.trend.map(m => (
+                    <div key={m.month} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                      <span style={{ fontSize: 11, color: "#7180A6", width: 48, flexShrink: 0 }}>{m.month}</span>
+                      <div style={{ flex: 1, height: 8, background: "rgba(255,255,255,0.05)", borderRadius: 4, overflow: "hidden" }}>
+                        <div style={{ width: `${(m.waste / max) * 100}%`, height: "100%", background: "#A78BFA", borderRadius: 4 }} />
+                      </div>
+                      <span style={{ fontSize: 11, color: "#A9B3D1", width: 56, textAlign: "right", flexShrink: 0 }}>{m.waste} ft²</span>
+                    </div>
+                  ));
+                })()}
+              </div>
+
+              {/* Remnant utilization */}
+              <div style={{ background: "rgba(17,27,53,0.9)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: 16 }}>
+                <h3 style={{ fontSize: 14, fontWeight: 700, color: "#fff", margin: "0 0 12px" }}>♻️ Remnant Utilization</h3>
+                {[
+                  ["Generated", waste.remnants.generated, "#A78BFA"],
+                  ["Available (reusable)", waste.remnants.available, "#37E3A5"],
+                  ["Reused / consumed", waste.remnants.reused, "#7180A6"],
+                ].map(([l, v, c]) => (
+                  <div key={l} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+                    <span style={{ fontSize: 13, color: "#A9B3D1" }}>{l}</span>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: c }}>{v}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* AI recommendations */}
+            <div style={{ marginTop: 14, background: "rgba(167,139,250,0.06)", border: "1px solid rgba(167,139,250,0.25)", borderRadius: 14, padding: 16 }}>
+              <h3 style={{ fontSize: 14, fontWeight: 700, color: "#A78BFA", margin: "0 0 12px" }}>✨ AI Recommendations</h3>
+              {waste.recommendations.map((r, i) => (
+                <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, padding: "9px 0", borderTop: i ? "1px solid rgba(255,255,255,0.06)" : "none" }}>
+                  <span style={{ fontSize: 13, color: "#E2E8F0", lineHeight: 1.4 }}>{r.text}</span>
+                  {r.savings > 0 && <span style={{ fontSize: 12.5, fontWeight: 800, color: "#37E3A5", whiteSpace: "nowrap" }}>~₹{Number(r.savings).toLocaleString("en-IN")}/mo</span>}
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
       {/* Quick Actions Grid */}

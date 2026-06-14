@@ -37,6 +37,7 @@ export const ACTION_META = {
   UPDATE_STOCK_ALERT:      { label: "Updated Stock Alert",    module: "Stock",        color: "#FFB95E" },
   TRANSFER:                { label: "Transferred Stock",      module: "Transfers",    color: "#FFB95E" },
   OPTIMIZE_CONFIRM:        { label: "Confirmed Optimization", module: "Optimization", color: "#A78BFA" },
+  AI_WASTE_ANALYSIS_GENERATED: { label: "AI Waste Analysis", module: "Optimization", color: "#A78BFA" },
   CREATE_QUOTATION:        { label: "Created Quotation",      module: "Quotations",   color: "#37E3A5" },
   EDIT_QUOTATION:          { label: "Edited Quotation",       module: "Quotations",   color: "#818CF8" },
   DELETE_QUOTATION:        { label: "Deleted Quotation",      module: "Quotations",   color: "#FF6B81" },

@@ -9,7 +9,7 @@ const { generateToken } = require('../utils/jwt');
 const ACTIVITY_TYPE_ACTIONS = {
   stock:        ['ADD', 'REMOVE', 'EDIT', 'ADD_REMNANT', 'UPDATE_STOCK_ALERT'],
   transfers:    ['TRANSFER'],
-  optimization: ['OPTIMIZE_CONFIRM'],
+  optimization: ['OPTIMIZE_CONFIRM', 'AI_WASTE_ANALYSIS_GENERATED'],
   quotations:   ['CREATE_QUOTATION', 'EDIT_QUOTATION', 'DELETE_QUOTATION'],
   orders:       ['CREATE_INVOICE', 'EDIT_INVOICE', 'DELETE_INVOICE'],
   customers:    ['CREATE_CUSTOMER', 'UPDATE_CUSTOMER', 'DELETE_CUSTOMER'],
