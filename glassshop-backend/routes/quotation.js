@@ -419,13 +419,13 @@ router.get('/:id/download', async (req, res) => {
   }
 });
 
-// Print cutting pad
+// Print stickers (one per glass item). Endpoint path kept for API compatibility.
 router.get('/:id/print-cutting-pad', async (req, res) => {
   try {
     const pdfBuffer = await pdfService.generateCuttingPadPrintPdf(req.params.id, req.user.username);
-    
+
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `inline; filename=cutting-pad-${req.params.id}.pdf`);
+    res.setHeader('Content-Disposition', `inline; filename=stickers-${req.params.id}.pdf`);
     res.send(pdfBuffer);
   } catch (error) {
     if (error.message === 'Quotation not found' || error.message.includes('Unauthorized')) {

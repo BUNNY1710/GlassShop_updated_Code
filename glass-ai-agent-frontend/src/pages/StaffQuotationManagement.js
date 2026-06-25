@@ -3637,41 +3637,6 @@ function StaffQuotationManagement() {
                       📥 Download Quotation
                     </button>
                     <button
-                      onClick={async () => {
-                        try {
-                          const response = await printCuttingPad(selectedQuotation.id);
-                          const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
-                          const printWindow = window.open(url, '_blank');
-                          if (printWindow) {
-                            printWindow.onload = () => {
-                              printWindow.print();
-                            };
-                          }
-                        } catch (error) {
-                          console.error("Failed to print cutting-pad", error);
-                          toast.error("Failed to print cutting-pad PDF");
-                        }
-                      }}
-                      style={{
-                        padding: "8px 16px",
-                        backgroundColor: "#10b981",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "8px",
-                        cursor: "pointer",
-                        fontSize: "14px",
-                        fontWeight: "500",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "6px",
-                        transition: "all 0.2s",
-                      }}
-                      onMouseOver={(e) => (e.target.style.backgroundColor = "#059669")}
-                      onMouseOut={(e) => (e.target.style.backgroundColor = "#10b981")}
-                    >
-                      🖨️ Print Cutting-Pad
-                    </button>
-                    <button
                       onClick={() => setSelectedQuotation(null)}
                       style={{
                         padding: "8px 12px",

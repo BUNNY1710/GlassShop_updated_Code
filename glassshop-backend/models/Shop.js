@@ -26,21 +26,32 @@ module.exports = (sequelize) => {
       allowNull: true,
       field: 'whatsapp_number'
     },
-    // Optional fields - may not exist in database yet
-    // These are commented out until columns are added to database
-    // gstNumber: {
-    //   type: DataTypes.STRING(50),
-    //   allowNull: true,
-    //   field: 'gst_number'
-    // },
-    // address: {
-    //   type: DataTypes.TEXT,
-    //   allowNull: true
-    // },
-    // phone: {
-    //   type: DataTypes.STRING(50),
-    //   allowNull: true
-    // },
+    businessType: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      field: 'business_type'
+    },
+    gstNumber: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      field: 'gst_number'
+    },
+    address: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
+    city: {
+      type: DataTypes.STRING(100),
+      allowNull: true
+    },
+    state: {
+      type: DataTypes.STRING(100),
+      allowNull: true
+    },
+    pincode: {
+      type: DataTypes.STRING(10),
+      allowNull: true
+    },
     lowStockThreshold: {
       type: DataTypes.INTEGER,
       allowNull: false,

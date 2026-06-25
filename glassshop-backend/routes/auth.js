@@ -102,40 +102,57 @@ router.post('/register-shop', async (req, res) => {
     if (process.env.NODE_ENV === 'production' && process.env.ALLOW_PUBLIC_REGISTRATION !== 'true') {
       return res.status(403).json({ error: 'Public registration is disabled. Contact an administrator to create a shop.' });
     }
-    const { username, password, shopName, email } = req.body;
+    const {
+      username, password, shopName, email,
+      ownerName, mobile, gstNumber, businessType, address, city, state, pincode,
+    } = req.body;
 
-    if (!username || !username.trim()) {
-      return res.status(400).json({ error: 'Username is required' });
-    }
-    if (!password || !password.trim()) {
-      return res.status(400).json({ error: 'Password is required' });
-    }
-    if (!shopName || !shopName.trim()) {
-      return res.status(400).json({ error: 'Shop name is required' });
-    }
+    if (!username || !username.trim()) return res.status(400).json({ error: 'Username is required' });
+    if (!password || password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    if (!shopName || !shopName.trim()) return res.status(400).json({ error: 'Shop name is required' });
 
-    // Check if username already exists
-    const existingUser = await User.findOne({ where: { userName: username } });
-    if (existingUser) {
+    // Uniqueness checks (username always; email/mobile when provided).
+    if (await User.findOne({ where: { userName: username.trim() } })) {
       return res.status(409).json({ error: 'Username already exists. Please choose a different username.' });
     }
+    if (email && email.trim() && await Shop.findOne({ where: { email: email.trim() } })) {
+      return res.status(409).json({ error: 'A shop with this email already exists.' });
+    }
+    if (mobile && mobile.trim() && await Shop.findOne({ where: { whatsappNumber: mobile.trim() } })) {
+      return res.status(409).json({ error: 'A shop with this mobile number already exists.' });
+    }
+    if (await Shop.findOne({ where: { shopName: shopName.trim() } })) {
+      return res.status(409).json({ error: 'A shop with this name already exists.' });
+    }
 
-    // Create shop
+    // Create shop + its owner.
     const shop = await Shop.create({
-      shopName,
-      email
+      shopName: shopName.trim(),
+      ownerName: ownerName || null,
+      email: email || null,
+      whatsappNumber: mobile || null,
+      businessType: businessType || null,
+      gstNumber: gstNumber || null,
+      address: address || null,
+      city: city || null,
+      state: state || null,
+      pincode: pincode || null,
     });
 
-    // Create admin user
     const hashedPassword = await bcrypt.hash(password, 10);
-    await User.create({
-      userName: username,
+    const owner = await User.create({
+      userName: username.trim(),
       password: hashedPassword,
       role: 'ROLE_OWNER', // the account that creates the shop is its owner
-      shopId: shop.id
+      whatsappNumber: mobile || null,
+      shopId: shop.id,
     });
 
-    res.json({ message: 'Shop registered successfully' });
+    // Auto-login: issue a token so the client lands straight on the dashboard.
+    const token = generateToken(owner.userName, owner.role);
+    const permissions = await getUserPermissions(owner);
+
+    res.status(201).json({ message: 'Shop registered successfully', token, role: owner.role, permissions });
   } catch (error) {
     if (error.name === 'SequelizeUniqueConstraintError') {
       return res.status(409).json({ error: 'Username already exists. Please choose a different username.' });

@@ -3798,6 +3798,11 @@ function QuotationManagement() {
                           <QuotaActBtn variant="confirm" title="Confirm quotation" onClick={() => showConfirmDialog("CONFIRM", quotation)}>✓</QuotaActBtn>
                           <QuotaActBtn variant="reject"  title="Reject quotation"  onClick={() => showConfirmDialog("REJECT",  quotation)}>✕</QuotaActBtn>
                         </>)}
+                        {["CONFIRMED","INVOICED"].includes(quotation.status)
+                          ? <QuotaActBtn variant="confirm" title="Print stickers" onClick={async () => { try { const r = await printCuttingPad(quotation.id); const url = window.URL.createObjectURL(new Blob([r.data],{type:'application/pdf'})); const w = window.open(url,'_blank'); if(w) w.onload=()=>w.print(); } catch { toast.error('Failed to generate stickers'); } }}>🏷️</QuotaActBtn>
+                          : (quotation.status === "DRAFT" || quotation.status === "SENT")
+                            ? <QuotaActBtn variant="view" title="Please confirm the quotation before printing stickers" onClick={() => toast.info("Please confirm the quotation before printing stickers.")}>🏷️</QuotaActBtn>
+                            : null}
                         <QuotaActBtn variant="delete"  title="Delete quotation"  onClick={() => showConfirmDialog("DELETE",  quotation)}>🗑</QuotaActBtn>
                       </div>
                     </td>
@@ -3875,8 +3880,14 @@ function QuotationManagement() {
                 <div style={{ display:'flex', gap:5, alignItems:'center' }}>
                   <DocDropdownBtn label="Print" icon="🖨️" iconOnly={isMobile} items={[
                     { icon:'📄', label:'Quotation PDF', onClick: async () => { try { const r = await downloadQuotationPdf(selectedQuotation.id); const url = window.URL.createObjectURL(new Blob([r.data],{type:'application/pdf'})); const w = window.open(url,'_blank'); if(w) w.onload=()=>w.print(); } catch { toast.error('Failed to print quotation PDF'); } } },
-                    { icon:'✂️', label:'Cutting Pad',   onClick: async () => { try { const r = await printCuttingPad(selectedQuotation.id); const url = window.URL.createObjectURL(new Blob([r.data],{type:'application/pdf'})); const w = window.open(url,'_blank'); if(w) w.onload=()=>w.print(); } catch { toast.error('Failed to print cutting-pad PDF'); } } },
                   ]} />
+                  {["CONFIRMED","INVOICED"].includes(selectedQuotation.status) && (
+                    <button
+                      onClick={async () => { try { const r = await printCuttingPad(selectedQuotation.id); const url = window.URL.createObjectURL(new Blob([r.data],{type:'application/pdf'})); const w = window.open(url,'_blank'); if(w) w.onload=()=>w.print(); } catch { toast.error('Failed to generate stickers'); } }}
+                      title="Print one sticker per glass item"
+                      style={{ height:32, padding:'0 12px', borderRadius:8, border:'1px solid rgba(55,227,165,0.4)', background:'rgba(55,227,165,0.14)', color:'#37E3A5', fontSize:13, fontWeight:700, cursor:'pointer', whiteSpace:'nowrap' }}
+                    >🏷️ {isMobile ? '' : 'Print Stickers'}</button>
+                  )}
                   <DocDropdownBtn label="Download" icon="⬇️" iconOnly={isMobile} items={[
                     { icon:'📥', label:'Quotation PDF', onClick: async () => { try { const r = await downloadQuotationPdf(selectedQuotation.id); const url = window.URL.createObjectURL(new Blob([r.data])); const a = document.createElement('a'); a.href=url; a.setAttribute('download',`quotation-${selectedQuotation.quotationNumber}.pdf`); document.body.appendChild(a); a.click(); a.remove(); window.URL.revokeObjectURL(url); } catch { toast.error('Failed to download quotation PDF'); } } },
                   ]} />

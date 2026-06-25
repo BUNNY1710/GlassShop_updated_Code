@@ -718,121 +718,156 @@ const generateCuttingPadPrintPdf = async (quotationId, userId) => {
   if (!q) throw new Error('Quotation not found');
   await verifyAccess(q.shopId, userId);
 
-  const LPW = 842, LPH = 595, LM = 30;
-  const LCW = LPW - LM * 2;
-  const doc    = new PDFDocument({ size: [LPW, LPH], margin: 0 });
+  // Compact 70×50 mm stickers tiled on A4 (2 cols × 5 rows = 10 per page).
+  // Clean black-and-white; small blank Notes/Drawing box for staff.
+  const MM = 2.834645;
+  const A4W = 595.28, A4H = 841.89;
+  const SW = 70 * MM, SH = 50 * MM;           // sticker size
+  const COLS = 2, ROWS = 5, PER = COLS * ROWS;
+  const gridW = COLS * SW, gridH = ROWS * SH;
+  const offX = (A4W - gridW) / 2;             // center the grid
+  const offY = (A4H - gridH) / 2;
+
+  const doc = new PDFDocument({ size: 'A4', margin: 0 });
   const chunks = [];
   doc.on('data', c => chunks.push(c));
 
   const shop = q.shop;
-  const arch = q.referenceArchitect;
+  const items = (q.items && q.items.length) ? q.items : [null];
+  const M = items.filter(Boolean).length || 1;
+  const dateStr = new Date().toLocaleDateString('en-IN');
 
-  doc.rect(8, 8, LPW - 16, LPH - 16).strokeColor(BORDER).lineWidth(0.6).stroke();
+  const drawSticker = (ox, oy, item, pieceNo) => {
+    const pad = 5, x0 = ox + pad, innerW = SW - pad * 2;
+    doc.rect(ox + 2, oy + 2, SW - 4, SH - 4).strokeColor(DARK).lineWidth(0.8).stroke();
 
-  // Header
-  let y = 20;
-  doc.fontSize(14).font('Helvetica-Bold').fillColor(DARK)
-     .text((shop?.shopName || 'GlassShop').toUpperCase(), LM, y,
-           { width: LCW * 0.55, lineBreak: false });
-  y += 18;
-  doc.fontSize(8).font('Helvetica').fillColor(GRAY);
-  if (shop?.address) { doc.text(shop.address, LM, y, { width: LCW * 0.55, lineBreak: false }); y += 11; }
-  if (shop?.phone)   { doc.text(`Tel: ${shop.phone}`, LM, y, { lineBreak: false }); y += 11; }
+    let y = oy + 5;
+    doc.fontSize(7).font('Helvetica-Bold').fillColor(DARK)
+       .text((shop?.shopName || 'GlassShop').toUpperCase(), x0, y, { width: innerW * 0.66, lineBreak: false });
+    doc.fontSize(5.5).font('Helvetica-Bold').fillColor(DARK)
+       .text('STICKER', x0 + innerW * 0.66, y + 1, { width: innerW * 0.34, align: 'right', lineBreak: false });
+    y += 9;
+    doc.moveTo(x0, y).lineTo(ox + SW - pad, y).strokeColor(BORDER).lineWidth(0.4).stroke();
+    y += 3;
 
-  // Badge (right)
-  const bX = LM + Math.round(LCW * 0.56);
-  const bW = LPW - LM - bX;
-  doc.rect(bX, 18, bW, 28).fill(ORANGE);
-  doc.fontSize(13).font('Helvetica-Bold').fillColor(WHITE)
-     .text('CUTTING PAD', bX, 25, { width: bW, align: 'center', lineBreak: false });
+    // compact two-column rows
+    const line = (l1, v1, l2, v2) => {
+      doc.fontSize(5.5).font('Helvetica').fillColor(GRAY).text(l1, x0, y, { width: 22, lineBreak: false });
+      doc.fontSize(6.5).font('Helvetica-Bold').fillColor(DARK).text(String(v1 ?? '-'), x0 + 22, y, { width: innerW * 0.5 - 22, lineBreak: false });
+      if (l2 != null) {
+        doc.fontSize(5.5).font('Helvetica').fillColor(GRAY).text(l2, x0 + innerW * 0.5, y, { width: 22, lineBreak: false });
+        doc.fontSize(6.5).font('Helvetica-Bold').fillColor(DARK).text(String(v2 ?? '-'), x0 + innerW * 0.5 + 22, y, { width: innerW * 0.5 - 22, lineBreak: false });
+      }
+      y += 9;
+    };
+    const tk = item?.thickness ? String(item.thickness).replace(/mm/i, '').trim() + 'mm' : '-';
+    const unit = item?.heightUnit || 'FEET';
+    const u = unit === 'INCH' ? '"' : unit === 'MM' ? 'mm' : "'";
+    const size = item ? `${fmtDim(item.width)}${u}x${fmtDim(item.height)}${u}` : '-';
 
-  // Meta right
-  let ry = 50;
-  [
-    `No: ${q.quotationNumber || ''}`,
-    `Date: ${fmtDate(q.quotationDate)}`,
-    `Customer: ${q.customerName || ''}`,
-    arch ? `Architect: ${arch.name}` : null,
-  ].filter(Boolean).forEach(m => {
-    doc.fontSize(8).font('Helvetica').fillColor(GRAY)
-       .text(m, bX, ry, { width: bW, lineBreak: false });
-    ry += 11;
+    line('Qtn', q.quotationNumber || ('#' + q.id), 'Date', dateStr);
+    line('Cust', q.customerName || '-', null);
+    line('Glass', item?.glassType || '-', 'Th', tk);
+    line('Size', size, 'Qty', item?.quantity ?? '-');
+    line('Piece', `${pieceNo} of ${M}`, 'Code', `${q.id}-${pieceNo}`);
+
+    // Notes / Drawing box — fills the rest of the sticker.
+    doc.fontSize(5).font('Helvetica-Bold').fillColor(GRAY)
+       .text('NOTES / DRAWING (STAFF)', x0, y, { width: innerW, lineBreak: false });
+    y += 7;
+    const boxBot = oy + SH - pad;
+    if (boxBot - y > 8) doc.rect(x0, y, innerW, boxBot - y).strokeColor(DARK).lineWidth(0.5).stroke();
+  };
+
+  items.forEach((item, i) => {
+    const slot = i % PER;
+    if (i > 0 && slot === 0) doc.addPage({ size: 'A4', margin: 0 });
+    const col = slot % COLS, rowI = Math.floor(slot / COLS);
+    drawSticker(offX + col * SW, offY + rowI * SH, item, i + 1);
   });
 
-  const headerBot = Math.max(y, ry) + 6;
-  doc.moveTo(LM, headerBot).lineTo(LPW - LM, headerBot).strokeColor(BORDER).lineWidth(0.6).stroke();
-  y = headerBot + 8;
+  return finalize(doc, chunks);
+};
 
-  // Columns: # | Glass Type | Thickness | H | W | Qty | Polish/Notes | ✓
-  const cpCols = [
-    { label: '#',             w: 22  },
-    { label: 'Glass Type',    w: 175 },
-    { label: 'Thickness',     w: 60  },
-    { label: 'Height',        w: 85  },
-    { label: 'Width',         w: 85  },
-    { label: 'Qty',           w: 35  },
-    { label: 'Polish / Notes',w: 218 },
-    { label: '✓',             w: 38  },
-  ];
-  let cx2 = 0;
-  cpCols.forEach(c => { c.x = cx2; cx2 += c.w; });
-  const tW2 = cx2;
-
-  // Header row
-  const TH2 = 19;
-  doc.rect(LM, y, tW2, TH2).fill(ORANGE);
-  doc.rect(LM, y, tW2, TH2).strokeColor(BORDER).lineWidth(0.6).stroke();
-  doc.fontSize(7.5).font('Helvetica-Bold').fillColor(WHITE);
-  cpCols.forEach((c, i) => {
-    if (i > 0) doc.moveTo(LM + c.x, y).lineTo(LM + c.x, y + TH2).strokeColor(WHITE).lineWidth(0.4).stroke();
-    doc.text(c.label.toUpperCase(), LM + c.x + 2, y + 5, { width: c.w - 4, align: 'center', lineBreak: false });
+// ─────────────────────────────────────────────────────────────────────────────
+// 2b. INVOICE STICKERS (one 100×150mm sticker per glass item)
+// ─────────────────────────────────────────────────────────────────────────────
+const generateStickerPdf = async (invoiceId, userId) => {
+  const inv = await Invoice.findByPk(invoiceId, {
+    include: [
+      { model: InvoiceItem, as: 'items', separate: true, order: [['itemOrder', 'ASC']] },
+      { model: Shop, as: 'shop' },
+    ],
   });
-  y += TH2;
+  if (!inv) throw new Error('Invoice not found');
+  await verifyAccess(inv.shopId, userId);
 
-  (q.items || []).forEach((item, idx) => {
-    if (y > LPH - 90) return;
-    const pd = parsePolishData(item.description);
-    let hD = fmtDim(item.height), wD = fmtDim(item.width);
-    if (pd && !pd.sizeInMM) { if (pd.heightOriginal) hD = pd.heightOriginal; if (pd.widthOriginal) wD = pd.widthOriginal; }
-    const unit = item.heightUnit || 'FEET';
-    const hU   = unit === 'INCH' ? '"' : unit === 'MM' ? 'mm' : "'";
+  let orderNo = '';
+  if (inv.quotationId) { try { const q = await Quotation.findByPk(inv.quotationId); orderNo = q?.quotationNumber || ''; } catch { /* ignore */ } }
 
-    let pol = '';
-    if (pd?.itemPolish) pol += `Type: ${pd.itemPolish}`;
-    if (pd?.polishSelection) {
-      const sel = pd.polishSelection.filter(s => s.checked && s.type);
-      if (sel.length) pol += (pol ? ' | ' : '') + 'Sides: ' + sel.map(s => `${s.side.split('(')[0].trim()}=${s.type}`).join(' ');
-    }
-    if (pd?.selectedHeightTableValue) pol += ` | H-Tbl:${pd.selectedHeightTableValue} W-Tbl:${pd.selectedWidthTableValue}`;
+  const MM = 2.834645;
+  const W = 100 * MM, Hpg = 150 * MM;
+  const doc = new PDFDocument({ size: [W, Hpg], margin: 0 });
+  const chunks = [];
+  doc.on('data', c => chunks.push(c));
 
-    const polH = pol ? doc.heightOfString(pol, { width: cpCols[6].w - 6, fontSize: 8 }) : 0;
-    const rH   = Math.max(19, polH + 10);
-    const isAlt = idx % 2 === 1;
-    if (isAlt) doc.rect(LM, y, tW2, rH).fill(ZEBRA);
+  const shop = inv.shop;
+  const items = (inv.items && inv.items.length) ? inv.items : [null];
+  const M = items.filter(Boolean).length || 1;
 
-    const tk = item.thickness ? String(item.thickness).replace(/mm/i,'').trim()+'MM' : '–';
-    const gl = [item.glassType, tk].filter(Boolean).join(' ');
-    const vals2 = [idx+1, gl, tk, `${hD}${hU}`, `${wD}${hU}`, item.quantity, pol || '–', ''];
-    doc.fontSize(8.5).font('Helvetica').fillColor(DARK);
-    cpCols.forEach((c, i) => {
-      if (i > 0) doc.moveTo(LM + c.x, y).lineTo(LM + c.x, y + rH).strokeColor(BORDER).lineWidth(0.3).stroke();
-      doc.text(String(vals2[i] || ''), LM + c.x + 3, y + 5, { width: c.w - 6, align: 'center', lineBreak: i === 6 });
-    });
-    doc.moveTo(LM, y).lineTo(LM, y + rH).strokeColor(BORDER).lineWidth(0.5).stroke();
-    doc.moveTo(LM + tW2, y).lineTo(LM + tW2, y + rH).strokeColor(BORDER).lineWidth(0.5).stroke();
-    doc.moveTo(LM, y + rH).lineTo(LM + tW2, y + rH).strokeColor(BORDER).lineWidth(0.4).stroke();
-    y += rH;
-  });
+  const draw = (item, pieceNo) => {
+    const pad = 6 * MM;
+    const x0 = pad, x1 = W - pad, innerW = x1 - x0;
+    doc.rect(4 * MM, 4 * MM, W - 8 * MM, Hpg - 8 * MM).strokeColor(DARK).lineWidth(1).stroke();
 
-  y += 14;
-  const sigL = ['Prepared By', 'Cut By', 'Checked By', 'Date / Shift'];
-  const sW   = Math.floor((LCW - 6 * (sigL.length - 1)) / sigL.length);
-  sigL.forEach((lbl, i) => {
-    const sx = LM + i * (sW + 6);
-    doc.rect(sx, y, sW, 46).strokeColor(BORDER).lineWidth(0.5).stroke();
-    doc.fontSize(7).font('Helvetica-Bold').fillColor(DARK).text(lbl.toUpperCase(), sx + 5, y + 5, { width: sW - 10 });
-    doc.moveTo(sx + 6, y + 32).lineTo(sx + sW - 6, y + 32).strokeColor(BORDER).lineWidth(0.4).stroke();
-    doc.fontSize(7).font('Helvetica').fillColor(LGRAY).text('Signature', sx + 5, y + 36, { width: sW - 10 });
+    let y = pad + 1;
+    doc.fontSize(11).font('Helvetica-Bold').fillColor(DARK)
+       .text((shop?.shopName || 'GlassShop').toUpperCase(), x0, y, { width: innerW, align: 'center', lineBreak: false });
+    y += 15;
+    doc.rect(x0, y, innerW, 18).fill(DARK);
+    doc.fontSize(12).font('Helvetica-Bold').fillColor(WHITE)
+       .text('STICKER', x0, y + 4, { width: innerW, align: 'center', lineBreak: false });
+    y += 24;
+
+    const row = (label, val) => {
+      doc.fontSize(7.5).font('Helvetica-Bold').fillColor(GRAY).text(label, x0, y, { width: innerW * 0.36, lineBreak: false });
+      doc.fontSize(8.5).font('Helvetica-Bold').fillColor(DARK).text(String(val ?? '-'), x0 + innerW * 0.36, y, { width: innerW * 0.64, lineBreak: false });
+      y += 12;
+    };
+    row('Invoice No', inv.invoiceNumber || ('#' + inv.id));
+    if (orderNo) row('Order No', orderNo);
+    row('Customer', inv.customerName || '-');
+    if (inv.customerMobile) row('Mobile', inv.customerMobile);
+
+    y += 2; doc.moveTo(x0, y).lineTo(x1, y).strokeColor(BORDER).lineWidth(0.5).stroke(); y += 4;
+
+    const tk = item?.thickness ? String(item.thickness).replace(/mm/i, '').trim() + 'mm' : '-';
+    row('Glass Type', item?.glassType || '-');
+    row('Thickness', tk);
+    row('Size (W×H)', item ? `${fmtDim(item.width)} × ${fmtDim(item.height)}` : '-');
+    row('Quantity', item?.quantity ?? '-');
+
+    y += 2;
+    doc.fontSize(9).font('Helvetica-Bold').fillColor(DARK)
+       .text(`Piece ${pieceNo} of ${M}`, x0, y, { width: innerW * 0.5, lineBreak: false });
+    doc.fontSize(6.5).font('Helvetica').fillColor(GRAY)
+       .text(new Date().toLocaleString('en-IN'), x0 + innerW * 0.5, y + 2, { width: innerW * 0.5, align: 'right', lineBreak: false });
+    y += 14;
+
+    const code = `INV-${inv.id}-P${pieceNo}`;
+    doc.rect(x0, y, innerW, 16).strokeColor(DARK).lineWidth(0.6).stroke();
+    doc.fontSize(9).font('Courier-Bold').fillColor(DARK).text(code, x0, y + 4, { width: innerW, align: 'center', lineBreak: false });
+    y += 20;
+
+    doc.fontSize(7.5).font('Helvetica-Bold').fillColor(GRAY)
+       .text('NOTES / DRAWING (STAFF USE)', x0, y, { width: innerW, lineBreak: false });
+    y += 11;
+    doc.rect(x0, y, innerW, Math.max(20, (Hpg - pad) - y)).strokeColor(DARK).lineWidth(0.8).stroke();
+  };
+
+  items.forEach((it, i) => {
+    if (i > 0) doc.addPage({ size: [W, Hpg], margin: 0 });
+    draw(it, i + 1);
   });
 
   return finalize(doc, chunks);
@@ -1146,6 +1181,7 @@ const generateChallanPdf = async (invoiceId, userId) => {
 module.exports = {
   generateQuotationPdf,
   generateCuttingPadPrintPdf,
+  generateStickerPdf,
   generateInvoicePdf,
   generateBasicInvoicePdf,
   generateChallanPdf,

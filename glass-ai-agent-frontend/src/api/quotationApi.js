@@ -57,6 +57,13 @@ export const printInvoice = (invoiceId) => {
   });
 };
 
+// Per-item stickers for an invoice (one 100×150mm sticker per glass item).
+export const printInvoiceStickers = (invoiceId) => {
+  return api.get(`/api/invoices/${invoiceId}/print-stickers`, {
+    responseType: 'blob',
+  });
+};
+
 export const printBasicInvoice = (invoiceId) => {
   return api.get(`/api/invoices/${invoiceId}/print-basic-invoice`, {
     responseType: 'blob',

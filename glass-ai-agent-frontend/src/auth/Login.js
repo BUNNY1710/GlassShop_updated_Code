@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../api/api";
 import { useResponsive } from "../hooks/useResponsive";
 import { storePermissions } from "../utils/permissions";
+import RegisterShop from "./RegisterShop";
 import "../styles/design-system.css";
 
 /* ── Inline SVG helpers ─────────────────────────────────────────────────── */
@@ -32,6 +33,8 @@ function Login() {
   const [error, setError]     = useState("");
   const [loading, setLoading] = useState(false);
   const [showPw, setShowPw]   = useState(false);
+  const [showRegister, setShowRegister] = useState(false);
+  const [notice, setNotice] = useState("");
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -74,6 +77,18 @@ function Login() {
       setLoading(false);
     }
   };
+
+  if (showRegister) return (
+    <RegisterShop
+      onBack={() => setShowRegister(false)}
+      onRegistered={(username) => {
+        setShowRegister(false);
+        setForm({ username: username || "", password: "" });
+        setError("");
+        setNotice("Shop registered successfully. Please log in to continue.");
+      }}
+    />
+  );
 
   const features = [
     "Real-time stock tracking & optimization",
@@ -368,6 +383,14 @@ function Login() {
               </div>
             </div>
 
+            {/* Success notice (after registration) */}
+            {notice && (
+              <div role="status" style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", background: "rgba(55,227,165,0.1)", border: "1px solid rgba(55,227,165,0.3)", borderRadius: 8, color: "#37E3A5", fontSize: 13, fontWeight: 500, lineHeight: 1.4 }}>
+                <span style={{ flexShrink: 0 }}>✅</span>
+                <span>{notice}</span>
+              </div>
+            )}
+
             {/* Error */}
             {error && (
               <div
@@ -450,15 +473,27 @@ function Login() {
             </button>
           </form>
 
-          {/* Footer */}
-          <p style={{
-            fontSize: 12,
-            color: "#94a3b8",
-            textAlign: "center",
-            margin: "20px 0 0 0",
-            lineHeight: 1.5,
-          }}>
-            Don't have an account? Contact your administrator
+          {/* Divider */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "20px 0 16px" }}>
+            <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.1)" }} />
+            <span style={{ fontSize: 11, color: "#7180A6" }}>OR</span>
+            <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.1)" }} />
+          </div>
+
+          {/* Register your shop */}
+          <button
+            type="button"
+            onClick={() => setShowRegister(true)}
+            style={{
+              width: "100%", height: 40, borderRadius: 10,
+              border: "1px solid rgba(79,93,255,0.5)", background: "rgba(79,93,255,0.12)",
+              color: "#A5B4FC", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+            }}
+          >
+            🏪 Register Your Shop
+          </button>
+          <p style={{ fontSize: 12, color: "#94a3b8", textAlign: "center", margin: "12px 0 0", lineHeight: 1.5 }}>
+            Don't have an account? Register your shop to get started.
           </p>
         </div>
       </div>

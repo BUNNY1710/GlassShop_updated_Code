@@ -3,7 +3,7 @@ const router = express.Router();
 const { Invoice, InvoiceItem, Payment, Quotation, QuotationItem, Customer, Architect, User, Shop } = require('../models');
 const { requirePermission } = require('../middleware/auth');
 const { logActivity } = require('../utils/activity');
-const { generateInvoicePdf, generateBasicInvoicePdf, generateChallanPdf } = require('../services/pdfService');
+const { generateInvoicePdf, generateBasicInvoicePdf, generateChallanPdf, generateStickerPdf } = require('../services/pdfService');
 
 // Baseline: any invoice access requires VIEW_INVOICE (admin bypasses).
 // Mutating endpoints add a stricter permission below.
@@ -131,6 +131,10 @@ router.post('/from-quotation', requirePermission('CREATE_INVOICE'), async (req, 
         { model: Payment, as: 'payments' }
       ]
     });
+
+    // Advance the source quotation to INVOICED so it no longer shows as an
+    // un-invoiced confirmed quotation (keeps statuses synchronized).
+    try { await quotation.update({ status: 'INVOICED' }); } catch { /* non-fatal */ }
 
     await logActivity(req, {
       action: 'CREATE_INVOICE', shopId: user.shopId,
@@ -381,6 +385,22 @@ router.get('/:id/print-invoice', async (req, res) => {
     console.error('Error generating invoice PDF for print:', error);
     console.error('Error stack:', error.stack);
     res.status(500).json({ error: error.message || 'Failed to generate invoice PDF' });
+  }
+});
+
+// Print stickers — one 100×150mm sticker per glass item on the invoice.
+router.get('/:id/print-stickers', async (req, res) => {
+  try {
+    const pdfBuffer = await generateStickerPdf(req.params.id, req.user.username);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="stickers-${req.params.id}.pdf"`);
+    res.send(pdfBuffer);
+  } catch (error) {
+    if (error.message === 'Invoice not found' || (error.message || '').includes('Unauthorized')) {
+      return res.status(404).json({ error: error.message });
+    }
+    console.error('Error generating stickers PDF:', error);
+    res.status(500).json({ error: error.message || 'Failed to generate stickers PDF' });
   }
 });
 

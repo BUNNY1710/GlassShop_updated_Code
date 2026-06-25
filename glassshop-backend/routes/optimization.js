@@ -4,6 +4,7 @@ const {
   sequelize, Stock, Glass, Quotation, AuditLog, User, Shop,
   OptimizationConfirmation, InventoryMovement, Stand
 } = require('../models');
+const { Op } = require('sequelize');
 const { requireAnyPermission } = require('../middleware/auth');
 
 // Confirming a plan consumes inventory, so allow anyone who can run optimization
@@ -125,12 +126,15 @@ router.post('/confirm', async (req, res) => {
       });
     }
 
-    // ── Step 3: update order status ──
+    // ── Step 3: confirming the optimization confirms the quotation ──
+    // (explicit user action "Confirm Optimization"). This makes the order
+    // available for invoicing — the Invoice module lists CONFIRMED quotations.
+    // Only DRAFT/SENT orders are promoted; never downgrade other states.
     const orderIds = [...new Set(orders.map(o => parseInt(o, 10)).filter(Boolean))];
     if (orderIds.length) {
       await Quotation.update(
-        { status: 'CUT' },
-        { where: { id: orderIds, shopId }, transaction: t }
+        { status: 'CONFIRMED' },
+        { where: { id: orderIds, shopId, status: { [Op.in]: ['DRAFT', 'SENT'] } }, transaction: t }
       );
     }
 
