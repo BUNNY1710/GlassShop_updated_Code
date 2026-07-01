@@ -733,8 +733,14 @@ const generateCuttingPadPrintPdf = async (quotationId, userId) => {
   doc.on('data', c => chunks.push(c));
 
   const shop = q.shop;
-  const items = (q.items && q.items.length) ? q.items : [null];
-  const M = items.filter(Boolean).length || 1;
+  const rawItems = (q.items && q.items.length) ? q.items : [null];
+  // One sticker per physical unit: expand each item into `quantity` copies (min 1).
+  const stickers = [];
+  rawItems.forEach((item) => {
+    const qty = item ? Math.max(1, parseInt(item.quantity, 10) || 1) : 1;
+    for (let k = 0; k < qty; k++) stickers.push(item);
+  });
+  const M = stickers.length || 1;
   const dateStr = new Date().toLocaleDateString('en-IN');
 
   const drawSticker = (ox, oy, item, pieceNo) => {
@@ -768,7 +774,7 @@ const generateCuttingPadPrintPdf = async (quotationId, userId) => {
     line('Qtn', q.quotationNumber || ('#' + q.id), 'Date', dateStr);
     line('Cust', q.customerName || '-', null);
     line('Glass', item?.glassType || '-', 'Th', tk);
-    line('Size', size, 'Qty', item?.quantity ?? '-');
+    line('Size', size, null);
     line('Piece', `${pieceNo} of ${M}`, 'Code', `${q.id}-${pieceNo}`);
 
     // Notes / Drawing box — fills the rest of the sticker.
@@ -779,7 +785,7 @@ const generateCuttingPadPrintPdf = async (quotationId, userId) => {
     if (boxBot - y > 8) doc.rect(x0, y, innerW, boxBot - y).strokeColor(DARK).lineWidth(0.5).stroke();
   };
 
-  items.forEach((item, i) => {
+  stickers.forEach((item, i) => {
     const slot = i % PER;
     if (i > 0 && slot === 0) doc.addPage({ size: 'A4', margin: 0 });
     const col = slot % COLS, rowI = Math.floor(slot / COLS);
@@ -812,8 +818,14 @@ const generateStickerPdf = async (invoiceId, userId) => {
   doc.on('data', c => chunks.push(c));
 
   const shop = inv.shop;
-  const items = (inv.items && inv.items.length) ? inv.items : [null];
-  const M = items.filter(Boolean).length || 1;
+  const rawItems = (inv.items && inv.items.length) ? inv.items : [null];
+  // One sticker per physical unit: expand each item into `quantity` copies (min 1).
+  const stickers = [];
+  rawItems.forEach((item) => {
+    const qty = item ? Math.max(1, parseInt(item.quantity, 10) || 1) : 1;
+    for (let k = 0; k < qty; k++) stickers.push(item);
+  });
+  const M = stickers.length || 1;
 
   const draw = (item, pieceNo) => {
     const pad = 6 * MM;
@@ -845,7 +857,6 @@ const generateStickerPdf = async (invoiceId, userId) => {
     row('Glass Type', item?.glassType || '-');
     row('Thickness', tk);
     row('Size (W×H)', item ? `${fmtDim(item.width)} × ${fmtDim(item.height)}` : '-');
-    row('Quantity', item?.quantity ?? '-');
 
     y += 2;
     doc.fontSize(9).font('Helvetica-Bold').fillColor(DARK)
@@ -865,7 +876,7 @@ const generateStickerPdf = async (invoiceId, userId) => {
     doc.rect(x0, y, innerW, Math.max(20, (Hpg - pad) - y)).strokeColor(DARK).lineWidth(0.8).stroke();
   };
 
-  items.forEach((it, i) => {
+  stickers.forEach((it, i) => {
     if (i > 0) doc.addPage({ size: [W, Hpg], margin: 0 });
     draw(it, i + 1);
   });
